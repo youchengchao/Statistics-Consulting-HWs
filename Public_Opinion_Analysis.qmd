@@ -10,6 +10,11 @@ format:
 mainfont: "Microsoft JhengHei UI"
 toc: TRUE
 ---
+1. 分析所有候選人的知名度、支持度
+
+2. 請提供3號候選人的競選策略(需在何地、對何人進行拉票)
+
+3. 請建立3號候選人支持率的預測模式
 
 ```{r}
 #| output: FALSE
@@ -19,10 +24,9 @@ library(Hmisc)
 pollsav <- read_sav("poll.sav")
 write.csv(pollsav, file = "poll.csv", row.names = FALSE)
 pollcsv <- read.csv("poll.csv")
-str(pollcsv)
 ```
 
-# Brief introduciotn to the data
+# Brief introduction to the data
 
 Dimension of the Data : ***1671 samples × 15 columns***
 
@@ -35,10 +39,13 @@ Dimension of the Data : ***1671 samples × 15 columns***
 | V7         | Education level |
 | V8         | Sex             |
 
+All variables are given in numeric format. For convenience, variables are converted to factor format.
+
 ```{r}
-#| warning: FALSE
-#| output: true
-summary(pollcsv)
+#| output: false
+str(pollcsv)
+pollcsv[] <- lapply(pollcsv, function(item) return(as.factor(item)))
+str(pollcsv)
 ```
 
 # check missing
@@ -55,16 +62,13 @@ There is no missing value in this data. We then go to next step.
 ```{r}
 #| output: asis
 #| warning: false
-#| error: false
-latex(describe(pollcsv), file = "", caption.placement = "top", title = "Public Opinion")
+latex(describe(pollcsv, "Public Opinion"),file = "", size = "normalsize")
 ```
-
-
-
 
 # Preprocessing
 
 ```{r}
+#| error: true
 pollcsv$v2[pollcsv$v2==99] <- "-"
 pollcsv$v3[pollcsv$v3==99] <- "-"
 table(pollcsv$v2)
