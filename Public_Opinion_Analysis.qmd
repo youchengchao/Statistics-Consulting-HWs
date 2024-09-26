@@ -1,0 +1,88 @@
+---
+title: "選舉民意調查資料分析報告"
+date: today
+author: 趙友誠 H24101060
+format:
+ pdf:
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+mainfont: "Microsoft JhengHei UI"
+toc: TRUE
+---
+
+```{r}
+#| output: FALSE
+#| warning: FALSE
+library(haven)
+library(Hmisc)
+pollsav <- read_sav("poll.sav")
+write.csv(pollsav, file = "poll.csv", row.names = FALSE)
+pollcsv <- read.csv("poll.csv")
+str(pollcsv)
+```
+
+# Brief introduciotn to the data
+
+Dimension of the Data : ***1671 samples × 15 columns***
+
+| Variables  | Explanation     |
+|:-----------|:----------------|
+| V1、V2、V3 | District and Li |
+| V4_1\~V4_8 | Popularity      |
+| V5         | Support level   |
+| V6         | Age             |
+| V7         | Education level |
+| V8         | Sex             |
+
+```{r}
+#| warning: FALSE
+#| output: true
+summary(pollcsv)
+```
+
+# check missing
+
+```{r}
+#| warning: false
+library(DataExplorer)
+plot_missing(pollcsv)
+```
+There is no missing value in this data. We then go to next step.
+
+# Descriptive statistic
+
+```{r}
+#| output: asis
+#| warning: false
+#| error: false
+latex(describe(pollcsv), file = "", caption.placement = "top", title = "Public Opinion")
+```
+
+
+
+
+# Preprocessing
+
+```{r}
+pollcsv$v2[pollcsv$v2==99] <- "-"
+pollcsv$v3[pollcsv$v3==99] <- "-"
+table(pollcsv$v2)
+table(pollcsv$v3)
+DistnLi <- apply(pollcsv[,1:3],MARGIN = 1, FUN = function(row){
+  if(row[2]=="-") return(paste0(row[1],row[2],row[3]))
+  if(row[3]=="-") return(paste0(row[1],row[3],row[2]))
+})
+pollcsv[,1:3] <- NULL
+pollcsv <- data.frame(
+  DistnLi = DistnLi,
+  pollcsv
+)
+pollcsv <- data.frame(t(apply(pollcsv,MARGIN = 1, FUN = function(row){
+  row[row==99] <- 0
+  return(row)
+})))
+```
+
+
+
