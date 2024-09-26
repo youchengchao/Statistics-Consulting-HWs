@@ -1,0 +1,46 @@
+---
+title: "Summary Staistic for Penguins_raw dataset"
+date: today
+author: 趙友誠 H24101060
+format:
+ pdf:
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+mainfont: "Microsoft JhengHei UI"
+toc: TRUE
+---
+
+```{r}
+#| output: FALSE
+library(Hmisc)
+library(DataExplorer)
+library(palmerpenguins)
+library(table1)
+library(xtable)
+din <- penguins_raw
+summary(din)
+colnames(din) <- unlist(lapply(colnames(din),function(x) gsub(" ","_",x)))
+```
+
+# latex的describe
+
+```{r}
+#| output: asis
+#| warning: FALSE
+#by(din, din$studyName, summary)
+latex(describe(din), file = "", caption.placement = "top", title = "Penguins_Raw dataset")
+```
+
+# table1
+
+```{r}
+#| warning: FALSE
+table1(~.-Date_Egg-Individual_ID-Sample_Number|studyName, data=din)
+```
+
+# DataExplorer的plot_missing
+
+```{r}
+DataExplorer::plot_missing(din)
+```
