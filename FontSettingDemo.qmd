@@ -1,0 +1,31 @@
+---
+title: "font setting"
+date: today
+author: 趙友誠 H24101060
+format:
+ pdf:
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{xeCJK}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: TRUE
+---
+## font test
+
+Here are some words for me to inspect if the font is good.
+
+## 字體測試
+
+我打了一些中文字，看看字體如何。
+
+## 字體在程式區塊的呈現
+
+```{r}
+print("Hello mother fker")
+print("哈囉你好嗎")
+```
+
+
