@@ -4,14 +4,18 @@ date: today
 author: 高嘉妤、柯堯珹、吳承恩、趙友誠
 format:
  pdf:
-    engine: xelatex
     include-in-header:
       - text: |
          \usepackage{setspace,relsize}
-         \usepackage{xeCJK}
-         \setmainfont{Times New Roman}
-         \setCJKmainfont{標楷體}
-toc: TRUE
+         \usepackage{geometry}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+mainfont: "Microsoft JhengHei UI"
+toc: true
+lang: zh-Tw
+documentclass: article
+pdf-engine: xelatex
+execute:
+  tidy: true
 ---
 
 1.  分析所有候選人的知名度、支持度
@@ -386,11 +390,33 @@ fit <-glm(factor(support)~v2+v3+v6+v7+v8+factor(known3),family=binomial(),data=p
 summary(fit)
 ```
 
-```{r}
-library(randomForest)
-randomForest(x = pollcsv[,-], y = pollcsv$support)
 
+
+```{r}
+#支持三號的教育程度和人數
+support3toedulevel <- pollcsv[pollcsv$v5 == 3,"v7"]
+summary(support3toedulevel)
+plot(support3toedulevel,
+     type = "h",
+     main = "支持三號候選人中教育程度與人數關係",
+     xlab = "教育程度",
+     ylab = "人數",
+     )
+
+#知道三號的教育程度和人數
+known3toedulevel <- apply(pollcsv[,4:11],1,function(row)any(row==3))
+k32edu <- pollcsv[known3toedulevel,14]
+summary(k32edu)
+plot(k32edu,
+     main = "知道三號候選人中教育程度與人數關係",
+     xlab = "教育程度",
+     ylab = "人數")
+
+#兩者的結果皆可發現在3(國中)和5(大學以上)對三號候選人的認識和支持度皆高
 ```
+
+
+
 
 
 
