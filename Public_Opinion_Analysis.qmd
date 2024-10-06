@@ -4,52 +4,20 @@ date: today
 author: 高嘉妤、柯堯珹、吳承恩、趙友誠
 format:
  pdf:
+    fig-pos: 'h'
     engine: xelatex
     include-in-header:
       - text: |
          \usepackage{setspace,relsize}
+         \usepackage{geometry}
          \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
          \setmainfont{Times New Roman}
          \setCJKmainfont{標楷體}
 toc: true
-lang: zh-Tw
 documentclass: article
-pdf-engine: xelatex
-execute:
-  tidy: true
 ---
-
-1.  分析所有候選人的知名度、支持度
-
-2.  請提供3號候選人的競選策略(需在何地、對何人進行拉票)
-
-3.  請建立3號候選人支持率的預測模式
-
-# Brief introduction to the data
-
-This is a complete data with no actual missing value while some might be labeled as missing. Dimension of the Data : ***1671 samples × 15 columns***
-
-| Variables  | Explanation     | remark                                                 |
-|:-----------------|:-----------------|:------------------------------------|
-| V1、V2、V3 | District and Li |                                                        |
-| V4_1\~V4_8 | Popularity      |                                                        |
-| V5         | Support level   |                                                        |
-| V6         | Age             | 1:20到29歲,2:30到39歲,3:40到49歲,4:50到59歲,5:60歲以上 |
-| V7         | Education level | 1:小學, 2:國中, 3:高中, 4:專科, 5:大學以上             |
-| V8         | Sex             | 1:male, 2:female                                       |
-
-| Variables  | Missing  |
-|:-----------|:---------|
-| V1         | 98,99    |
-| V2、V3     | 44,98,99 |
-| V4_1\~V4_8 | 98,99    |
-| V5         | 98,99    |
-| V6         | 6,99     |
-| V7         | 95,99    |
-| V8         | 99       |
-
-There is some potential encoding error which some value is coded into 91. We treat it as the same as 98,99.
-
 ```{r}
 #| output: FALSE
 #| warning: FALSE
@@ -62,14 +30,38 @@ write.csv(pollsav, file = "poll.csv", row.names = FALSE)
 pollcsv <- read.csv("poll.csv")
 ```
 
-# Preprocessing
+# 資料簡介
 
-First, we replace 44,91,95,98,99 by 0 and then converted variables from numeric format to factor one. As the graph shown below, there is no missing value in this data.
+This is a complete data with no actual missing value while some might be labeled as missing. Dimension of the Data : ***1671 samples × 15 columns***
+
+| Variables  | Explanation     | remark                                                 |
+|------------------|------------------|-------------------------------------|
+| V1、V2、V3 | District and Li |                                                        |
+| V4_1\~V4_8 | Popularity      |                                                        |
+| V5         | Support level   |                                                        |
+| V6         | Age             | 1:20到29歲,2:30到39歲,3:40到49歲,4:50到59歲,5:60歲以上 |
+| V7         | Education level | 1:小學, 2:國中, 3:高中, 4:專科, 5:大學以上             |
+| V8         | Sex             | 1:male, 2:female                                       |
+
+: 變數解釋
+
+| Variables  | Missing  |
+|:-----------|:---------|
+| V1         | 98,99    |
+| V2、V3     | 44,98,99 |
+| V4_1\~V4_8 | 98,99    |
+| V5         | 98,99    |
+| V6         | 6,99     |
+| V7         | 95,99    |
+| V8         | 99       |
+
+: 遺失值定義
+
+有些數據在轉換時發生錯誤，因此將91視為與98、99同類。而我們發現有42筆從第一題開始就是遺失值的數據，因此將他們移除後，資料維度是***1629 samples × 15 columns***。
 
 ```{r}
 #| output: false
 #| warning: false
-str(pollcsv)
 pollcsv <- data.frame(
   t(apply(pollcsv,MARGIN = 1, FUN = function(row){
     row[row==99 | row==98 | row==91 | row==95 | row==44 | row[13]==6] <- 0
@@ -78,402 +70,439 @@ pollcsv <- data.frame(
 )
 pollcsv <- pollcsv[pollcsv$v1!=0,]
 pollcsv[] <- lapply(pollcsv, function(item) return(as.factor(item)))
-n <- dim(pollcsv)[1]
+n <- dim(pollcsv)[1]   #樣本數
 ```
 
-# Descriptive statistic
+# 一、分析所有候選人的知名度、支持度
 
-This chunk is for the convenience of analysis, so it will not be shown here.
+指標定義: 
 
-```{r}
-#| output: false
-#| warning: false
-latex(describe(pollcsv, "Public Opinion"),file = "", size = "normalsize")
-```
+1. $\text{知名度} = \frac{\text{第四題出現次數}}{\text{樣本數}}$ 
 
-The definition of the popularity of a candidate in this analysis is the number of appearance of a candidate that a participant answered in the 4th question. And the definition of the support level of a candidate is the number of appearance of a candidate in 5th question divided by the number of the participants who specifically choose a name in 5th question. That is, participants who did not actually answered the question are removed from the calculation.
+2. $\text{支持度} = \frac{\text{第五題出現次數}}{\text{有效樣本數}} = \frac{\text{第五題出現次數}}{\text{樣本數-無表態者}}$
 
 ```{r}
-#| output: asis
-
 #計算1~10號候選人在複選題出現的次數
 count4 <- unlist(lapply(factor(1:10), function(x){
-  return(length(unlist(apply(pollcsv[,4:11], MARGIN = 1, function(row) if(x %in% row) return (TRUE)))))
+  return(
+    sum(unlist(
+      apply(
+        pollcsv[,4:11],
+        MARGIN = 1,
+        function(row) if(x %in% row) return (TRUE)))))
 }))
-
 #計算1~10號候選人在第5題出現的次數
 count5 <- unlist(lapply(factor(0:10),function(x){
   return(sum(pollcsv$v5==x))
 } ))
-
+#有效樣本數
 n_prime <- n-count5[1]
-  
 #知名度 = 出現次數/sample size
 p <- data.frame(factor(1:10), popularity=round(count4/n,3), count4)
-
 #支持度 = 出現次數/(sample size-沒回答的)
-s <- data.frame(factor(1:10), `support level`=round(count5[2:11]/n_prime,3), count5[2:11])
-
+s <- data.frame(
+  factor(1:10),
+  support.level=round(count5[2:11]/n_prime,3),
+  count5[2:11]
+)
 #將候選人依據知名度與支持度排序
 p <- p[order(p$popularity, decreasing = TRUE ),]
 s <- s[order(s$support.level, decreasing = TRUE ),]
-
-latex(data.table::data.table(cbind(p,s)),title="",file = "", booktabs = TRUE, cgroup = c('Popularity', 'Support level'), colheads = rep(c('candidate', 'rate', 'count'), 2))
-```
-
-Then we calculate the popularity and the support level grouped by district.
-
-```{r}
-#| output: asis
-
+df.total <- cbind(p,s)
+row.names(df.total) <- 1:10
 #依據區將資料分成Dist1與Dist2
 Dist1 <-subset(pollcsv,pollcsv$v1==1)
 Dist2 <-subset(pollcsv,pollcsv$v1==2)
 n1 <- dim(Dist1)[1]
 n2 <- dim(Dist2)[1]
-
 #第一區的計算
 #候選人在複選題出現的次數
 count4_1 <- unlist(lapply(factor(1:10), function(x){
-  return(length(unlist(apply(Dist1[,4:11], MARGIN = 1, function(row) if(x %in% row) return (TRUE)))))
+  return(
+    sum(unlist(
+      apply(
+        Dist1[,4:11],
+        MARGIN = 1,
+        function(row) if(x %in% row) return (TRUE)))))
 }))
 #候選人在第5題出現的次數
 count5_1 <- unlist(lapply(factor(0:10),function(x){
   return(sum(Dist1$v5==x))
 } ))
-
 n1_prime <- n1-count5_1[1]
-
 #知名度 = 出現次數/sample size
 p_1 <- data.frame(factor(1:10), popularity=round(count4_1/n1,3), count4_1)
-
 #支持度 = 出現次數/(sample size-沒回答的)
-s_1 <- data.frame(factor(1:10), `support level`=round(count5_1[2:11]/n1_prime,3), count5_1[2:11])
-
+s_1 <- data.frame(
+  factor(1:10), 
+  support.level=round(count5_1[2:11]/n1_prime,3),
+  count5_1[2:11]
+)
 #將候選人依據知名度與支持度排序
 p_1 <- p_1[order(p_1$popularity, decreasing = TRUE ),]
 s_1 <- s_1[order(s_1$support.level, decreasing = TRUE ),]
-
-latex(data.table::data.table(cbind(p_1,s_1)),title="",file = "", booktabs = TRUE, cgroup = c('Popularity', 'Support level'), colheads = rep(c('candidate', 'rate', 'count'), 2))
-
+df.R1 <- cbind(p_1,s_1)
+row.names(df.R1) <- 1:10
 #第二區的計算
 #候選人在複選題出現的次數
 count4_2 <- unlist(lapply(factor(1:10), function(x){
-  return(length(unlist(apply(Dist2[,4:11], MARGIN = 1, function(row) if(x %in% row) return (TRUE)))))
+  return(
+    sum(unlist(
+      apply(
+        Dist2[,4:11],
+        MARGIN = 1,
+        function(row) if(x %in% row) return (TRUE)))))
 }))
-
 #候選人在第5題出現的次數
 count5_2 <- unlist(lapply(factor(0:10),function(x){
   return(sum(Dist2$v5==x))
 } ))
-
 n2_prime <- n2-count5_2[1]
-
 #知名度 = 出現次數/sample size
 p_2 <- data.frame(factor(1:10), popularity=round(count4_2/n2,3), count4_2)
-
 #支持度 = 出現次數/(sample size-沒回答的)
-s_2 <- data.frame(factor(1:10), `support level`=round(count5_2[2:11]/n2_prime,3), count5_2[2:11])
-
+s_2 <- data.frame(
+  factor(1:10),
+  support.level=round(count5_2[2:11]/n2_prime,3),
+  count5_2[2:11]
+)
 #將候選人依據知名度與支持度排序
 p_2 <- p_2[order(p_2$popularity, decreasing = TRUE ),]
 s_2 <- s_2[order(s_2$support.level, decreasing = TRUE ),]
-
-latex(data.table::data.table(cbind(p_2,s_2)),title="",file = "", booktabs = TRUE, cgroup = c('Popularity', 'Support level'), colheads = rep(c('candidate', 'rate', 'count'), 2))
+df.R2 <- cbind(p_2,s_2)
+row.names(df.R2) <- 1:10
 ```
 
-# 候選人3的知名度與支持度(分區、年齡層、性別): 後面三個還沒做
-
-```{r}
-#1區+2區的知名度與支持度
-p[1,2]
-s[1,2]
-#1區的知名度與支持度
-p_1[1,2]
-s_1[1,2]
-
-#2區的知名度與支持度
-p_2[1,2]
-s_2[1,2]
+```{r, results='hold'}
+#| output: asis
+alist <- list(df.R1, df.R2, df.total)
+blist <- c("第一區候選人知名度與支持度","第二區候選人知名度與支持度","兩區合併候選人知名度與支持度")
+for(i in 1:3){
+  latex(
+    alist[[i]],
+    title="",
+    file = "",
+    caption = blist[i],
+    booktabs = TRUE,
+    colheads = c('號碼','知名度', '計數',"號碼",'支持度','計數')
+  )
+}
 ```
+表三至表五是所有候選人的分區及合併之知名度與支持度。
 
-# 年齡分層
+# 二、候選人3的知名度與支持度
 
-```{r}
+在第二題，我們將用年齡、性別、居住里和教育水平來對這筆資料進行分層，用以觀察3號候選人在不同情況下的知名度和支持度，特別注意我們還計算了"supportknown"此項變數，來計算選票轉換率(支持度/知名度)，也就是在所有知道3號候選人的選民中，支持他的有多少人，用來進行更好的競選策略。
+
+## 年齡分層
+
+```{r, results='hold'}
+#| output: asis
 #知名度
-known3 <- apply(pollcsv[,4:11], 1, function(row){
-  if("3" %in% row){
-    return(1)
-  }else{return(0)}
-})
 knownC3 <- data.frame(
-  yes_no = known3,
+  yes_no = apply(
+    pollcsv[,4:11], 1, function(row){
+      if("3" %in% row){return(1)}
+      else{return(0)}}
+  ),
   age = pollcsv$v6
 )
-
 #支持度
-poll3 <- unlist(lapply(pollcsv[,12], function(x){
-  if(x=="3"){
-    return(1)
-  }else{return(0)}
-}))
 pollC3 <- data.frame(
-  yes_no = poll3,
+  yes_no = unlist(
+    lapply(pollcsv[,12], function(x){
+      if(x=="3"){return(1)}
+      else{return(0)}
+  })),
   age = pollcsv$v6
 )
 Age_Stratified <- data.frame(
-  num_known = t(table(knownC3))[,2],
-  num_support = t(table(pollC3))[,2],
+  知名度計數 = t(table(knownC3))[,2],
+  支持度計數 = t(table(pollC3))[,2],
   num_total = table(pollcsv$v6)
 )
 Age_Stratified[,3] <- NULL
-Age_Stratified
+
+Age_Stratified$知名度 <- 
+  round(Age_Stratified$知名度計數/Age_Stratified$num_total.Freq,2) 
+Age_Stratified$支持度 <- 
+  round(Age_Stratified$支持度計數/Age_Stratified$num_total.Freq,2)
+Age_Stratified$supportknown <- 
+  round(Age_Stratified$支持度/Age_Stratified$知名度,2)
+Age_Stratified <- Age_Stratified%>%
+  rename(
+    '該年齡之樣本數'='num_total.Freq'
+  )
+Age_Stratified$年齡 <- c("20-29","30-39","40-49","50-59","60+")
+Age_Stratified <- Age_Stratified[,c(7,3,1,4,2,5,6)]
+latex(data.table::data.table(Age_Stratified),title="",file = "",caption = "候選人3依年齡分層之知名度與支持度")
 ```
+依照年齡分層的知名度與支持度如表六所示:
 
-從上面的表格可以得知，30歲以下的支持度有效轉換率比其他年齡層高上不少，因此可以致力於提升在年輕族群中的知名度，
+30歲以下的支持度有效轉換率比其他年齡層高上不少，因此可以致力於提升在年輕族群中的知名度。在網路社群方面下功夫應該是不錯的投資。
 
+## 里分層
 
 ```{r}
 #| output: asis
-
 #將v4_1~v4_10有3的新增True False
 pollcsv$has_3 <- apply(pollcsv[, 4:11], 1, function(row) any(row == 3))
-
+library(dplyr)
+library(ggplot2)
 #北區人
-north_number<-pollcsv%>%
-  count(v2)
-north_number<-subset(north_number,v2!=0)
-
+north_number <- pollcsv %>% count(v2)
+north_number <- subset(north_number,v2!=0)
 #中西區人
-west_number<-pollcsv%>%
-  count(v3)
-west_number<-subset(west_number,v3!=0)
+west_number <- pollcsv %>% count(v3)
+west_number <- subset(west_number,v3!=0)
 
 #知名 北區
 result1_3_2 <- pollcsv%>%
   filter(has_3 == TRUE)%>%
   count(v2)
 result1_3_2 <- subset(result1_3_2, v2 != 0)
-
 # 知名 中西
 result1_3_3 <-pollcsv%>%
   filter(has_3==TRUE)%>%
   count(v3)
 result1_3_3 <- subset(result1_3_3,v3!=0)
-
 #支持 北
 resultv5_v2 <-pollcsv%>%
   filter(v5 ==3)%>%
   count(v2)
 resultv5_v2 <- subset(resultv5_v2,v2!=0)
-
 #支持 中西
 resultv5_v3 <-pollcsv%>%
   filter(v5 ==3)%>%
   count(v3)
 resultv5_v3 <- subset(resultv5_v3,v3!=0)
-
 #北區相除
-merged_north <- merge(north_number, result1_3_2, by = "v2", suffixes = c("_north", "_known"))
-merged_north <- merge(merged_north, resultv5_v2, by = 'v2')
+merged_north <- merge(
+  north_number, 
+  result1_3_2, 
+  by = "v2", suffixes = c("_north", "_known"))
+merged_north <- merge(
+  merged_north, 
+  resultv5_v2, 
+  by = 'v2')
 
-merged_north$ratio_known <- merged_north$n_known / merged_north$n_north
-merged_north$ratio_support <- merged_north$n / merged_north$n_north
+merged_north$ratio_known <- round(merged_north$n_known / merged_north$n_north,2)
+merged_north$ratio_support <- round(merged_north$n / merged_north$n_north,2)
 
 ggplot(merged_north, aes(x = v2, y = ratio_known))+
   geom_bar(stat = 'identity')+
   scale_x_discrete(breaks = 1:44)+
-  labs(title = 'North with known ratio in village', x = 'Village', y = 'Ratio')+
+  labs(title = 'Fig 1:North with known ratio in village', x = 'Village', y = 'Ratio')+
   theme(plot.title = element_text(hjust = 0.5))
 ggplot(merged_north, aes(x = v2, y = ratio_support))+
   geom_bar(stat = 'identity')+
   scale_x_discrete(breaks = 1:44)+
-  labs(title = 'North with support ratio in village', x = 'Village', y = 'Ratio')+
+  labs(title = 'Fig 2:North with support ratio in village', x = 'Village', y = 'Ratio')+
   theme(plot.title = element_text(hjust = 0.5))
-
 #中西相除
-merged_west <- merge(west_number, result1_3_3, by = "v3", suffixes = c("_west", "_known"))
-merged_west <- merge(merged_west, resultv5_v3, by = 'v3')
-
-merged_west$ratio_known <- merged_west$n_known / merged_west$n_west
-merged_west$ratio_support <- merged_west$n / merged_west$n_west
-
+merged_west <- merge(
+  west_number, result1_3_3, 
+  by = "v3", suffixes = c("_west", "_known"))
+merged_west <- merge(
+  merged_west, resultv5_v3, 
+  by = 'v3')
+merged_west$ratio_known <- round(merged_west$n_known / merged_west$n_west,2)
+merged_west$ratio_support <- round(merged_west$n / merged_west$n_west,2)
 #重新命名 west_table
 west_table<-merged_west%>%
   rename(
-    'VillageinMiddle west'='v3',
-    'Totalnumber'='n_west',
-    'Known'='n_known',
-    'Support'='n',
-    'ratiosupport'="ratio_support",
-    "ratioknown"="ratio_known"
+    '里(中西區)'='v3',
+    '里樣本數'='n_west',
+    '知名度計數'='n_known',
+    '支持度計數'='n',
+    '支持度'="ratio_support",
+    "知名度"="ratio_known"
   )
-west_table$supportknown <-west_table$ratiosupport/west_table$ratioknown
-latex(data.table::data.table(west_table),title="",file = "")
-
-#重新命名 north table
-north_table<-merged_north%>%
-  rename(
-    'VillageinNorth'='v2',
-    'Totalnumber'='n_north',
-    'Known'='n_known',
-    'Support'='n',
-    'ratiosupport'="ratio_support",
-    "ratioknown"="ratio_known"
-  )
-north_table$supportknown <-north_table$ratiosupport/north_table$ratioknown
-latex(data.table::data.table(north_table),title="",file = "")
+west_table$supportknown <- 
+  round(west_table$支持度/west_table$知名度,2)
+west_table <- west_table[,c(1,2,3,5,4,6,7)]
+latex(data.table::data.table(west_table),title="",file = "",caption="候選人3於中西區各里之知名度與支持度")
 ```
+如圖1、圖2所示:
 
+在中西區，3號候選人在第1,14,16,4里的知名度皆不高；第2里的知名度最高；而三號候選人在中西區的支持度大致上偏低，除了第11和17里的支持度比較高。
+
+我們認為3號候選人可以鞏固第17里的選民，因為此里的人有高選票轉換率，而3號候選人不用特別針對第2里的選民進行拉票活動，因為在第2里已經有較高比率的知名度的情況下，支持度卻不高。
 
 ```{r}
 #| output: asis
+#重新命名 north table
+north_table<-merged_north%>%
+  rename(
+    '里(北區)'='v2',
+    '里樣本數'='n_north',
+    '知名度計數'='n_known',
+    '支持度計數'='n',
+    '支持度'="ratio_support",
+    "知名度"="ratio_known"
+  )
+north_table$supportknown <- round(north_table$支持度計數/north_table$知名度,2)
+north_table <- north_table[,c(1,2,3,5,4,6,7)]
+latex(data.table::data.table(north_table),title="",file = "",caption="候選人3於北區各里之知名度與支持度")
+```
+如表7、表8所示，在北區中，3號候選人在第8里的知名度最高，在第1里的支持度最低。而3號候選人在第24里的支持度最高，第30里的支持度最低。
 
+我們認為3號候選人可以鞏固第8里的選民，因為第8里的支持度和知名度都偏高，而第22和30里不用進行特別的拜票活動，因為這兩個里的支持度和知名度都偏低。
+
+## 性別分層
+
+```{r}
+#| output: asis
 sex1 <-subset(pollcsv,pollcsv$v8==1)#男生
 sex2 <-subset(pollcsv,pollcsv$v8==2)#女生
 n3 <- dim(sex1)[1]
 n4 <- dim(sex2)[1]
-
 #男生的計算
 count4_sex1 <- unlist(lapply(factor(1:10), function(x){
-  return(length(unlist(apply(sex1[,4:11], MARGIN = 1, function(row) if(x %in% row) return (TRUE)))))
+  return(
+    sum(unlist(
+      apply(
+        sex1[,4:11],
+        MARGIN = 1,
+        function(row) if(x %in% row) return (TRUE)))))
 }))
-
 count5_sex1 <- unlist(lapply(factor(0:10),function(x){
   return(sum(sex1$v5==x))
 } ))
-
 n3_prime <- n3-count5_sex1[1]
-
 #知名度 = 出現次數/sample size
-p_sex1 <- data.frame(factor(1:10), popularity=round(count4_sex1/n3,3), count4_sex1)
-
+p_sex1 <- data.frame(
+  factor(1:10), 
+  popularity=round(count4_sex1/n3,3), 
+  count4_sex1
+)
 #支持度 = 出現次數/(sample size-沒回答的)
-s_sex1 <- data.frame(factor(1:10), `support level`=round(count5_sex1[2:11]/n3_prime,3), count5_sex1[2:11])
-
-
+s_sex1 <- data.frame(
+  factor(1:10),
+  support.level=round(count5_sex1[2:11]/n3_prime,3),
+  count5_sex1[2:11]
+)
 #女生的計算
 #候選人在複選題出現的次數
 count4_sex2 <- unlist(lapply(factor(1:10), function(x){
-  return(length(unlist(apply(sex2[,4:11], MARGIN = 1, function(row) if(x %in% row) return (TRUE)))))
+  return(
+    sum(unlist(
+      apply(
+        sex2[,4:11],
+        MARGIN = 1,
+        function(row) if(x %in% row) return (TRUE)))))
 }))
-
 #候選人在第5題出現的次數
 count5_sex2 <- unlist(lapply(factor(0:10),function(x){
   return(sum(sex2$v5==x))
 } ))
-
 n4_prime <- n4-count5_sex2[1]
-
 #知名度 = 出現次數/sample size
-p_sex2 <- data.frame(factor(1:10), popularity=round(count4_sex2/n4,3), count4_sex2)
-
+p_sex2 <- data.frame(
+  factor(1:10),
+  popularity=round(count4_sex2/n4,3),
+  count4_sex2
+)
 #支持度 = 出現次數/(sample size-沒回答的)
-s_sex2 <- data.frame(factor(1:10), `support level`=round(count5_sex2[2:11]/n4_prime,3), count5_sex2[2:11])
-
-
-
+s_sex2 <- data.frame(
+  factor(1:10), 
+  support.level=round(count5_sex2[2:11]/n4_prime,3), 
+  count5_sex2[2:11]
+)
 data1=data.frame(
   sex=c('male','female'),
   total = c(n3,n4),
-  popularity_count=c(count4_sex1[3],count4_sex2[3]),
-  popularity_ratio=c(round(count4_sex1[3]/n3,2),round(count4_sex2[3]/n4,2)),
-  support_count=c(count5_sex1[4],count5_sex2[4]),
-  support_ratio=c(round(count5_sex1[4]/n3,2),round(count5_sex2[4]/n4,2)),
-  change_ratio=c(round(count5_sex1[4]/count4_sex1[3],2),round(count5_sex2[4]/count4_sex2[3],2)))
-latex(data1,title="",file = "", booktabs = TRUE,colheads = c('sex','total',' popularitycount','popularityratio','supportcount','supportratio','changeratio'))
+  popularity_count=c(
+    count4_sex1[3],
+    count4_sex2[3]),
+  popularity_ratio=c(
+    round(count4_sex1[3]/n3,2),
+    round(count4_sex2[3]/n4,2)),
+  support_count=c(
+    count5_sex1[4],
+    count5_sex2[4]),
+  support_ratio=c(
+    round(count5_sex1[4]/n3,2),
+    round(count5_sex2[4]/n4,2)),
+  change_ratio=c(
+    round(count5_sex1[4]/count4_sex1[3],2),
+    round(count5_sex2[4]/count4_sex2[3],2)))
+latex(
+  data1,
+  title="",file = "",caption = "候選人3依性別分層之知名度與支持度",
+  booktabs = TRUE,
+  colheads = c('性別','該性別樣本數','知名度計數',
+               '知名度','支持度計數','支持度',
+               'supportknown')
+)
 ```
 
-可以發現3號候選人在男性選民中的知名度是大於女性選民的，但男性選民的支持度卻小於女性選民，在所有認識3號候選人的男性選民中，有46.3%的人支持他當選；而在所有認識3號候選人的女性選民中，有53.4%的人支持他當選。因此我認為3號候選人可以多多向女性選民進行拉票，以此拉高在女性選民中的知名度，並藉此來提高支持度。
+根據表9可以發現，3號候選人在男性選民中的知名度是大於女性選民的，但男性選民的支持度卻小於女性選民，在所有認識3號候選人的男性選民中，有46.3%的人支持他當選；而在所有認識3號候選人的女性選民中，有53.4%的人支持他當選。
 
+因此建議3號候選人可以多多向女性選民進行拉票，以此拉高在女性選民中的知名度，並藉此來提高支持度。
 
-```{r}
-pollcsv$support <- ifelse(pollcsv$v5==3,1,0)
-pollcsv$known3 <- known3
-str(pollcsv)
-fit <-glm(factor(support)~v2+v3+v6+v7+v8+factor(known3),family=binomial(),data=pollcsv)
-summary(fit)
-```
-
-
+## 教育程度分層
 
 ```{r}
+#| output: asis
 #支持三號的教育程度和人數
 support3toedulevel <- pollcsv[pollcsv$v5 == 3,"v7"]
-summary(support3toedulevel)
-plot(support3toedulevel,
-     type = "h",
-     main = "支持三號候選人中教育程度與人數關係",
-     xlab = "education level",
-     ylab = "count",
-     )
+supportcount<-summary(support3toedulevel)
 
 #知道三號的教育程度和人數
 known3toedulevel <- apply(pollcsv[,4:11],1,function(row)any(row==3))
 k32edu <- pollcsv[known3toedulevel,14]
-summary(k32edu)
-plot(k32edu,
-     main = "知道三號候選人中教育程度與人數關係",
-     xlab = "教育程度",
-     ylab = "人數")
+popularitycount <- summary(k32edu)
 
-#兩者的結果皆可發現在3(國中)和5(大學以上)對三號候選人的認識和支持度皆高
+totalnumber <- summary(pollcsv$v7)
+edu_table <- data.frame(
+  cbind(totalnumber,popularitycount,supportcount)
+)
+edu_table$popularityratio <- 
+  round(edu_table$popularitycount/edu_table$totalnumber ,2)
+edu_table$supportratio <- 
+  round(edu_table$supportcount/edu_table$totalnumber ,2)
+edu_table$supportknown <- 
+  round(edu_table$supportcount/edu_table$popularitycount,2)
+edu_table <- edu_table[2:6,]
+edu_table$edulevel <- c("小學","國中","高中","專科","大學及以上") 
+edu_table <- edu_table[,c(7,1,2,4,3,5,6)]
+latex(data.table::data.table(edu_table),title="",file = "", caption="候選人3依學歷分層之知名度與支持度")
 ```
 
+如表10所示:
+
+3號候選人在各教育水平情況下的知名度和支持度皆相差不大，因此不需要針對不同的教育水平進行不同的競選策略。
+
+總結來說，我們認為3號候選人可以用特定的競選方法來針對不同族群，像是可以舉辦文創市集來針對年輕族群和女性族群，或是在網路上投放廣告和進行網路宣傳活動來吸引年輕族群的票，或是針對特定的里來讓喜愛他的選民獲得更多關注，透過街訪鄰居的力量獲得特定里裡面的更多票。
+
+# 三、候選人3的支持率預測模式
+
+## 隨機森林
 
 ```{r}
+#| warning: false
+#| eval: false
 library(randomForest)
 library(caret)
+pollcsv$support <- ifelse(pollcsv$v5=="3",1,0)
 pollcsv$support <- factor(pollcsv$support)
-set.seed(123)  # 為了結果可重現，設定隨機種子
+set.seed(123)
 train_index <- createDataPartition(pollcsv$support, p = 0.8, list = FALSE)
-
-# 分割訓練集和測試集
 train_data <- pollcsv[train_index, ]  # 訓練集
 test_data <- pollcsv[-train_index, ]  # 測試集
-
-rf_model <- train(support ~ ., 
-                  data = pollcsv,
-                  method = "rf",  # 指定隨機森林算法
-                  trControl = trainControl(method = "cv", number = 3),
-                  tuneLength = 5
+rf_model <- train(
+  support ~ ., data = pollcsv,
+  method = "rf",
+  trControl = trainControl(method = "cv", number = 3),
+  tuneLength = 5
 )
-
 predictions <- predict(rf_model, newdata = test_data)
 confusionMatrix(predictions, test_data$support)
 ```
 
-
-```{r}
-library(glmnet)
-temp <- as.matrix(pollcsv[,c(1:3,12:16)])
-y <- pollcsv$support
-
-if(FALSE){
-  temp$DL <- apply(pollcsv[,1:3], 1, function(row){
-  if(row[2]=="0"){
-    return(paste0(row[1],"_",row[3]))
-  }else if(row[3]=="0"){
-    return(paste0(row[1],"_",row[2]))
-  }
-})
-}
-
-set.seed(123)
-lasso_model <- glmnet(X=temp, y, alpha = 1, family = binomial())
-
-```
-
-
-
-
-
-
+## 廣義線性模型(羅吉斯)
 ```{r}
 
 ```
-
-
-
-
 
