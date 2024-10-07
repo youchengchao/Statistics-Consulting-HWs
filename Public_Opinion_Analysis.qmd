@@ -458,16 +458,15 @@ totalnumber <- summary(pollcsv$v7)
 edu_table <- data.frame(
   cbind(totalnumber,popularitycount,supportcount)
 )
-edu_table$popularityratio <- 
-  round(edu_table$popularitycount/edu_table$totalnumber ,2)
-edu_table$supportratio <- 
-  round(edu_table$supportcount/edu_table$totalnumber ,2)
-edu_table$supportknown <- 
-  round(edu_table$supportcount/edu_table$popularitycount,2)
+edu_table$popularityratio <- round(edu_table$popularitycount/edu_table$totalnumber ,2)
+edu_table$supportratio <- round(edu_table$supportcount/edu_table$totalnumber ,2)
+edu_table$supportknown <- round(edu_table$supportcount/edu_table$popularitycount,2)
 edu_table <- edu_table[2:6,]
 edu_table$edulevel <- c("小學","國中","高中","專科","大學及以上") 
 edu_table <- edu_table[,c(7,1,2,4,3,5,6)]
-latex(data.table::data.table(edu_table),title="",file = "", caption="候選人3依學歷分層之知名度與支持度")
+latex(data.table::data.table(edu_table),
+      title="",file = "", caption="候選人3依學歷分層之知名度與支持度",
+      colheads=c("教育程度","樣本數","知名度計數","知名度","支持度計數","支持度","supportknown"))
 ```
 
 如表10所示:
