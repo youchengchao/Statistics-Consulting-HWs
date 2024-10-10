@@ -1,0 +1,231 @@
+---
+title: "Poisson Regression model Demo"
+date: today
+author: 趙友誠
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+---
+
+# 資料簡介 DoctorVisits Dataset from package AER
+
+```{r}
+#| output: false
+#| warning: false
+library(AER)
+library(Hmisc)
+library(ggplot2)
+library(DataExplorer)
+data(DoctorVisits)
+```
+
+| 變數      | 解釋                                           | 資料格式 | 備註            |
+|:--------------|:--------------------------|:--------------|:--------------|
+| visits    | 過去兩週的看醫生(諮詢)的次數                   | num      | counts:0~9          |
+| gender    | 性別                                           | factor   | 1=male,2=female |
+| age       | 年齡                                           | num      | years/100:0.19~0.72       |
+| income    | 年收入(in 10,000 dollars)                      | num      | income/10000:0.0~1.5    |
+| illness   | 過去兩週不舒服的次數                           | num      | counts:0~5          |
+| reduced   | 過去兩週因生病或受傷的休養天數                 | num      | counts:0~14          |
+| health    | GHQ-12心理健康問卷分數(越低代表心理狀態越健康) | num      | 0\~12           |
+| private   | 有無私人醫療保險                               | factor   | 1=no,2=yes      |
+| freepoor  | 有無政府醫療保險(低收)                         | factor   | 1=no,2=yes      |
+| freerepat | 有無政府醫療保險(退伍軍人、高齡、失能)         | factor   | 1=no,2=yes      |
+| nchronic  | 有無不影響行動的慢性疾病                       | factor   | 1=no,2=yes      |
+| lchronic  | 有無限制行動的慢性疾病                         | factor   | 1=no,2=yes      |
+
+: 變數解釋
+
+```{r}
+#| output: asis
+str(DoctorVisits)
+latex(describe(DoctorVisits),title="",file="", caption="descriptive statistic of the dataset")
+library(ggplot2)
+mytable <- data.frame(table(DoctorVisits$visits))
+ggplot(mytable, aes(x = factor(Var1), y = Freq)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  geom_text(aes(label = Freq), vjust = -0.5, hjust = 0.5) +  # 調整 vjust 和 hjust
+  labs(x = "Value", y = "Frequency") +
+  theme_minimal()
+```
+
+觀察變數分布建議使用Hmisc::describe()。
+
+```{r}
+sum(DoctorVisits$private=="yes" & DoctorVisits$freepoor=="yes" & DoctorVisits$freerepat=="yes")
+sum(DoctorVisits$private=="yes" & DoctorVisits$freepoor=="yes")
+sum(DoctorVisits$private=="yes" & DoctorVisits$freerepat=="yes")
+sum(DoctorVisits$freepoor=="yes" & DoctorVisits$freerepat=="yes")
+DoctorVisits$insurance <- as.factor(apply(DoctorVisits[,8:10], MARGIN = 1, function(row){
+  return(ifelse(row[1]=="yes", "P",ifelse(row[2]=="yes", "GP", ifelse(row[3]=="yes", "GR", "N"))))
+}))
+DoctorVisits <- DoctorVisits[,c(1:7,13,11,12)]
+sum(DoctorVisits$nchronic=="yes" & DoctorVisits$lchronic=="yes")
+sum(DoctorVisits$lchronic=="yes")
+sum(DoctorVisits$nchronic=="yes")
+sum(DoctorVisits$nchronic=="no" & DoctorVisits$lchronic=="no")
+DoctorVisits$chronDis <- as.factor(apply(DoctorVisits[,9:10], MARGIN = 1, function(row){
+  return(ifelse(row[1]=="yes", "nch",ifelse(row[2]=="yes", "lch", "N")))
+}))
+DoctorVisits <- DoctorVisits[,c(1:8,11)]
+```
+
+將private, freepoor, freerepat三個變數合併成insurance類別變數 :
+
+P=private, GP=freepoor, GR=freerepat, N=沒有保險
+
+nchronic,lchronic合併成chronDis類別變數 :
+
+nch=有慢性疾病但不限制行動, lch=有慢性疾病並且會限制行動, N=沒有慢性疾病
+
+# 建構模型
+
+```{r}
+#| output: true
+mydata <- model.matrix(~.*.-1, data = DoctorVisits[,-1])
+mydata <- data.frame(visits = DoctorVisits$visits, mydata[,-1])
+fullmodel <- glm(visits~.,data=mydata, family = poisson())
+nullmodel <- glm(visits~1,data=mydata, family = poisson())
+fit.step <- step(
+  nullmodel,
+  scope = list(lower = nullmodel,upper=fullmodel),
+  direction = "both",k = log(5190), trace = FALSE)
+cat("The number of variables selected is:",length(fit.step$coefficients)-1)
+summary(fit.step)
+```
+
+按照慣例做法，將未選中的主效應項加入模型 :
+
+發現加入health會使得age.health與health不顯著，因此傾向保留主效應。
+
+```{r}
+#| output: asis
+oldformula <- fit.step$formula
+newformula <- update(oldformula, .~.-age.health+health)
+fit.step <- glm(newformula, data = mydata, family = poisson())
+output <- summary(fit.step)$coefficients
+output <- data.frame(
+  coef = round(output[,1],3),
+  sd = round(output[,2],3),
+  z = round(output[,3],3),
+  pvalue = round(output[,4],3)
+)
+output$sig <- sapply(output$pvalue, function(p) {
+  ifelse(p < 0.001,"***",ifelse(p < 0.01,"**",ifelse(p < 0.05,"*","")))
+})
+colnames(output) <- c("Coefficients", "Std Error", "Z value", "P value", "Significance")
+output <- output[c(1,3,8,5,2,10,4,6,7,9),]
+latex(output, title="",file="",caption = "fitted model")
+```
+
+```{r}
+x <- seq(0, 0.8, by = 0.001)
+curve(expr = exp(0.567 - 0.856 * x), from = 0, to = 0.8, 
+      xlab = "Age", ylab = "ratio", 
+      col = "blue", lwd = 2, main = expression(mu[female] / mu[male]))
+grid()
+abline(h=1, col="red")
+points(x = 0.567/0.856, y = 1, col="black")
+text(x = 0.567/0.856, y = 1.1,paste0("x is ",round(0.567/0.856,2)))
+```
+
+
+
+# check for overdispersion
+
+```{r}
+#| echo: false
+#| eval: false
+# glm 的 residual degree of freedom 的算法
+GLM.df <- function(model) dim(model$data)[1] - length(model$coefficients)
+
+# glm的$residual是working residual
+sum(fit.step$residuals==resid(fit.step, type = "working"))
+
+# residual
+resid(fit.step, type = "deviance")
+resid(fit.step, type = "pearson")
+
+# poisson glm的pearson residual
+(DoctorVisits$visits - fit.step$fitted.values)/ sqrt(fit.step$fitted.values)
+
+# standardized residual = residual / df of residual
+rstandard(fit.step, type = "deviance")
+rstandard(fit.step, type = "pearson")
+```
+
+## estimation of dispersion parameter
+
+```{r}
+# Deviance Method
+dispersion_deviance <- sum(resid(fit.step, type = "deviance")^2)/fit.step$df.residual
+cat("estimated dispersion by deviance:", dispersion_deviance)
+# Pearson Method
+dispersion_pearson <- sum(resid(fit.step, type = "pearson")^2)/fit.step$df.residual
+cat("estimated dispersion by pearson:", dispersion_pearson)
+```
+
+## residual analysis
+
+```{r}
+# 檢查pearson residual的變異數是否有等於1
+cat("Variance of Pearson residual:",var(resid(fit.step, type = "pearson")))
+
+#殘差圖(記得依fitted value大小排序)
+par(mfrow = c(1, 2))
+plot(sort(fit.step$fitted.values),
+     resid(fit.step, type = "deviance")[order(fit.step$fitted.values, decreasing = FALSE)],
+     main="Fig 2.1 Deviance resudual plot", ylab = "residual", xlab="fitted value",
+     ylim = c(-6,13), xlim=c(0,4))
+abline(0,0)
+plot(sort(fit.step$fitted.values),
+     resid(fit.step, type = "pearson")[order(fit.step$fitted.values, decreasing = FALSE)],
+     main="Fig 2.2 Pearson resudual plot", ylab = "residual", xlab="fitted value",
+     ylim = c(-6,13), xlim=c(0,4))
+abline(0,0)
+```
+
+## dispersion test
+
+```{r}
+dispersiontest(fit.step,alternative = "greater",
+               trafo = 1)
+dispersiontest(fit.step,alternative = "greater",
+               trafo = function(mu) mu)
+dispersiontest(fit.step,alternative = "greater",
+               trafo = 2)
+dispersiontest(fit.step,alternative = "greater",
+               trafo = function(mu) mu^2)
+dispersiontest(fit.step,alternative = "greater")
+dispersiontest(fit.step,alternative = "two.sided")
+dispersiontest(fit.step,alternative = "less")
+
+```
+
+# 改用Quasi_MLE
+
+```{r}
+plot_correlation(DoctorVisits)
+fit.quasipoi <- glm(data = DoctorVisits, formula = visits ~. , family = quasipoisson())
+summary(fit.quasipoi)
+dispersion_deviance_quasi <- sum(resid(fit.quasipoi, type = "deviance")^2)/fit.quasipoi$df.residual
+dispersion_pearson_quasi <- sum(resid(fit.quasipoi, type = "pearson")^2)/fit.quasipoi$df.residual
+cat("estimated dispersion by deviance:", dispersion_deviance_quasi,
+    "\nestimated dispersion by pearson:", dispersion_pearson_quasi)
+
+
+```
+
+
