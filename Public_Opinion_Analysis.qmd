@@ -37,7 +37,7 @@ pollcsv <- read.csv("poll.csv")
 This is a complete data with no actual missing value while some might be labeled as missing. Dimension of the Data : ***1671 samples × 15 columns***
 
 | Variables  | Explanation         | remark                                                 |
-|------------------|------------------|------------------------------------|
+|----------------|----------------|-----------------------------------------|
 | V1         | District            | 1:北區, 2:中西區                                       |
 | V2、V3     | Li                  |                                                        |
 | V4_1\~V4_8 | Candidate known     | 1\~10號                                                |
@@ -613,31 +613,39 @@ fit.rf <- randomForest(
 confusionMatrix(predict(fit.rf, test_data),reference = test_data$support)
 ```
 
-          Reference
-Prediction    0    1
-         0 1535  133
-         1  173  112
+```         
+      Reference
+```
 
-               Accuracy : 0.8433          
-                 95% CI : (0.8264, 0.8592)
-    No Information Rate : 0.8746          
-    P-Value [Acc > NIR] : 0.99998         
-                                          
-                  Kappa : 0.3326          
-                                          
- Mcnemar's Test P-Value : 0.02578         
-                                          
-            Sensitivity : 0.8987          
-            Specificity : 0.4571          
-         Pos Pred Value : 0.9203          
-         Neg Pred Value : 0.3930          
-             Prevalence : 0.8746          
-         Detection Rate : 0.7860          
-   Detection Prevalence : 0.8541          
-      Balanced Accuracy : 0.6779          
-                                          
-       'Positive' Class : 0               
+Prediction 0 1 0 1535 133 1 173 112
 
+```         
+           Accuracy : 0.8433          
+             95% CI : (0.8264, 0.8592)
+No Information Rate : 0.8746          
+P-Value [Acc > NIR] : 0.99998         
+                                      
+              Kappa : 0.3326          
+                                      
+```
+
+Mcnemar's Test P-Value : 0.02578
+
+```         
+        Sensitivity : 0.8987          
+        Specificity : 0.4571          
+     Pos Pred Value : 0.9203          
+     Neg Pred Value : 0.3930          
+         Prevalence : 0.8746          
+     Detection Rate : 0.7860          
+```
+
+Detection Prevalence : 0.8541\
+Balanced Accuracy : 0.6779
+
+```         
+   'Positive' Class : 0               
+```
 
 ## 廣義線性模型(羅吉斯)
 
@@ -658,7 +666,6 @@ fit.final <- glm(data = data.frame(mydata.matrix), formula = support1~v11+v28+v2
 summary(fit.final)
 ```
 
-
 ```{r}
 fit <- glm(support~v1+v6+v7+v8,family = binomial(logit),data = train_data)
 fit.aic<-stepAIC(fit,trace = FALSE)
@@ -673,5 +680,3 @@ confusionMatrix(as.factor(pre_logit), as.factor(test_data$support))
 ```
 
 我們先使用stepAIC選取AIC最小的模型。而從模型當中去確認相對顯著的變數，可以得出中西區的勝算是北區的 exp(-0.8391)=0.432倍。
-
-
