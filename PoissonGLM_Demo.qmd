@@ -22,13 +22,13 @@ documentclass: article
 # 資料簡介 DoctorVisits Dataset from package AER
 
 ```{r}
-#| output: false
 #| warning: false
 library(AER)
 library(Hmisc)
 library(ggplot2)
 library(DataExplorer)
 data(DoctorVisits)
+str(DoctorVisits)
 ```
 
 | 變數      | 解釋                                           | 資料格式 | 備註            |
@@ -50,8 +50,7 @@ data(DoctorVisits)
 
 ```{r}
 #| output: asis
-str(DoctorVisits)
-latex(describe(DoctorVisits),title="",file="", caption="descriptive statistic of the dataset")
+latex(describe(DoctorVisits),title="",file="")
 library(ggplot2)
 mytable <- data.frame(table(DoctorVisits$visits))
 ggplot(mytable, aes(x = factor(Var1), y = Freq)) + 
@@ -213,19 +212,4 @@ dispersiontest(fit.step,alternative = "two.sided")
 dispersiontest(fit.step,alternative = "less")
 
 ```
-
-# 改用Quasi_MLE
-
-```{r}
-plot_correlation(DoctorVisits)
-fit.quasipoi <- glm(data = DoctorVisits, formula = visits ~. , family = quasipoisson())
-summary(fit.quasipoi)
-dispersion_deviance_quasi <- sum(resid(fit.quasipoi, type = "deviance")^2)/fit.quasipoi$df.residual
-dispersion_pearson_quasi <- sum(resid(fit.quasipoi, type = "pearson")^2)/fit.quasipoi$df.residual
-cat("estimated dispersion by deviance:", dispersion_deviance_quasi,
-    "\nestimated dispersion by pearson:", dispersion_pearson_quasi)
-
-
-```
-
 
