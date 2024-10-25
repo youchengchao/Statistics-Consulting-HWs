@@ -44,7 +44,7 @@ pollcsv <- read.csv("poll.csv")
 
 # 資料簡介
 
-This is a complete data with no actual missing value while some might be labeled as missing. Dimension of the Data : ***1671 samples × 15 columns***
+Dimension of the Data : ***1671 samples × 15 columns***
 
 | Variables  | Explanation         | remark                                                 |
 |----------------|----------------|-----------------------------------------|
@@ -70,14 +70,14 @@ This is a complete data with no actual missing value while some might be labeled
 
 : 遺失值定義
 
-有些數據在轉換時發生錯誤，因此將91視為與98、99同類。而我們發現有42筆從第一題開始就是遺失值的數據，因此將他們移除後，資料維度是***1629 samples × 15 columns***。
-
+另外我們發現有些數據可能在轉換時發生錯誤，因此將91視為與98、99同類。
+而我們也發現有42筆從第一題開始就是遺失值的數據，因此將他們移除後，資料維度是***1629 samples × 15 columns***。
 ```{r}
 #| output: false
 #| warning: false
 pollcsv <- data.frame(
   t(apply(pollcsv,MARGIN = 1, FUN = function(row){
-    row[row==99 | row==98 | row==91 | row==95 | row==44 | row[13]==6] <- 0
+    row[row==99 | row==98 | row==95 | row==91 | row==44 | row[13]==6] <- 0
     return(row)
   }))
 )
