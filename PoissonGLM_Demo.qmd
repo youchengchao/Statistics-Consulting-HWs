@@ -31,38 +31,8 @@ data(DoctorVisits)
 str(DoctorVisits)
 ```
 
-| 變數      | 解釋                                           | 資料格式 | 備註            |
-|:--------------|:--------------------------|:--------------|:--------------|
-| visits    | 過去兩週的看醫生(諮詢)的次數                   | num      | counts:0~9          |
-| gender    | 性別                                           | factor   | 1=male,2=female |
-| age       | 年齡                                           | num      | years/100:0.19~0.72       |
-| income    | 年收入(in 10,000 dollars)                      | num      | income/10000:0.0~1.5    |
-| illness   | 過去兩週不舒服的次數                           | num      | counts:0~5          |
-| reduced   | 過去兩週因生病或受傷的休養天數                 | num      | counts:0~14          |
-| health    | GHQ-12心理健康問卷分數(越低代表心理狀態越健康) | num      | 0\~12           |
-| private   | 有無私人醫療保險                               | factor   | 1=no,2=yes      |
-| freepoor  | 有無政府醫療保險(低收)                         | factor   | 1=no,2=yes      |
-| freerepat | 有無政府醫療保險(退伍軍人、高齡、失能)         | factor   | 1=no,2=yes      |
-| nchronic  | 有無不影響行動的慢性疾病                       | factor   | 1=no,2=yes      |
-| lchronic  | 有無限制行動的慢性疾病                         | factor   | 1=no,2=yes      |
-
-: 變數解釋
-
 ```{r}
-#| output: asis
-latex(describe(DoctorVisits),title="",file="")
-library(ggplot2)
-mytable <- data.frame(table(DoctorVisits$visits))
-ggplot(mytable, aes(x = factor(Var1), y = Freq)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  geom_text(aes(label = Freq), vjust = -0.5, hjust = 0.5) +  # 調整 vjust 和 hjust
-  labs(x = "Value", y = "Frequency") +
-  theme_minimal()
-```
-
-觀察變數分布建議使用Hmisc::describe()。
-
-```{r}
+#check how to combine the variables
 sum(DoctorVisits$private=="yes" & DoctorVisits$freepoor=="yes" & DoctorVisits$freerepat=="yes")
 sum(DoctorVisits$private=="yes" & DoctorVisits$freepoor=="yes")
 sum(DoctorVisits$private=="yes" & DoctorVisits$freerepat=="yes")
@@ -78,69 +48,99 @@ sum(DoctorVisits$nchronic=="no" & DoctorVisits$lchronic=="no")
 DoctorVisits$chronDis <- as.factor(apply(DoctorVisits[,9:10], MARGIN = 1, function(row){
   return(ifelse(row[1]=="yes", "nch",ifelse(row[2]=="yes", "lch", "N")))
 }))
-DoctorVisits <- DoctorVisits[,c(1:8,11)]
+DoctorVisits$isfemale <- ifelse(DoctorVisits$gender=="female",1,0)
+DoctorVisits <- DoctorVisits[,c(1,12,3:8,11)]
+head(DoctorVisits)
 ```
 
-將private, freepoor, freerepat三個變數合併成insurance類別變數 :
+將private, freepoor, freerepat三個變數合併成insurance類別變數 : P=private, GP=freepoor, GR=freerepat, N=沒有保險
 
-P=private, GP=freepoor, GR=freerepat, N=沒有保險
+nchronic,lchronic合併成chronDis類別變數 : nch=有慢性疾病但不限制行動, lch=有慢性疾病並且會限制行動, N=沒有慢性疾病
 
-nchronic,lchronic合併成chronDis類別變數 :
+| 變數      | 解釋                           | 資料格式 | 備註                                               |
+|:---------------|:-----------------------|:---------------|:---------------|
+| visits    | 過去兩週的看醫生(諮詢)的次數   | num      | counts:0\~9                                        |
+| isfemale  | 性別                           | num      | 1,0                                                |
+| age       | 年齡                           | num      | years/100:0.19\~0.72                               |
+| income    | 年收入(in 10,000 dollars)      | num      | income/10000:0.0\~1.5                              |
+| illness   | 過去兩週不舒服的次數           | num      | counts:0\~5                                        |
+| reduced   | 過去兩週因生病或受傷的休養天數 | num      | counts:0\~14                                       |
+| health    | GHQ-12心理健康問卷分數         | num      | mentally (healthy)0\~12(unhealthy)                 |
+| insurance | 醫療保險種類                   | factor   | P:私人, GP:政府低收, GR:政府高齡與其他, N:沒有保險 |
+| chronDis  | 慢性疾病種類                   | factor   | nch: 不限制行動, lch:限制行動, N:沒有慢性疾病      |
 
-nch=有慢性疾病但不限制行動, lch=有慢性疾病並且會限制行動, N=沒有慢性疾病
+: 變數解釋
+
+```{r}
+#| output: asis
+latex(describe(DoctorVisits),title="",file="")
+```
+
+```{r}
+library(ggplot2)
+mytable <- data.frame(table(DoctorVisits$visits))
+ggplot(mytable, aes(x = factor(Var1), y = Freq)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  geom_text(aes(label = Freq), vjust = -0.5, hjust = 0.5) +  # 調整 vjust 和 hjust
+  labs(x = "Value", y = "Frequency") +
+  theme_minimal()
+```
 
 # 建構模型
 
 ```{r}
 #| output: true
+#build interaction terms
 mydata <- model.matrix(~.*.-1, data = DoctorVisits[,-1])
-mydata <- data.frame(visits = DoctorVisits$visits, mydata[,-1])
+mydata <- data.frame(visits = DoctorVisits$visits, mydata)
 fullmodel <- glm(visits~.,data=mydata, family = poisson())
 nullmodel <- glm(visits~1,data=mydata, family = poisson())
-fit.step <- step(
+myGLM <- step(
   nullmodel,
   scope = list(lower = nullmodel,upper=fullmodel),
   direction = "both",k = log(5190), trace = FALSE)
-cat("The number of variables selected is:",length(fit.step$coefficients)-1)
-summary(fit.step)
+cat("The number of variables selected is:",length(myGLM$coefficients)-1)
+summary(myGLM)
 ```
 
-按照慣例做法，將未選中的主效應項加入模型 :
+因為建立模型是以解釋為目的，所以將未選中的主效應項加入模型:
 
-發現加入health會使得age.health與health不顯著，因此傾向保留主效應。
+若加入之後導致不顯著，可能發生共線性，這時傾向保留主項。
+
+```{r}
+oldformula <- myGLM$formula
+newformula <- update(oldformula, .~.+health+income+insuranceGP+insuranceN)
+myGLM <- glm(newformula, data = mydata, family = poisson())
+summary(myGLM)
+oldformula <- myGLM$formula
+newformula <- update(oldformula, .~.-age.health-income.insuranceN)
+myGLM <- glm(newformula, data = mydata, family = poisson())
+summary(myGLM)
+lmtest::lrtest(object = myGLM,
+  glm(visits~.-chronDis-isfemale,
+      DoctorVisits,
+      family=poisson()) 
+)
+```
+
+Goodness-of-fit test的結果顯示，加入交互項的模型顯著優於僅有主項的模型。
 
 ```{r}
 #| output: asis
-oldformula <- fit.step$formula
-newformula <- update(oldformula, .~.-age.health+health)
-fit.step <- glm(newformula, data = mydata, family = poisson())
-output <- summary(fit.step)$coefficients
+output <- summary(myGLM)$coefficients
 output <- data.frame(
-  coef = round(output[,1],3),
-  sd = round(output[,2],3),
-  z = round(output[,3],3),
-  pvalue = round(output[,4],3)
+  coef = round(output[,1],4),
+  sd = round(output[,2],4),
+  z = round(output[,3],4),
+  pvalue = round(output[,4],4)
 )
 output$sig <- sapply(output$pvalue, function(p) {
   ifelse(p < 0.001,"***",ifelse(p < 0.01,"**",ifelse(p < 0.05,"*","")))
 })
 colnames(output) <- c("Coefficients", "Std Error", "Z value", "P value", "Significance")
-output <- output[c(1,3,8,5,2,10,4,6,7,9),]
+output <- output[c(1,5,3,10,7,11,2,9,4,6,8),]
 latex(output, title="",file="",caption = "fitted model")
 ```
-
-```{r}
-x <- seq(0, 0.8, by = 0.001)
-curve(expr = exp(0.567 - 0.856 * x), from = 0, to = 0.8, 
-      xlab = "Age", ylab = "ratio", 
-      col = "blue", lwd = 2, main = expression(mu[female] / mu[male]))
-grid()
-abline(h=1, col="red")
-points(x = 0.567/0.856, y = 1, col="black")
-text(x = 0.567/0.856, y = 1.1,paste0("x is ",round(0.567/0.856,2)))
-```
-
-
 
 # check for overdispersion
 
@@ -151,65 +151,71 @@ text(x = 0.567/0.856, y = 1.1,paste0("x is ",round(0.567/0.856,2)))
 GLM.df <- function(model) dim(model$data)[1] - length(model$coefficients)
 
 # glm的$residual是working residual
-sum(fit.step$residuals==resid(fit.step, type = "working"))
+sum(myGLM$residuals==resid(myGLM, type = "working"))
 
 # residual
-resid(fit.step, type = "deviance")
-resid(fit.step, type = "pearson")
+resid(myGLM, type = "deviance")
+resid(myGLM, type = "pearson")
 
 # poisson glm的pearson residual
-(DoctorVisits$visits - fit.step$fitted.values)/ sqrt(fit.step$fitted.values)
+(DoctorVisits$visits - myGLM$fitted.values)/ sqrt(myGLM$fitted.values)
 
 # standardized residual = residual / df of residual
-rstandard(fit.step, type = "deviance")
-rstandard(fit.step, type = "pearson")
+rstandard(myGLM, type = "deviance")
+rstandard(myGLM, type = "pearson")
 ```
 
 ## estimation of dispersion parameter
 
 ```{r}
-# Deviance Method
-dispersion_deviance <- sum(resid(fit.step, type = "deviance")^2)/fit.step$df.residual
-cat("estimated dispersion by deviance:", dispersion_deviance)
-# Pearson Method
-dispersion_pearson <- sum(resid(fit.step, type = "pearson")^2)/fit.step$df.residual
-cat("estimated dispersion by pearson:", dispersion_pearson)
+phi_est<-sum(
+  resid(myGLM, type = "pearson")^2
+  )/myGLM$df.residual
+cat("estimated dispersion by pearson:", phi_est)
 ```
 
 ## residual analysis
 
 ```{r}
 # 檢查pearson residual的變異數是否有等於1
-cat("Variance of Pearson residual:",var(resid(fit.step, type = "pearson")))
+cat("Variance of Pearson residual:",var(resid(myGLM, type = "pearson")))
 
 #殘差圖(記得依fitted value大小排序)
-par(mfrow = c(1, 2))
-plot(sort(fit.step$fitted.values),
-     resid(fit.step, type = "deviance")[order(fit.step$fitted.values, decreasing = FALSE)],
-     main="Fig 2.1 Deviance resudual plot", ylab = "residual", xlab="fitted value",
-     ylim = c(-6,13), xlim=c(0,4))
+plot(sort(myGLM$fitted.values),
+     rstandard(myGLM, type = "pearson")[order(myGLM$fitted.values, decreasing = FALSE)],
+     main="Std Pearson residual plot", ylab = "residual", xlab="fitted value",
+     ylim = c(-3,14), xlim=c(0,14))
 abline(0,0)
-plot(sort(fit.step$fitted.values),
-     resid(fit.step, type = "pearson")[order(fit.step$fitted.values, decreasing = FALSE)],
-     main="Fig 2.2 Pearson resudual plot", ylab = "residual", xlab="fitted value",
-     ylim = c(-6,13), xlim=c(0,4))
+plot(sort(myGLM$fitted.values),
+     resid(myGLM, type = "pearson")[order(myGLM$fitted.values, decreasing = FALSE)],
+     main="Pearson residual plot", ylab = "residual", xlab="fitted value",
+     ylim = c(-3,14), xlim=c(0,14))
 abline(0,0)
+abline(0,1)
 ```
 
-## dispersion test
+## overdispersion test
 
 ```{r}
-dispersiontest(fit.step,alternative = "greater",
-               trafo = 1)
-dispersiontest(fit.step,alternative = "greater",
-               trafo = function(mu) mu)
-dispersiontest(fit.step,alternative = "greater",
-               trafo = 2)
-dispersiontest(fit.step,alternative = "greater",
-               trafo = function(mu) mu^2)
-dispersiontest(fit.step,alternative = "greater")
-dispersiontest(fit.step,alternative = "two.sided")
-dispersiontest(fit.step,alternative = "less")
+#g(mu) = mu
+dispersiontest(myGLM,alternative = "greater", trafo = 1)
+dispersiontest(myGLM,alternative = "greater", trafo = function(mu) mu)
+dispersiontest(myGLM,alternative = "greater")
+
+#g(mu)=mu^2
+dispersiontest(myGLM,alternative = "greater", trafo = 2)
+dispersiontest(myGLM,alternative = "greater", trafo = function(mu) mu^2)
+dispersiontest(myGLM,alternative = "greater")
+```
+
+```{r}
+overdisp::overdisp(
+  x = myGLM$model,
+  dependent.position = 1,
+  predictor.position = 2:dim(myGLM$model)[2])
+
+
 
 ```
+
 
