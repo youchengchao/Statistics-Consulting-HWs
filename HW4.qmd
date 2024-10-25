@@ -22,14 +22,22 @@ documentclass: article
 ```{r}
 #| output: FALSE
 #| warning: FALSE
-library(haven)
+library(rio)
+library(labelled)
 library(Hmisc)
 library(dplyr)
 library(ggplot2)
 library(MASS)
-pollsav <- read_sav("poll.sav")
-write.csv(pollsav, file = "poll.csv", row.names = FALSE)
-pollcsv <- read.csv("poll.csv")
+pollsav <- import("poll.sav")
+str(pollsav)
+pollcsv <- data.frame(
+  apply(pollsav,2,function(col){
+    as.factor(
+      remove_attributes(col,
+                        attributes = c("label","format.spss",
+                                       "display_width","labels")))
+}))
+pollcsv <- remove_attributes(pollcsv, "dimnames")
 ```
 
 1. 進行資料整理、資料清洗、missing values診斷、資料視覺化。 
@@ -58,32 +66,37 @@ Dimension of the Data : ***1671 samples × 15 columns***
 
 : 變數解釋
 
+```{r}
+#| output: asis
+latex(describe(pollcsv), file="")
+```
+
 | Variables  | Missing  |
 |:-----------|:---------|
 | V1         | 98,99    |
 | V2、V3     | 44,98,99 |
-| V4_1\~V4_8 | 98,99    |
-| V5         | 98,99    |
+| V4_1\~V4_8 | 91,98,99 |
+| V5         | 91,98,99 |
 | V6         | 6,99     |
 | V7         | 95,99    |
 | V8         | 99       |
 
 : 遺失值定義
 
-另外我們發現有些數據可能在轉換時發生錯誤，因此將91視為與98、99同類。
-而我們也發現有42筆從第一題開始就是遺失值的數據，因此將他們移除後，資料維度是***1629 samples × 15 columns***。
 ```{r}
 #| output: false
 #| warning: false
 pollcsv <- data.frame(
   t(apply(pollcsv,MARGIN = 1, FUN = function(row){
-    row[row==99 | row==98 | row==95 | row==91 | row==44 | row[13]==6] <- 0
+    row[row==99 | row==98 | row==95 | row==91 | row==44] <- NA
     return(row)
   }))
 )
-pollcsv <- pollcsv[pollcsv$v1!=0,]
-pollcsv[] <- lapply(pollcsv, function(item) return(as.factor(item)))
-n <- dim(pollcsv)[1]   #樣本數
+pollcsv$v6[pollcsv$v6==6] <- NA
+```
+
+```{r}
+DataExplorer::plot_missing(pollcsv, title = "Fig 1: Missing Value")
 ```
 
 # 一、分析所有候選人的知名度、支持度
@@ -105,11 +118,12 @@ count4 <- unlist(lapply(factor(1:10), function(x){
         function(row) if(x %in% row) return (TRUE)))))
 }))
 #計算1~10號候選人在第5題出現的次數
-count5 <- unlist(lapply(factor(0:10),function(x){
-  return(sum(pollcsv$v5==x))
+count5 <- unlist(lapply(1:10,function(x){
+  return(sum(pollcsv$v5[!is.na(pollcsv$v5)]==x))
 } ))
+
 #有效樣本數
-n_prime <- n-count5[1]
+n_prime <- sum(count5)
 #知名度 = 出現次數/sample size
 p <- data.frame(factor(1:10), popularity=round(count4/n,3), count4)
 #支持度 = 出現次數/(sample size-沒回答的)
