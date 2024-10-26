@@ -22,33 +22,41 @@ documentclass: article
 ```{r}
 #| output: FALSE
 #| warning: FALSE
-library(rio)
-library(labelled)
-library(Hmisc)
-library(dplyr)
-library(ggplot2)
-library(MASS)
+if(!require(rio)){
+  install.packages("rio")
+  library(rio)
+}
+if(!require(labelled)){
+  install.packages("labelled")
+  library(labelled)
+}
+if(!require(Hmisc)){
+  install.packages("Hmisc")
+  library(Hmisc)
+}
+if(!require(dplyr)){
+  install.packages("dplyr")
+  library(dplyr)
+}
+if(!require(ggplot2)){
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if(!require(MASS)){
+  install.packages("MASS")
+  library(MASS)
+}
 pollsav <- import("poll.sav")
 str(pollsav)
-pollcsv <- data.frame(
-  apply(pollsav,2,function(col){
-    as.factor(
-      remove_attributes(col,
-                        attributes = c("label","format.spss",
-                                       "display_width","labels")))
-}))
-pollcsv <- remove_attributes(pollcsv, "dimnames")
 ```
 
-1. 進行資料整理、資料清洗、missing values診斷、資料視覺化。 
+# 請提供3號候選人的競選策略(需在何地、對何人進行拉票)
 
-2. 分析所有候選人的支持率(建議參考附件中檔案方式整理)
+# 以V4回答出候選人人數來評估受訪者「政治熱衷程度」，建立合適統計模型分析該變數並說明使用該方法的原因。
 
-3. 請提供3號候選人的競選策略(需在何地、對何人進行拉票)
+# 請建立3號候選人支持率(具資料不平衡特性)的預測模式，請說明如何處理資料不平衡的問題。
 
-4. 以V4回答出候選人人數來評估受訪者「政治熱衷程度」，建立合適統計模型分析該變數並說明使用該方法的原因。
 
-5. 請建立3號候選人支持率(具資料不平衡特性)的預測模式，請說明如何處理資料不平衡的問題。
 
 # 資料簡介
 
@@ -66,8 +74,22 @@ Dimension of the Data : ***1671 samples × 15 columns***
 
 : 變數解釋
 
+
+# 資料前處理
+
+## 資料整理
+
 ```{r}
 #| output: asis
+pollcsv <- data.frame(
+  apply(pollsav,2,function(col){
+    as.factor(
+      remove_attributes(col,
+                        attributes = c("label","format.spss",
+                                       "display_width","labels")))
+})) #因為sav格式的"屬性"會造成describe
+pollcsv <- remove_attributes(pollcsv, "dimnames")
+n <- dim(pollcsv)[1]
 latex(describe(pollcsv), file="")
 ```
 
@@ -83,9 +105,12 @@ latex(describe(pollcsv), file="")
 
 : 遺失值定義
 
+## 遺失值比例圖
+
+將定義的遺失值轉換成NA並以遺失值比例圖(by variable)的方式呈現。
+考量到遺失值的性質，我們並未刪除任何資料，決定後續對不同變數分析時再移除。
+
 ```{r}
-#| output: false
-#| warning: false
 pollcsv <- data.frame(
   t(apply(pollcsv,MARGIN = 1, FUN = function(row){
     row[row==99 | row==98 | row==95 | row==91 | row==44] <- NA
@@ -93,130 +118,49 @@ pollcsv <- data.frame(
   }))
 )
 pollcsv$v6[pollcsv$v6==6] <- NA
-```
-
-```{r}
 DataExplorer::plot_missing(pollcsv, title = "Fig 1: Missing Value")
 ```
+# 候選人支持率分析
 
-# 一、分析所有候選人的知名度、支持度
-
-指標定義:
-
-1.  $\text{知名度} = \frac{\text{第四題出現次數}}{\text{樣本數}}$
-
-2.  $\text{支持度} = \frac{\text{第五題出現次數}}{\text{有效樣本數}} = \frac{\text{第五題出現次數}}{\text{樣本數-無表態者}}$
+支持度定義 : $\text{支持度} = \frac{\text{第五題出現次數}}{\text{樣本數}}$
 
 ```{r}
-#計算1~10號候選人在複選題出現的次數
-count4 <- unlist(lapply(factor(1:10), function(x){
-  return(
-    sum(unlist(
-      apply(
-        pollcsv[,4:11],
-        MARGIN = 1,
-        function(row) if(x %in% row) return (TRUE)))))
-}))
-#計算1~10號候選人在第5題出現的次數
-count5 <- unlist(lapply(1:10,function(x){
-  return(sum(pollcsv$v5[!is.na(pollcsv$v5)]==x))
+#計算總體支持度
+count5.total <- unlist(lapply(1:11,function(x){
+  if(x==11) return(sum(is.na(pollcsv$v5)))
+  else return(sum(pollcsv$v5[!is.na(pollcsv$v5)]==x))
 } ))
+#計算分區支持度(北區中西區)
+North <-subset(pollcsv,pollcsv$v1==1)
+MidWest <-subset(pollcsv,pollcsv$v1==2)
+n1 <- dim(North)[1]
+n2 <- dim(MidWest)[1]
+count5.North <- unlist(lapply(1:11,function(x){
+  if(x==11) return(sum(is.na(North$v5)))
+  else return(sum(North$v5[!is.na(North$v5)]==x))
+} ))
+count5.MidWest <- unlist(lapply(1:11,function(x){
+  if(x==11) return(sum(is.na(MidWest$v5)))
+  else return(sum(MidWest$v5[!is.na(MidWest$v5)]==x))
+} ))
+#計算性別支持度
+male <-subset(pollcsv,pollcsv$v8==1)
+female <-subset(pollcsv,pollcsv$v8==2)
+n.male <- dim(male)[1]
+n.female <- dim(female)[1]
+count5.male <- unlist(lapply(1:11,function(x){
+  if(x==11) return(sum(is.na(male$v8)))
+  else return(sum(male$v8[!is.na(male$v8)]==x))
+} ))
+count5.female <- unlist(lapply(1:11,function(x){
+  if(x==11) return(sum(is.na(female$v8)))
+  else return(sum(female$v8[!is.na(female$v8)]==x))
+} ))
+#計算年齡支持度
 
-#有效樣本數
-n_prime <- sum(count5)
-#知名度 = 出現次數/sample size
-p <- data.frame(factor(1:10), popularity=round(count4/n,3), count4)
-#支持度 = 出現次數/(sample size-沒回答的)
-s <- data.frame(
-  factor(1:10),
-  support.level=round(count5[2:11]/n_prime,3),
-  count5[2:11]
-)
-#將候選人依據知名度與支持度排序
-p <- p[order(p$popularity, decreasing = TRUE ),]
-s <- s[order(s$support.level, decreasing = TRUE ),]
-df.total <- cbind(p,s)
-row.names(df.total) <- 1:10
-#依據區將資料分成Dist1與Dist2
-Dist1 <-subset(pollcsv,pollcsv$v1==1)
-Dist2 <-subset(pollcsv,pollcsv$v1==2)
-n1 <- dim(Dist1)[1]
-n2 <- dim(Dist2)[1]
-#第一區的計算
-#候選人在複選題出現的次數
-count4_1 <- unlist(lapply(factor(1:10), function(x){
-  return(
-    sum(unlist(
-      apply(
-        Dist1[,4:11],
-        MARGIN = 1,
-        function(row) if(x %in% row) return (TRUE)))))
-}))
-#候選人在第5題出現的次數
-count5_1 <- unlist(lapply(factor(0:10),function(x){
-  return(sum(Dist1$v5==x))
-} ))
-n1_prime <- n1-count5_1[1]
-#知名度 = 出現次數/sample size
-p_1 <- data.frame(factor(1:10), popularity=round(count4_1/n1,3), count4_1)
-#支持度 = 出現次數/(sample size-沒回答的)
-s_1 <- data.frame(
-  factor(1:10), 
-  support.level=round(count5_1[2:11]/n1_prime,3),
-  count5_1[2:11]
-)
-#將候選人依據知名度與支持度排序
-p_1 <- p_1[order(p_1$popularity, decreasing = TRUE ),]
-s_1 <- s_1[order(s_1$support.level, decreasing = TRUE ),]
-df.R1 <- cbind(p_1,s_1)
-row.names(df.R1) <- 1:10
-#第二區的計算
-#候選人在複選題出現的次數
-count4_2 <- unlist(lapply(factor(1:10), function(x){
-  return(
-    sum(unlist(
-      apply(
-        Dist2[,4:11],
-        MARGIN = 1,
-        function(row) if(x %in% row) return (TRUE)))))
-}))
-#候選人在第5題出現的次數
-count5_2 <- unlist(lapply(factor(0:10),function(x){
-  return(sum(Dist2$v5==x))
-} ))
-n2_prime <- n2-count5_2[1]
-#知名度 = 出現次數/sample size
-p_2 <- data.frame(factor(1:10), popularity=round(count4_2/n2,3), count4_2)
-#支持度 = 出現次數/(sample size-沒回答的)
-s_2 <- data.frame(
-  factor(1:10),
-  support.level=round(count5_2[2:11]/n2_prime,3),
-  count5_2[2:11]
-)
-#將候選人依據知名度與支持度排序
-p_2 <- p_2[order(p_2$popularity, decreasing = TRUE ),]
-s_2 <- s_2[order(s_2$support.level, decreasing = TRUE ),]
-df.R2 <- cbind(p_2,s_2)
-row.names(df.R2) <- 1:10
 ```
 
-```{r, results='hold'}
-#| output: asis
-alist <- list(df.R1, df.R2, df.total)
-blist <- c("第一區候選人知名度與支持度","第二區候選人知名度與支持度","兩區合併候選人知名度與支持度")
-for(i in 1:3){
-  latex(
-    alist[[i]],
-    title="",
-    file = "",
-    caption = blist[i],
-    booktabs = TRUE,
-    colheads = c('號碼','知名度', '計數',"號碼",'支持度','計數')
-  )
-}
-```
 
-表三至表五是所有候選人的分區及合併之知名度與支持度。
 
 # 二、候選人3的知名度與支持度
 
