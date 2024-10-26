@@ -54,6 +54,10 @@ if(!require(twmap)){
   remotes::install_github("shihjyun/twmap")
   library(twmap)
 }
+if(!require(showtext)){
+  install.packages("showtext")
+  library(showtext)
+}
 pollsav <- import("poll.sav")
 str(pollsav)
 ```
@@ -203,6 +207,7 @@ twmap::tw_village #村里界圖
 ## 三號候選人之里heatmap
 
 ```{r}
+#| warning: false
 #計算三號候選人對於里的支持度
 support.li_north <- data.frame(
   support = sapply(1:33, function(i){
@@ -224,11 +229,17 @@ myMap <- tw_village[
   tw_village$COUNTYNAME == "臺南市" & 
   (tw_village$TOWNNAME=="中西區"| tw_village$TOWNNAME=="北區") ,]
 myMap <- merge(x = myMap, y = rbind(support.li_midwest, support.li_north), by = "VILLNAME")
+showtext_auto()
 ggplot(data = myMap) +
-  geom_sf(aes(fill = support)) +
-  scale_fill_gradientn(colors = c("#FFE0BD", "#FFCD94", "#EAC086", "#C68642", "#8D5524"))+
-  ggtitle("Fig 2: Support level heatmap for the 3rd candidate") +
-  theme_minimal()
+  geom_sf(aes(fill = support)) +  # 填充區域
+  geom_sf(
+    data = summarize(
+      group_by(myMap,TOWNNAME),
+      geometry = st_union(st_buffer(geometry,dist = 0.01))) , fill = NA, color = 'red') + 
+      #st_buffer是為了解決union之後內部還有線條的問題
+  geom_sf_text(aes(label=VILLNAME), size = 2, color = "white")+
+  ggtitle("Fig 2: 三號候選人支持度熱區圖")+
+  theme_gray(base_family ="Arial")
 ```
 
 
