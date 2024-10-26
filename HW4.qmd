@@ -65,7 +65,7 @@ Dimension of the Data : ***1671 samples × 15 columns***
 | Variables  | Explanation         | remark                                                 |
 |----------------|----------------|-----------------------------------------|
 | V1         | District            | 1:北區, 2:中西區                                       |
-| V2、V3     | Li                  |                                                        |
+| V2、V3     | Li                  | v2: 33個里, v3: 20個里                                 |
 | V4_1\~V4_8 | Candidate known     | 1\~10號                                                |
 | V5         | Candidate supported | 1\~10號                                                |
 | V6         | Age                 | 1:20到29歲,2:30到39歲,3:40到49歲,4:50到59歲,5:60歲以上 |
@@ -126,49 +126,45 @@ DataExplorer::plot_missing(pollcsv, title = "Fig 1: Missing Value")
 ```{r}
 #| output: asis
 #計算總體支持度
-count5.total <- unlist(lapply(1:11,function(x){
+count5.total <- sapply(1:11,function(x){
   if(x==11) return(sum(is.na(pollcsv$v5))/n)
   else return(sum(pollcsv$v5[!is.na(pollcsv$v5)]==x)/n)
-} ))
+} )
 #計算分區支持度(北區中西區) v1
 support.district <- do.call(rbind, lapply(1:2,function(i){
   tempdata <- pollcsv[pollcsv$v1==i,]
   n.temp <- dim(tempdata)[1]
-  return(unlist(
-    lapply(1:11, function(x){
-      if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
-      else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
-    })))
+  return(sapply(1:11, function(x){
+    if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
+    else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
+    }))
 }))
 #計算性別支持度 v8
 support.sex <- do.call(rbind, lapply(1:2,function(i){
   tempdata <- pollcsv[pollcsv$v8==i,]
   n.temp <- dim(tempdata)[1]
-  return(unlist(
-    lapply(1:11, function(x){
-      if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
-      else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
-    })))
+  return(sapply(1:11, function(x){
+    if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
+    else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
+    }))
 }))
 #計算年齡支持度 v6
 support.age <- do.call(rbind, lapply(1:5,function(i){
   tempdata <- pollcsv[pollcsv$v6==i,]
   n.temp <- dim(tempdata)[1]
-  return(unlist(
-    lapply(1:11, function(x){
-      if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
-      else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
-    })))
+  return(sapply(1:11, function(x){
+    if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
+    else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
+    }))
 }))
 #計算教育程度支持度 v7
 support.edu <- do.call(rbind, lapply(1:5,function(i){
   tempdata <- pollcsv[pollcsv$v7==i,]
   n.temp <- dim(tempdata)[1]
-  return(unlist(
-    lapply(1:11, function(x){
-      if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
-      else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
-    })))
+  return(sapply(1:11, function(x){
+    if(x==11) return(sum(is.na(tempdata$v5))/n.temp)
+    else return(sum(tempdata$v5[!is.na(tempdata$v5)]==x)/n.temp)
+    }))
 }))
 table.support <- rbind(
   count5.total,
@@ -207,9 +203,32 @@ twmap::tw_village #村里界圖
 ## 三號候選人之里heatmap
 
 ```{r}
-plot(tw_village[
+#計算三號候選人對於里的支持度
+support.li_north <- data.frame(
+  support = sapply(1:33, function(i){
+    tempdata <- pollcsv[pollcsv$v2==i,]
+    n.temp <- dim(tempdata)[1]
+    return(sum(tempdata$v5[!is.na(tempdata$v5)]==3)/n.temp)}
+  ),
+  VILLNAME = names(attr(pollsav$v2,"labels"))[1:33]
+)
+support.li_midwest <- data.frame(
+  support = sapply(1:20, function(i){
+    tempdata <- pollcsv[pollcsv$v3==i,]
+    n.temp <- dim(tempdata)[1]
+    return(sum(tempdata$v5[!is.na(tempdata$v5)]==3)/n.temp)
+  }),
+  VILLNAME = names(attr(pollsav$v3,"labels"))[1:20]
+)
+myMap <- tw_village[
   tw_village$COUNTYNAME == "臺南市" & 
-  (tw_village$TOWNNAME=="中西區"| tw_village$TOWNNAME=="北區") ,]$geometry)
+  (tw_village$TOWNNAME=="中西區"| tw_village$TOWNNAME=="北區") ,]
+myMap <- merge(x = myMap, y = rbind(support.li_midwest, support.li_north), by = "VILLNAME")
+ggplot(data = myMap) +
+  geom_sf(aes(fill = support)) +
+  scale_fill_gradientn(colors = c("#FFE0BD", "#FFCD94", "#EAC086", "#C68642", "#8D5524"))+
+  ggtitle("Fig 2: Support level heatmap for the 3rd candidate") +
+  theme_minimal()
 ```
 
 
