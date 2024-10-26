@@ -206,7 +206,7 @@ twmap::tw_village #村里界圖
 
 ## 三號候選人之里heatmap
 
-```{r}
+```{r, out.width="100%"}
 #| warning: false
 #計算三號候選人對於里的支持度
 support.li_north <- data.frame(
@@ -239,7 +239,8 @@ ggplot(data = myMap) +
       #st_buffer是為了解決union之後內部還有線條的問題
   geom_sf_text(aes(label=VILLNAME), size = 2, color = "white")+
   ggtitle("Fig 2: 三號候選人支持度熱區圖")+
-  theme_gray(base_family ="Arial")
+  labs(fill = "支持度")+
+  theme_gray(base_family ="Arial", base_size = 10)
 ```
 
 
