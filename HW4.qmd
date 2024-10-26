@@ -181,7 +181,8 @@ rownames(table.support) <- c(
 colnames(table.support) <- c(1:10,"沒決定")
 latex(table.support, file = "",
       rgroup = c("總計","分區","性別","年齡","學歷"),
-      n.rgroup = c(1,2,2,5,5)
+      n.rgroup = c(1,2,2,5,5),
+      caption = "候選人支持度整理表"
 )
 ```
 
