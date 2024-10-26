@@ -46,6 +46,14 @@ if(!require(MASS)){
   install.packages("MASS")
   library(MASS)
 }
+if(!require(sf)){
+  install.packages("sf")
+  library(sf)
+}
+if(!require(twmap)){
+  remotes::install_github("shihjyun/twmap")
+  library(twmap)
+}
 pollsav <- import("poll.sav")
 str(pollsav)
 ```
@@ -179,7 +187,7 @@ rownames(table.support) <- c(
   "20到29歲","30到39歲","40到49歲","50到59歲","60歲以上",
   "小學","國中","高中","專科","大學以上 ")
 colnames(table.support) <- c(1:10,"沒決定")
-latex(table.support, file = "",
+latex(table.support, file = "",title="",
       rgroup = c("總計","分區","性別","年齡","學歷"),
       n.rgroup = c(1,2,2,5,5),
       caption = "候選人支持度整理表"
@@ -187,6 +195,23 @@ latex(table.support, file = "",
 ```
 
 # 三號候選人的競選策略(需在何地、對何人進行拉票)
+
+```{r}
+#| eval: false
+#| echo: false
+twmap::tw_county #縣市界圖
+twmap::tw_town #鄉鎮市區界圖
+twmap::tw_village #村里界圖
+```
+
+## 三號候選人之里heatmap
+
+```{r}
+plot(tw_village[
+  tw_village$COUNTYNAME == "臺南市" & 
+  (tw_village$TOWNNAME=="中西區"| tw_village$TOWNNAME=="北區") ,]$geometry)
+```
+
 
 # 受訪者政治熱衷程度之統計模型(需說明使用此模型之理由)
 
