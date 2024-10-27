@@ -22,15 +22,15 @@ documentclass: article
 ```{r}
 #| output: FALSE
 #| warning: FALSE
-if(!require(rio)){
+if(!require(rio)){       #read sav file
   install.packages("rio")
   library(rio)
 }
-if(!require(labelled)){
+if(!require(labelled)){  #remove attribute of sav data
   install.packages("labelled")
   library(labelled)
 }
-if(!require(Hmisc)){
+if(!require(Hmisc)){     #describe
   install.packages("Hmisc")
   library(Hmisc)
 }
@@ -46,15 +46,15 @@ if(!require(MASS)){
   install.packages("MASS")
   library(MASS)
 }
-if(!require(sf)){
+if(!require(sf)){        #render map
   install.packages("sf")
   library(sf)
 }
-if(!require(twmap)){
+if(!require(twmap)){     #map data
   remotes::install_github("shihjyun/twmap")
   library(twmap)
 }
-if(!require(showtext)){
+if(!require(showtext)){  #show zw-tw in ggplot2
   install.packages("showtext")
   library(showtext)
 }
@@ -245,6 +245,57 @@ ggplot(data = myMap) +
 
 
 # 受訪者政治熱衷程度之統計模型(需說明使用此模型之理由)
+
+```{r}
+#| warning: false
+pollcsv$known_count <- rowSums(!is.na(pollcsv[,c("v4_1", "v4_2", "v4_3", "v4_4", "v4_5", "v4_6", "v4_7", "v4_8")]))
+
+count_da <- sapply(0:8,function(x){
+  sum(pollcsv$known_count==x)
+})
+
+count_data <- data.frame(
+  Times = factor(0:8),
+  Values = count_da
+)
+
+ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+
+  geom_bar(stat = 'identity')+
+  scale_x_discrete(breaks = 0:8)+
+  labs(title='Known Times', x = 'Times', y = 'Frequency')+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+
+poiv4<-glm(known_count~v1+v6+v7+v8, data = pollcsv, family = poisson())
+summary(poiv4)
+
+nbv4 <- glm.nb(known_count~v1+v6+v7+v8, data = pollcsv)
+summary(nbv4)
+
+if(!require(AER)){
+  install.packages("AER")
+  library(AER)
+}
+dispersiontest(poiv4)
+lrtest(poiv4,nbv4) #決定要用Poisson 還是 Negative binomial
+
+ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+ #建立次數圖
+  geom_bar(stat = 'identity')+
+  scale_x_discrete(breaks = 0:8)+
+  labs(title='Known Times', x = 'Times', y = 'Frequency')+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+
+if(!require(pscl)){
+  install.packages("pscl")
+  library(pscl)
+}
+zinb_model <- zeroinfl(known_count ~ v1 +v6+v7+v8, data = pollcsv, dist = "negbin")#建立zero-inflated negative model
+summary(zinb_model)
+
+lrtest(nbv4,zinb_model) #決定要用Negative 或 zero-inflated
+```
+
 
 # 三號候選人支持率預測模式
 
