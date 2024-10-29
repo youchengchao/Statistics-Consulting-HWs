@@ -305,10 +305,91 @@ lrtest(nbv4,zinb_model) #決定要用Negative 或 zero-inflated
 
 
 
-# 三號候選人支持率預測模式
+# 三號候選人支持率預測模式 與資料不平衡處理
+```{r, out.width="100%"}
+set.seed(123)  # For reproducibility
+library(smotefamily)
+library(dplyr)
+new_poll <- pollcsv[,c(1,13,14,15,16)]
+new_poll_wei <- pollcsv[,c(1,13,14,15,16)]
+head(new_poll)
+#由於在V1 V6 V7 V8當中，缺失值並不多，因此我選擇刪除缺失值
+new_poll <- na.omit(new_poll)
+new_poll_wei <- na.omit(new_poll_wei)
+new_poll_wei$sup3 <- as.numeric(new_poll_wei$sup3)
+#轉換為數值才能使用smote
+new_poll <- new_poll %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate_if(is.factor, as.numeric)
 
-## 資料不平衡處理
+poll_balanced <- SMOTE(X = new_poll[, -which(names(new_poll) == "sup3")], 
+                    target = new_poll$sup3, 
+                    K = 5)
+table(poll_balanced$data$class)
 
+poll_balanced <- poll_balanced$data
+#由於smote 過後他新增的資料可能會有不是整數的狀況，然而在這筆資料當中應該要為整數，也因此我選擇將那些有小數點的資料四捨五入
+poll_balanced[] <- lapply(poll_balanced, function(x) if(is.numeric(x)) round(x) else x)
+poll_balanced$class <- as.numeric(poll_balanced$class)
+#轉換為factor
+poll_balanced[c("v1", "v6", "v7", "v8")] <- lapply(poll_balanced[c("v1", "v6", "v7", "v8")], as.factor)
+describe(poll_balanced)
+
+
+train_nrow <- floor(0.7 * nrow(poll_balanced))
+train_idx <- sample(seq_len(nrow(poll_balanced)), size=train_nrow)
+
+poll_training <- poll_balanced[train_idx, ]
+cat("Training set size:", nrow(poll_training))
+
+poll_testing <- poll_balanced[-train_idx, ]
+cat("Test set size:", nrow(poll_testing))
+
+sup3_log <- glm(class ~ ., data = poll_training, family = binomial)
+summary(sup3_log)
+pred_prob <- predict(sup3_log, poll_testing, type = "response")
+
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+library(caret)
+confusionMatrix(factor(pred_class), factor(poll_testing$class))
+
+#Weighted logistic regression
+
+class_counts <- table(new_poll_wei$sup3)
+class_counts
+
+train_nrow_wei <- floor(0.7 * nrow(new_poll_wei))
+train_idx_wei <- sample(seq_len(nrow(new_poll_wei)), size=train_nrow_wei)
+
+poll_training_wei <- new_poll_wei[train_idx_wei, ]
+
+weights <- ifelse(poll_training_wei$sup3 == 1,
+                  class_counts[1] / (class_counts[1]+class_counts[2]),
+                  class_counts[2] / (class_counts[1]+class_counts[2]))  
+poll_testing_wei <- new_poll_wei[-train_idx_wei, ]
+
+weighted_logit_model <- glm(sup3 ~ v1 + v6 + v7 + v8, 
+                            data = poll_training_wei, 
+                            family = binomial, 
+                            weights = weights)
+
+summary(weighted_logit_model)
+
+pred_prob_wei <- predict(weighted_logit_model, poll_testing_wei, type = "response")
+
+library(pROC)
+#使用roc curve 找出最佳的閥值
+roc_curve <- roc(poll_testing_wei$sup3, pred_prob_wei)
+best_coords <- coords(roc_curve, "best", best.method = "youden")
+
+
+pred_class_wei <- ifelse(pred_prob_wei > best_coords$threshold, 1, 0)
+
+confusionMatrix(factor(pred_class_wei), factor(poll_testing_wei$sup3))
+
+```
+在處理不平衡資料的時候，我選擇使用smote 以及 weighted logistic regression 來處理。我分別將他們都切成訓練集以及測試集，並且對他們做confusion matrics 以此來判斷哪個模型較佳。在這過程當中，weighted logistic regression 在最後分類的accuracy rate 高達 0.7214，而smote 的accuracy rate 則僅有0.5825，因此我認為使用weighted logistic regression在這裡是較佳的。此外，weighted權重的部分我是以比例去決定的，以此減少資料的不平衡。
 
 
 
