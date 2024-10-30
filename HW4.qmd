@@ -22,42 +22,16 @@ documentclass: article
 ```{r}
 #| output: FALSE
 #| warning: FALSE
-if(!require(rio)){       #read sav file
-  install.packages("rio")
-  library(rio)
-}
-if(!require(labelled)){  #remove attribute of sav data
-  install.packages("labelled")
-  library(labelled)
-}
-if(!require(Hmisc)){     #describe
-  install.packages("Hmisc")
-  library(Hmisc)
-}
-if(!require(dplyr)){
-  install.packages("dplyr")
-  library(dplyr)
-}
-if(!require(ggplot2)){
-  install.packages("ggplot2")
-  library(ggplot2)
-}
-if(!require(MASS)){
-  install.packages("MASS")
-  library(MASS)
-}
-if(!require(sf)){        #render map
-  install.packages("sf")
-  library(sf)
-}
-if(!require(twmap)){     #map data
-  remotes::install_github("shihjyun/twmap")
-  library(twmap)
-}
-if(!require(showtext)){  #show zw-tw in ggplot2
-  install.packages("showtext")
-  library(showtext)
-}
+library(rio)           #read sav file
+library(labelled)      #remove attribute of sav data
+library(Hmisc)         #describe
+library(dplyr)
+library(ggplot2)
+library(MASS)
+library(sf)            #render map
+#remotes::install_github("shihjyun/twmap")
+library(twmap)         #map data
+library(showtext)      #show zw-tw in ggplot2
 pollsav <- import("poll.sav")
 str(pollsav)
 ```
@@ -90,7 +64,7 @@ pollcsv <- data.frame(
       remove_attributes(col,
                         attributes = c("label","format.spss",
                                        "display_width","labels")))
-})) #因為sav格式的"屬性"會造成describe
+})) #因為sav格式的"屬性"會造成describe的bug
 pollcsv <- remove_attributes(pollcsv, "dimnames")
 n <- dim(pollcsv)[1]
 latex(describe(pollcsv), file="")
@@ -121,7 +95,7 @@ pollcsv <- data.frame(
   }))
 )
 pollcsv$v6[pollcsv$v6==6] <- NA
-DataExplorer::plot_missing(pollcsv, title = "Fig 1: Missing Value")
+DataExplorer::plot_missing(pollcsv, title = "Fig 1: Missing Value",)
 ```
 # 候選人支持率分析表
 
@@ -225,6 +199,7 @@ support.li_midwest <- data.frame(
   }),
   VILLNAME = names(attr(pollsav$v3,"labels"))[1:20]
 )
+#從台灣地圖選取中西區與北區里層級的地圖資料
 myMap <- tw_village[
   tw_village$COUNTYNAME == "臺南市" & 
   (tw_village$TOWNNAME=="中西區"| tw_village$TOWNNAME=="北區") ,]
@@ -236,13 +211,12 @@ ggplot(data = myMap) +
     data = summarize(
       group_by(myMap,TOWNNAME),
       geometry = st_union(st_buffer(geometry,dist = 0.01))) , fill = NA, color = 'red') + 
-      #st_buffer是為了解決union之後內部還有線條的問題
+      #st_buffer是為了解決union之後內部還有線條的問題(地圖資料有問題)
   geom_sf_text(aes(label=VILLNAME), size = 2, color = "white")+
   ggtitle("Fig 2: 三號候選人支持度熱區圖")+
   labs(fill = "支持度")+
   theme_gray(base_family ="Arial", base_size = 10)
 ```
-
 
 # 受訪者政治熱衷程度之統計模型(需說明使用此模型之理由)
 
@@ -250,50 +224,32 @@ ggplot(data = myMap) +
 #| warning: false
 pollcsv$known_count <- rowSums(!is.na(pollcsv[,c("v4_1", "v4_2", "v4_3", "v4_4", "v4_5", "v4_6", "v4_7", "v4_8")]))
 
-count_da <- sapply(0:8,function(x){
-  sum(pollcsv$known_count==x)
-})
-
 count_data <- data.frame(
   Times = factor(0:8),
-  Values = count_da
+  Values = sapply(0:8,function(x){
+    sum(pollcsv$known_count==x)
+  })
 )
 
-ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+
+#建立次數圖
+ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+ 
   geom_bar(stat = 'identity')+
   scale_x_discrete(breaks = 0:8)+
-  labs(title='Known Times', x = 'Times', y = 'Frequency')+
+  labs(title='Fig 3:政治熱衷程度計數長條圖', x = '知道候選人數量', y = '人數')+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
 
 poiv4<-glm(known_count~v1+v6+v7+v8, data = pollcsv, family = poisson())
-summary(poiv4)
+AER::dispersiontest(poiv4)
 
 nbv4 <- glm.nb(known_count~v1+v6+v7+v8, data = pollcsv)
+lrtest(poiv4,nbv4) #決定要用Poisson 還是 Negative binomial
 summary(nbv4)
 
-if(!require(AER)){
-  install.packages("AER")
-  library(AER)
-}
-dispersiontest(poiv4)
-lrtest(poiv4,nbv4) #決定要用Poisson 還是 Negative binomial
-
-ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+ #建立次數圖
-  geom_bar(stat = 'identity')+
-  scale_x_discrete(breaks = 0:8)+
-  labs(title='Known Times', x = 'Times', y = 'Frequency')+
-  theme_minimal()+
-  theme(plot.title = element_text(hjust = 0.5))
-
-if(!require(pscl)){
-  install.packages("pscl")
-  library(pscl)
-}
-zinb_model <- zeroinfl(known_count ~ v1 +v6+v7+v8, data = pollcsv, dist = "negbin")#建立zero-inflated negative model
-summary(zinb_model)
-
+library(pscl)     #建立zero-inflated negative model
+zinb_model <- zeroinfl(known_count ~ v1 +v6+v7+v8, data = pollcsv, dist = "negbin")
 lrtest(nbv4,zinb_model) #決定要用Negative 或 zero-inflated
+summary(zinb_model)
 ```
 
 先將每位受訪者知道的候選人用計數的方式去呈現出政治熱忠程度，而這些資料就轉變成count data，也因此先使用Poisson model 去做模型。然而在使用Poisson model之後並且去做Dispersion test時，可以發現這個模型有Overdispersion的情形產生，並且Likelihood ratio test的結果也建議我們使用Negative binomial 的模型。在做出資料的分布圖後，可以發現受訪者完全不知道候選人的比例偏高，也就是0的資料，也因此想要使用Zero-inflated negative binomial model去解決0所帶來的問題。
@@ -302,13 +258,90 @@ lrtest(nbv4,zinb_model) #決定要用Negative 或 zero-inflated
 
 
 
+# 三號候選人支持率預測模式 與資料不平衡處理
+```{r, out.width="100%"}
+set.seed(123)  # For reproducibility
+library(smotefamily)
+library(dplyr)
+new_poll <- pollcsv[,c(1,13,14,15,16)]
+new_poll_wei <- pollcsv[,c(1,13,14,15,16)]
+#由於在V1 V6 V7 V8當中，缺失值並不多，因此我選擇刪除缺失值
+new_poll <- na.omit(new_poll)
+new_poll_wei <- na.omit(new_poll_wei)
+new_poll_wei$sup3 <- as.numeric(new_poll_wei$sup3)
+#轉換為數值才能使用smote
+new_poll <- new_poll %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate_if(is.factor, as.numeric)
+
+poll_balanced <- SMOTE(X = new_poll[, -which(names(new_poll) == "sup3")], 
+                    target = new_poll$sup3, 
+                    K = 5)
+table(poll_balanced$data$class)
+
+poll_balanced <- poll_balanced$data
+#由於smote 過後他新增的資料可能會有不是整數的狀況，然而在這筆資料當中應該要為整數，也因此我選擇將那些有小數點的資料四捨五入
+poll_balanced[] <- lapply(poll_balanced, function(x) if(is.numeric(x)) round(x) else x)
+poll_balanced$class <- as.numeric(poll_balanced$class)
+#轉換為factor
+poll_balanced[c("v1", "v6", "v7", "v8")] <- lapply(poll_balanced[c("v1", "v6", "v7", "v8")], as.factor)
+describe(poll_balanced)
 
 
+train_nrow <- floor(0.7 * nrow(poll_balanced))
+train_idx <- sample(seq_len(nrow(poll_balanced)), size=train_nrow)
 
-# 三號候選人支持率預測模式
+poll_training <- poll_balanced[train_idx, ]
+cat("Training set size:", nrow(poll_training))
 
-## 資料不平衡處理
+poll_testing <- poll_balanced[-train_idx, ]
+cat("Test set size:", nrow(poll_testing))
 
+sup3_log <- glm(class ~ ., data = poll_training, family = binomial)
+summary(sup3_log)
+pred_prob <- predict(sup3_log, poll_testing, type = "response")
+
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+library(caret)
+confusionMatrix(factor(pred_class), factor(poll_testing$class))
+
+#Weighted logistic regression
+
+class_counts <- table(new_poll_wei$sup3)
+class_counts
+
+train_nrow_wei <- floor(0.7 * nrow(new_poll_wei))
+train_idx_wei <- sample(seq_len(nrow(new_poll_wei)), size=train_nrow_wei)
+
+poll_training_wei <- new_poll_wei[train_idx_wei, ]
+
+weights <- ifelse(poll_training_wei$sup3 == 1,
+                  class_counts[1] / (class_counts[1]+class_counts[2]),
+                  class_counts[2] / (class_counts[1]+class_counts[2]))  
+poll_testing_wei <- new_poll_wei[-train_idx_wei, ]
+
+weighted_logit_model <- glm(sup3 ~ v1 + v6 + v7 + v8, 
+                            data = poll_training_wei, 
+                            family = binomial, 
+                            weights = weights)
+
+summary(weighted_logit_model)
+
+pred_prob_wei <- predict(weighted_logit_model, poll_testing_wei, type = "response")
+
+library(pROC)
+#使用roc curve 找出最佳的閥值
+roc_curve <- roc(poll_testing_wei$sup3, pred_prob_wei)
+best_coords <- coords(roc_curve, "best", best.method = "youden")
+
+
+pred_class_wei <- ifelse(pred_prob_wei > best_coords$threshold, 1, 0)
+
+confusionMatrix(factor(pred_class_wei), factor(poll_testing_wei$sup3))
+
+```
+在處理不平衡資料的時候，我選擇使用smote 以及 weighted logistic regression 來處理。我分別將他們都切成訓練集以及測試集，並且對他們做confusion matrics 以此來判斷哪個模型較佳。在這過程當中，weighted logistic regression 在最後分類的accuracy rate 高達 0.7214，而smote 的accuracy rate 則僅有0.5825，因此我認為使用weighted logistic regression在這裡是較佳的。此外，weighted權重的部分我是以比例去決定的，以此減少資料的不平衡。
 
 
 
