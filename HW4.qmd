@@ -212,24 +212,31 @@ ggplot(data = myMap) +
   theme_gray(base_size = 6.5)
 ```
 
-從地圖中可以發現北區支持度較中西區高，
-
-## 
+## 借助統計模型分析顯著因子
 
 ```{r}
 pollcsv$sup3 <- ifelse(pollcsv$v5=="3",1,0)
-#count_sup3 <-
-#weights <- ifelse(pollcsv$sup3 == 1,
-#                  count_sup3[1] / (count_sup3[1]+count_sup3[2]),
-#                  count_sup3[2] / (count_sup3[1]+count_sup3[2]))  
-
-#weighted_logit_model <- glm(sup3 ~ v1 + v6 + v7 + v8, 
-#                            data = poll_training_wei, 
-#                            family = binomial, 
-#                            weights = weights)
-
-#summary(weighted_logit_model)
+pollcsv$sup3[is.na(pollcsv$sup3)] <- 0
+data.adjust <- na.omit(pollcsv[,c(1,13:16)])  #將v6~v8有NA的資料刪除
+data.adjust$sup3 <- as.factor(data.adjust$sup3)
+count_sup3 <- table(data.adjust$sup3)
+w <- ifelse(data.adjust$sup3 == 1,
+                  count_sup3[1] / (count_sup3[1]+count_sup3[2]),
+                  count_sup3[2] / (count_sup3[1]+count_sup3[2]))
+w <- round(round(100*w)/min(round(100*w)))
+wlogit_fulldata <- glm(sup3 ~ v1 + v6 + v7 + v8,
+                       data = data.adjust, 
+                       family = binomial(),
+                       weights = w)
+summary(wlogit_fulldata)
 ```
+
+模型中，
+v1(區)以北區(1)最為baseline，此項的係數為顯著且小於0。中西區vs.北區的odds ratio是$$ e^{-0.72456}\approx 0.485$$
+v7(教育程度)的2,3,4(國中~專科)較為顯著且係數為正，各自對於只有國小學歷的人的odds ratio為$$e^{0.58620}\approx 1.797$$$$e^{0.35934}\approx 1.432$$$$e^{0.34832}\approx 1.417$$
+v6(年齡)只有3(40\~49歲)稍微顯著，對於20\~29歲的人的odds ratio是$$e^{0.42026}\approx 1.522$$
+
+結合圖2的地圖資訊，建議三號候選人積極對北區、學歷在國中到專科之間、年齡在40~49歲的民眾積極拓展知名度。
 
 # 4. 以V4回答出候選人人數來評估受訪者「政治熱衷程度」，建立合適統計模型分析該變數並說明使用該方法的原因
 
@@ -270,6 +277,7 @@ summary(zinb_model)
 # 5. 3號候選人支持率(具資料不平衡特性)的預測模式與資料不平衡的處理
 
 ```{r, out.width="100%"}
+#| warning: false
 set.seed(123)  # For reproducibility
 library(smotefamily)
 library(dplyr)
@@ -327,14 +335,14 @@ poll_training_wei <- new_poll_wei[train_idx_wei, ]
 
 weights <- ifelse(poll_training_wei$sup3 == 1,
                   class_counts[1] / (class_counts[1]+class_counts[2]),
-                  class_counts[2] / (class_counts[1]+class_counts[2]))  
+                  class_counts[2] / (class_counts[1]+class_counts[2]))
+weights <- round(round(100*weights)/min(round(100*weights)))
 poll_testing_wei <- new_poll_wei[-train_idx_wei, ]
 
 weighted_logit_model <- glm(sup3 ~ v1 + v6 + v7 + v8, 
                             data = poll_training_wei, 
                             family = binomial, 
                             weights = weights)
-
 summary(weighted_logit_model)
 
 pred_prob_wei <- predict(weighted_logit_model, poll_testing_wei, type = "response")
@@ -347,7 +355,7 @@ pred_class_wei <- ifelse(pred_prob_wei > best_coords$threshold, 1, 0)
 
 confusionMatrix(factor(pred_class_wei), factor(poll_testing_wei$sup3))
 ```
-在處理不平衡資料的時候，我選擇使用smote 以及 weighted logistic regression 來處理。我分別將他們都切成訓練集以及測試集，並且對他們做confusion matrics 以此來判斷哪個模型較佳。在這過程當中，weighted logistic regression 在最後分類的accuracy rate 高達 0.7214，而smote 的accuracy rate 則僅有0.5825，因此我認為使用weighted logistic regression在這裡是較佳的。此外，weighted權重的部分我是以比例去決定的，以此減少資料的不平衡。
+在處理不平衡資料的時候，我選擇使用smote 以及 weighted logistic regression 來處理。我分別將他們都切成訓練集以及測試集，並且對他們做confusion matrics 以此來判斷哪個模型較佳。在這過程當中，weighted logistic regression 在最後分類的accuracy rate 高達 0.7297，而smote 的accuracy rate 則僅有0.5825，因此我認為使用weighted logistic regression在這裡是較佳的。此外，weighted權重的部分我是以比例去決定的，以此減少資料的不平衡。
 
 
 
