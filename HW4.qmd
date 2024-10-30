@@ -172,6 +172,8 @@ twmap::tw_town #鄉鎮市區界圖
 twmap::tw_village #村里界圖
 ```
 
+## 地圖視覺化
+
 ```{r, out.width="100%"}
 #| warning: false
 #計算三號候選人對於里的支持度
@@ -207,7 +209,26 @@ ggplot(data = myMap) +
   geom_sf_text(aes(label=VILLNAME), size = 2, color = "white")+
   ggtitle("Fig 2: 三號候選人支持度熱區圖")+
   labs(fill = "支持度")+
-  theme_gray(base_family ="Arial", base_size = 10)
+  theme_gray(base_size = 6.5)
+```
+
+從地圖中可以發現北區支持度較中西區高，
+
+## 
+
+```{r}
+pollcsv$sup3 <- ifelse(pollcsv$v5=="3",1,0)
+#count_sup3 <-
+#weights <- ifelse(pollcsv$sup3 == 1,
+#                  count_sup3[1] / (count_sup3[1]+count_sup3[2]),
+#                  count_sup3[2] / (count_sup3[1]+count_sup3[2]))  
+
+#weighted_logit_model <- glm(sup3 ~ v1 + v6 + v7 + v8, 
+#                            data = poll_training_wei, 
+#                            family = binomial, 
+#                            weights = weights)
+
+#summary(weighted_logit_model)
 ```
 
 # 4. 以V4回答出候選人人數來評估受訪者「政治熱衷程度」，建立合適統計模型分析該變數並說明使用該方法的原因
@@ -215,22 +236,19 @@ ggplot(data = myMap) +
 ```{r}
 #| warning: false
 pollcsv$known_count <- rowSums(!is.na(pollcsv[,c("v4_1", "v4_2", "v4_3", "v4_4", "v4_5", "v4_6", "v4_7", "v4_8")]))
-pollcsv$sup3 <- ifelse(pollcsv$v5=="3",1,0)
 count_data <- data.frame(
   Times = factor(0:8),
   Values = sapply(0:8,function(x){
     sum(pollcsv$known_count==x)
   })
 )
-
 #建立次數圖
 ggplot(count_data, aes(x = Times, y = Values , fill = Times ))+ 
   geom_bar(stat = 'identity')+
   scale_x_discrete(breaks = 0:8)+
-  labs(title='Fig 3:政治熱衷程度計數長條圖', x = '知道候選人數量', y = '人數')+
+  labs(title='Fig 3:政治熱衷程度計數長條圖', x = '政治熱衷程度', y = '人數', fill = "知道候選人數量")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
-
 poiv4<-glm(known_count~v1+v6+v7+v8, data = pollcsv, family = poisson())
 AER::dispersiontest(poiv4)
 
@@ -255,8 +273,8 @@ summary(zinb_model)
 set.seed(123)  # For reproducibility
 library(smotefamily)
 library(dplyr)
-new_poll <- pollcsv[,c(1,13,14,15,16,17)]
-new_poll_wei <- pollcsv[,c(1,13,14,15,16,17)]
+new_poll <- pollcsv[,c(1,13,14,15,16)]
+new_poll_wei <- pollcsv[,c(1,13,14,15,16)]
 #由於在V1 V6 V7 V8當中，缺失值並不多，因此我選擇刪除缺失值
 new_poll <- na.omit(new_poll)
 new_poll_wei <- na.omit(new_poll_wei)
