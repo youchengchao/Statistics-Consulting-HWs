@@ -291,9 +291,49 @@ describe(poll_balanced)
 train_nrow <- floor(0.7 * nrow(poll_balanced))
 train_idx <- sample(seq_len(nrow(poll_balanced)), size=train_nrow)
 
+<<<<<<< HEAD
 poll_training <- poll_balanced[train_idx, ]
 cat("Training set size:", nrow(poll_training))
 
+=======
+# 三號候選人支持率預測模式 與資料不平衡處理
+```{r, out.width="100%"}
+set.seed(123)  # For reproducibility
+library(smotefamily)
+library(dplyr)
+new_poll <- pollcsv[,c(1,13,14,15,16)]
+new_poll_wei <- pollcsv[,c(1,13,14,15,16)]
+head(new_poll)
+#由於在V1 V6 V7 V8當中，缺失值並不多，因此我選擇刪除缺失值
+new_poll <- na.omit(new_poll)
+new_poll_wei <- na.omit(new_poll_wei)
+new_poll_wei$sup3 <- as.numeric(new_poll_wei$sup3)
+#轉換為數值才能使用smote
+new_poll <- new_poll %>% 
+  mutate_if(is.character, as.factor) %>% 
+  mutate_if(is.factor, as.numeric)
+
+poll_balanced <- SMOTE(X = new_poll[, -which(names(new_poll) == "sup3")], 
+                    target = new_poll$sup3, 
+                    K = 5)
+table(poll_balanced$data$class)
+
+poll_balanced <- poll_balanced$data
+#由於smote 過後他新增的資料可能會有不是整數的狀況，然而在這筆資料當中應該要為整數，也因此我選擇將那些有小數點的資料四捨五入
+poll_balanced[] <- lapply(poll_balanced, function(x) if(is.numeric(x)) round(x) else x)
+poll_balanced$class <- as.numeric(poll_balanced$class)
+#轉換為factor
+poll_balanced[c("v1", "v6", "v7", "v8")] <- lapply(poll_balanced[c("v1", "v6", "v7", "v8")], as.factor)
+describe(poll_balanced)
+
+
+train_nrow <- floor(0.7 * nrow(poll_balanced))
+train_idx <- sample(seq_len(nrow(poll_balanced)), size=train_nrow)
+
+poll_training <- poll_balanced[train_idx, ]
+cat("Training set size:", nrow(poll_training))
+
+>>>>>>> 017e7fc360ab1ab94be0f5bebf603a85d58b0d0a
 poll_testing <- poll_balanced[-train_idx, ]
 cat("Test set size:", nrow(poll_testing))
 
