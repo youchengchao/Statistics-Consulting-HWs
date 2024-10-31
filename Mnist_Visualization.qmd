@@ -26,7 +26,7 @@ mnist <- data.table::fread("MNIST_train.csv")
 
 # Visualization by PCA
 
-```{r}
+```{r, fig.align = "center", fig.width=8, fig.height=5}
 #| warning: false
 library(ggplot2)
 library(dplyr)
@@ -46,10 +46,13 @@ rec_pc$label <- as.character(rec_pc$label)
 
 #pc1 pc2 的loading (但是變數太多看不出什麼東西)
 pca_rotation<-pca$rotation
-pca_rotation_df <- data.frame(Variable = rownames(pca_rotation), PC1 = pca_rotation[, 1], PC2 = pca_rotation[, 2])
-
-pca_rotation_longs <- tidyr::pivot_longer(pca_rotation_df, cols = -Variable, names_to = "PCA", values_to = "Rotation")
-
+pca_rotation_df <- data.frame(Variable = rownames(pca_rotation),
+                              PC1 = pca_rotation[, 1],
+                              PC2 = pca_rotation[, 2])
+pca_rotation_longs <- tidyr::pivot_longer(pca_rotation_df,
+                                          cols = -Variable,
+                                          names_to = "PCA",
+                                          values_to = "Rotation")
 #loadings data
 pca_rotation1<-pca_rotation_longs%>%
   filter(PCA=='PC1')
@@ -96,7 +99,26 @@ ggplot(rec_pc,aes(x = PC1, y = PC2,colour = label))+
 
 # Visualization by t-SNE
 
-```{r}
+```{r, fig.align = "center", fig.width=8, fig.height=5}
+library(Rtsne)
+set.seed(123)
+tsne_result <- Rtsne(mnist[,-1], dims = 2)
+tsne_df <- as.data.frame(tsne_result$Y)
+centroids <- tsne_df %>%
+  mutate(label = mnist$label) %>%  # Add labels to the dataframe
+  group_by(label) %>%
+  summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop')
+
+ggplot(data = tsne_df)+
+  geom_point(aes(x=V1, y=V2, color  = as.factor(mnist$label)))+
+  labs(title = "Fig 3: t-SNE Visualization of MNIST Data",
+       x = "V1",
+       y = "V2",
+       color = "Number") +
+  geom_text(data = centroids, aes(x = V1, y = V2, label = label), 
+            vjust = -1, size = 4, color = "black") +
+  theme_gray()
+
 ```
 
 
