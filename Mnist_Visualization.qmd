@@ -1,0 +1,102 @@
+---
+title: "HW Mnist資料集視覺化"
+date: today
+author: 高嘉妤、柯堯珹、吳承恩、趙友誠
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+---
+
+```{r}
+mnist <- data.table::fread("MNIST_train.csv")
+```
+
+
+# Visualization by PCA
+
+```{r}
+#| warning: false
+library(ggplot2)
+library(dplyr)
+library(showtext)
+showtext_auto()
+pca<-prcomp(mnist[,2:785],center = T)
+#做Scree plot 可以發現1到2的斜率是最大的，因此我取到pc2
+screeplot(pca,type = 'line', main= "Fig 1: Scree plot")
+
+#取pc1 跟 pc2
+rec_pc <- as.data.frame(pca$x[,1:2])
+#將數字的label 加進去pc1 跟 pc2 的dataset
+rec_pc$label<-mnist$label
+
+#轉成character 以方便後續做圖
+rec_pc$label <- as.character(rec_pc$label)
+
+#pc1 pc2 的loading (但是變數太多看不出什麼東西)
+pca_rotation<-pca$rotation
+pca_rotation_df <- data.frame(Variable = rownames(pca_rotation), PC1 = pca_rotation[, 1], PC2 = pca_rotation[, 2])
+
+pca_rotation_longs <- tidyr::pivot_longer(pca_rotation_df, cols = -Variable, names_to = "PCA", values_to = "Rotation")
+
+#loadings data
+pca_rotation1<-pca_rotation_longs%>%
+  filter(PCA=='PC1')
+pca_rotation2<-pca_rotation_longs%>%
+  filter(PCA=='PC2')
+
+#loading 圖 pc1 跟pc2 一起的
+ggplot(pca_rotation_longs, aes(x = Variable, y = Rotation, fill = PCA)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "PCA Loadings", x = "Variable", y = "Loading") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#單獨pc1 loading 的圖
+ggplot(pca_rotation1, aes(x = Variable, y = Rotation, fill = PCA)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "PC1", x = "Variable", y = "Loading") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(-0.2,0.5))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#單獨pc2 loading 的圖
+ggplot(pca_rotation2, aes(x = Variable, y = Rotation, fill = PCA)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "PC2", x = "Variable", y = "Loading") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(-0.5,0.5))+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#製作pc1 對 pc2 的圖，也可以看出大部份同一個label 都還是有cluster 形成一個group
+ggplot(rec_pc,aes(x = PC1, y = PC2,colour = label))+
+  geom_point()+ labs(title = 'PC1 vs PC2')+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = 'bottom')
+```
+
+# Visualization by MDS
+
+```{r}
+
+```
+
+# Visualization by t-SNE
+
+```{r}
+```
+
+
