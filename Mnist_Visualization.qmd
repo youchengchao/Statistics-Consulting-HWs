@@ -94,6 +94,59 @@ ggplot(rec_pc,aes(x = PC1, y = PC2,colour = label))+
 # Visualization by MDS
 
 ```{r}
+library(magrittr)
+library(dplyr)
+library(ggpubr)
+library(proxy)
+library(parallelDist)
+#用mds方法將將點與點的距離降維
+subset_mds <- function(mnist, sample_size = 1000) {
+  X <- as.matrix(mnist[,2:785])
+  n <- nrow(X)
+  
+  
+  # 隨機選擇子集
+  set.seed(1)
+  idx <- sample(n, sample_size)
+  X_sample <- X[idx,]
+    
+  # 在子集上計算 MDS
+  d_sample <- dist(X_sample)
+  mds_sample <- cmdscale(d_sample)
+    
+  # 使用 Nyström 方法擴展到所有點
+  K_sample <- as.matrix(dist(X_sample))
+  K_full <- as.matrix(dist(X, X_sample))
+    
+  mds <- K_full %*% solve(K_sample + diag(1e-6, nrow(K_sample))) %*% mds_sample %>%
+    as_tibble()
+  
+  return(mds)
+}
+mds = subset_mds(mnist)
+
+colnames(mds) <-c('Dim1','Dim2')
+ggscatter(mds,x="Dim1",y="Dim2",
+          size=1,rapel=TRUE)
+clust <- kmeans(mds,10)$cluster %>%
+  as.factor()
+mds <- mds %>%
+  mutate(groups=clust)
+mds <- mds %>%
+  mutate(realgroups=as.factor(mnist$label))
+
+#圖片為每個點在第一維度對上第二維度的散佈圖，可以發現同一群還是大致上有聚集再一起，並且跟pca呈現的圖片類似
+ggscatter(mds,x="Dim1",y="Dim2",
+          size=1,rapel=TRUE,
+          color="realgroups",
+          ellipse=TRUE,
+          ellipse.type = "convex")
+
+ggscatter(mds,x="Dim1",y="Dim2",
+          size=1,rapel=TRUE,
+          color="groups",
+          ellipse=TRUE,
+          ellipse.type = "convex")
 
 ```
 
