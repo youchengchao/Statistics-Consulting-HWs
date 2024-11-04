@@ -93,7 +93,6 @@ DB.csv <-read.csv("DisruptiveBehavior.csv")
 ```{r}
 DB.csv <- DB.csv[,-c(1:4)]
 #str(DB.csv)
-DB.csv$q2 <- 110-DB.csv$q2 #轉換成年齡
 DataExplorer::plot_missing(DB.csv)
 ```
 
@@ -104,9 +103,8 @@ DataExplorer::plot_missing(DB.csv)
 
 ```{r}
 library(ggplot2)
-DB.csv$q28_5[DB.csv$q28_5==0]=2
-DB.csv$q28_5[DB.csv$q28_5==1]=0
-DB.csv$q28_5[DB.csv$q28_5==2]=1
+DB.csv$q28_5[!is.na(DB.csv$q28_5)] <- 0
+DB.csv$q28_5[is.na(DB.csv$q28_5)] <- 1
 
 #沒有惡搞
 DB.csv$q16_18[DB.csv$q16 == 2 & DB.csv$q18 == 2] <- 0
@@ -323,3 +321,28 @@ ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
 ```
+
+
+```{r}
+library(rlang)
+Barplot.p <- function(din, c_label, split_label, cat_label){
+  temp <- din %>%
+    group_by(!!sym(split_label)) %>%
+    mutate(proportion = !!sym(c_label) / sum(!!sym(c_label))) %>%
+    ungroup()
+  ggplot(temp, aes(x = factor(!!sym(split_label)), y = proportion, fill = factor(!!sym(cat_label)))) +
+    geom_bar(stat = "identity", position = "stack") +
+    labs(x = "Proportion", y = "Score", fill = "A") +
+    theme_minimal() +
+    coord_flip()
+}
+Barplot.p(din=counts_42,
+          c_label="count",
+          split_label = "q28_5",
+          cat_label = "q42_1")
+```
+
+
+
+
+
