@@ -360,7 +360,47 @@ Barplot.p(din=counts_42)
 ```
 
 ```{r}
+ks.test(counts_16_18$count[counts_16_18$q28_5==1],
+        counts_16_18$count[counts_16_18$q28_5==0])
 
+ks.test(counts_20_01$count[counts_20_01$q28_5==1],
+        counts_20_01$count[counts_20_01$q28_5==0])
+
+ks.test(counts_20_02$count[counts_20_02$q28_5==1],
+        counts_20_02$count[counts_20_02$q28_5==0])
+
+ks.test(counts_22$count[counts_22$q28_5==1],
+        counts_22$count[counts_22$q28_5==0])
+
+ks.test(counts_23$count[counts_23$q28_5==1],
+        counts_23$count[counts_23$q28_5==0])
+
+ks.test(counts_24$count[counts_24$q28_5==1],
+        counts_24$count[counts_24$q28_5==0])
+
+ks.test(counts_25$count[counts_25$q28_5==1],
+        counts_25$count[counts_25$q28_5==0])
+
+ks.test(counts_26$count[counts_26$q28_5==1],
+        counts_26$count[counts_26$q28_5==0])
+
+ks.test(counts_27$count[counts_27$q28_5==1],
+        counts_27$count[counts_27$q28_5==0])
+
+ks.test(counts_38$count[counts_38$q28_5==1],
+        counts_38$count[counts_38$q28_5==0])
+
+ks.test(counts_39$count[counts_39$q28_5==1],
+        counts_39$count[counts_39$q28_5==0])
+
+ks.test(counts_40$count[counts_40$q28_5==1],
+        counts_40$count[counts_40$q28_5==0])
+
+ks.test(counts_41$count[counts_41$q28_5==1],
+        counts_41$count[counts_41$q28_5==0])
+
+ks.test(counts_42$count[counts_42$q28_5==1],
+        counts_42$count[counts_42$q28_5==0])
 ```
 
 
