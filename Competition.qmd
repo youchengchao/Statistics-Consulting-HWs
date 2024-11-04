@@ -403,6 +403,13 @@ ks.test(counts_42$count[counts_42$q28_5==1],
         counts_42$count[counts_42$q28_5==0])
 ```
 
-
+```{r}
+fit.logistic <- glm(
+  factor(q28_5)~q24_01_1+q24_02_1+q24_03_1+q24_04_1+q24_05_1 ,
+  data = DB.csv,
+  family = binomial
+)
+summary(fit.logistic)
+```
 
 
