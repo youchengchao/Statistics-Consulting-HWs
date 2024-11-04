@@ -325,23 +325,43 @@ ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
 
 ```{r}
 library(rlang)
-Barplot.p <- function(din, c_label, split_label, cat_label){
+Barplot.p <- function(din){
+  split_label<-colnames(din)[1]
+  cat_label <- colnames(din)[2]
+  c_label <- colnames(din)[3]
   temp <- din %>%
     group_by(!!sym(split_label)) %>%
     mutate(proportion = !!sym(c_label) / sum(!!sym(c_label))) %>%
     ungroup()
   ggplot(temp, aes(x = factor(!!sym(split_label)), y = proportion, fill = factor(!!sym(cat_label)))) +
     geom_bar(stat = "identity", position = "stack") +
-    labs(x = "Proportion", y = "Score", fill = "A") +
+    labs(x = "Proportion", y = "Percentage", fill = "A") +
+    ggtitle(label = cat_label)+
     theme_minimal() +
     coord_flip()
 }
-Barplot.p(din=counts_42,
-          c_label="count",
-          split_label = "q28_5",
-          cat_label = "q42_1")
 ```
 
+```{r}
+Barplot.p(din=counts_16_18)
+Barplot.p(din=counts_20_01)
+Barplot.p(din=counts_20_02)
+Barplot.p(din=counts_22)
+Barplot.p(din=counts_23)
+Barplot.p(din=counts_24)
+Barplot.p(din=counts_25)
+Barplot.p(din=counts_26)
+Barplot.p(din=counts_27)
+Barplot.p(din=counts_38)
+Barplot.p(din=counts_39)
+Barplot.p(din=counts_40)
+Barplot.p(din=counts_41)
+Barplot.p(din=counts_42)
+```
+
+```{r}
+
+```
 
 
 
