@@ -1,0 +1,325 @@
+---
+title: "取消文化之現象分析"
+date: today
+author: 高嘉妤、柯堯珹、吳承恩、趙友誠
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+---
+
+| Variables | Explanation          | remark             |
+|-----------|----------------------|--------------------|
+| q1        | 性別                 | 1:男性, 2:女性     |
+| q2        | 出生年(民國)         |                    |
+| q3        | 出生縣市             |                    |
+| q4        | 教育程度             |                    |
+| q5        | 週上網天數           |                    |
+| q6        | 上網時數(工作、學習)     |                |
+| q7        | 上網時數(娛樂、休閒) |                    |
+| q8        | 上網原因             |                    |
+| q9        | 使用的即時通訊軟體                 |      |
+| q10       | 使用的社群媒體                     |      |
+| q11       | 使用的影音平台                     |      |
+| q12       | 了解疫情消息的管道        |               |
+| q13_01    | 使用網路平台關注疫情消息的頻率   |        |
+| q13_02    | 疫情相關留言的言論種類      |             |
+| q13_03    | 疫情相關留言對自己的幫助    |             |
+| q13_04    | 疫情相關留言的負面性質      |             |
+| q13_05    | 疫情相關留言對自己的負面影響 |             |
+| q14_01    | 社群媒體上的來源             |             |
+| q14_02    | Line上的來源                 |             |
+| q14_03    | YT上的來源                   |             |
+| q15_01    | 疫情期間是否減少出門         |             |
+| q15_02    | 減少出門時的休閒活動         |             |
+| q15_03    | 政府疫情處置的滿意度         |             |
+| q16       | 是否參與過不會對人造成傷害的網路惡搞 |     |
+| q17_01    | 是騙人的不會對人造成傷害的網路惡搞   |     |
+| q17_02    | 不是騙人的不會對人造成傷害的網路惡搞 |     |
+| q18       | 是否參與過會對人造成傷害的網路惡搞   |     |
+| q19_01    | 是騙人的會對人造成傷害的網路惡搞     |     |
+| q19_02    | 不是騙人的會對人造成傷害的網路惡搞 |       |
+| q20       | 主動激化傾向                       |       |
+| q21_a     | 注意力偵測| 專心:只選第六項並填寫已讀二字\newline 分心:其他情況 |
+| q22       | 他人攻擊傾向|                              |
+| q23       | 自己攻擊傾向|                              |
+| q24       | 回聲室效應 |                               |
+| q25       | 被攻擊的接受度 |                           |
+| q26       | 推測他人攻擊意圖 |                          |
+| q27       | 抵制意圖    |                               |
+| q28       | 採取過的社群媒體抵制行為種類  |             |
+| q29       | 抵制的原因   |                              |
+| q30       | 抵制行為的有效程度  |                      |
+| q31       | 抵制前的同理心   |                          |
+| q32       | 抵制行為的對名人的傷害程度 |                |
+| q33       | 抵制行為的對自己的重要程度 |                |
+| q34       | 抵制成本        |                            |
+| q35       | 抵制規模感知    |                            |
+| q36       | 抵制的社會壓力  |                            |
+| q37_a     | 注意力偵測     |   專心:彩虹有七個顏色\newline 分心: otherwise |
+| q38_01    | 生活滿意度    |                              |
+| q38_02    | 社會滿意度   |                               |
+| q39       | 生活品質    |                                |
+| q40       | 國民黨喜好程度   |                           |
+| q41       | 民進黨喜好程度   |                           |
+| q42       | 意識形態         | 0\~10: 台獨\~統一         |
+
+: 變數解釋
+
+```{r}
+#| output: FALSE
+#| warning: FALSE
+library(haven)           #read sav file
+library(labelled)      #remove attribute of sav data
+library(Hmisc)         #describe
+library(showtext)      #show zw-tw in ggplot2
+library(dplyr);library(ggplot2);library(MASS)
+DB.sav <-read_sav("DisruptiveBehavior.sav")
+write.csv(DB.sav,file= "DisruptiveBehavior.csv", row.names= FALSE)
+DB.csv <-read.csv("DisruptiveBehavior.csv")
+```
+
+```{r}
+DB.csv <- DB.csv[,-c(1:4)]
+#str(DB.csv)
+DB.csv$q2 <- 110-DB.csv$q2 #轉換成年齡
+DataExplorer::plot_missing(DB.csv)
+```
+
+```{r}
+#| output: asis
+#latex(describe(DB.csv),title="",file="")
+```
+
+```{r}
+library(ggplot2)
+DB.csv$q28_5[DB.csv$q28_5==0]=2
+DB.csv$q28_5[DB.csv$q28_5==1]=0
+DB.csv$q28_5[DB.csv$q28_5==2]=1
+
+#沒有惡搞
+DB.csv$q16_18[DB.csv$q16 == 2 & DB.csv$q18 == 2] <- 0
+#有惡搞但不騙人不傷害
+DB.csv$q16_18[DB.csv$q17_02 == 1] <- 1
+#有惡搞有騙人沒傷害
+DB.csv$q16_18[DB.csv$q17_01 == 1] <- 2
+#有惡搞沒騙人有傷害
+DB.csv$q16_18[DB.csv$q19_02 ==1]<-3
+#有惡搞有騙人有傷害
+DB.csv$q16_18[DB.csv$q19_01 == 1]<-4
+
+#16_18對28_5的計數
+counts_16_18 <- DB.csv %>%
+  group_by(q28_5, q16_18) %>%
+  summarise(count = n())
+#圖
+ggplot(counts_16_18, aes(x = as.factor(q28_5), y = q16_18, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_16_18$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs網路惡搞", x = "boycott", y = "網路惡搞行為", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
+which(is.na(DB.csv$q16_18))
+
+#為了讓討厭的人知道他不屬於您的團體，在網路上罵他，您覺得可不可以接受?計數
+counts_20_01 <- DB.csv%>%
+  group_by(q28_5,q20_01_1)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_20_01, aes(x = as.factor(q28_5), y = q20_01_1, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_20_01$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs不屬團體之網路罵人接受度", x = "boycott", y = "接受度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
+#為了獲得想要的，在網路上罵人，您覺得可不可以接受?計數
+counts_20_02 <- DB.csv%>%
+  group_by(q28_5,q20_02_1)%>%
+  summarise(count = n())
+ggplot(counts_20_02, aes(x = as.factor(q28_5), y = q20_02_1, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_20_02$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs獲得想要之網路罵人接受度", x = "boycott", y = "接受度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
+
+#網路世界看到別人的網路攻擊行為
+DB.csv$q22_total <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
+counts_22 <- DB.csv%>%
+  group_by(q28_5,q22_total)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_22, aes(x = as.factor(q28_5), y = q22_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_22$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs別人的網路攻擊行為", x = "boycott", y = "網路攻擊頻繁程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
+#網路世界自己做出的網路攻擊行為
+DB.csv$q23_total <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
+counts_23 <- DB.csv%>%
+  group_by(q28_5,q23_total)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_23, aes(x = as.factor(q28_5), y = q23_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_23$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs自己的網路攻擊行為", x = "boycott", y = "網路攻擊頻繁程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
+#越容易接收到不是使用者偏好的訊息
+DB.csv$q24_total <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
+counts_24 <- DB.csv%>%
+  group_by(q28_5,q24_total)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_24, aes(x = as.factor(q28_5), y = q24_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_24$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs接收不是使用者偏好的頻繁程度", x = "boycott", y = "頻繁程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+#越能接受網路攻擊
+DB.csv$q25_total <- rowSums(DB.csv[,c("q25_01_1", "q25_02_1", "q25_03_1", "q25_04_1")])
+counts_25 <- DB.csv%>%
+  group_by(q28_5,q25_total)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_25, aes(x = as.factor(q28_5), y = q25_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_25$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs接受網路攻擊行為", x = "boycott", y = "接受網路攻擊", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#推測他人的攻擊意圖
+DB.csv$q26_total <- rowSums(DB.csv[,c("q26_01_1", "q26_02_1", "q26_03_1")])
+counts_26 <- DB.csv%>%
+  group_by(q28_5,q26_total)%>%
+  summarise(count = n())
+#圖
+ggplot(counts_26, aes(x = as.factor(q28_5), y = q26_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_26$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs他人攻擊意圖頻繁程度", x = "boycott", y = "頻繁程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#當名人說不該說的話、做不該做的事，您多想透過社群媒體抵制他們？
+counts_27 <- DB.csv%>%
+  group_by(q28_5,q27_1)%>%
+  summarise(count = n())
+ggplot(counts_27, aes(x = as.factor(q28_5), y = q27_1, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_27$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs多想抵制他們的程度", x = "boycott", y = "抵制程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+#心理幸福感
+DB.csv$q38_total <- rowSums(DB.csv[,c("q38_01_1", "q38_02_1")])
+counts_38 <- DB.csv%>%
+  group_by(q28_5,q38_total)%>%
+  summarise(count = n())
+
+ggplot(counts_38, aes(x = as.factor(q28_5), y = q38_total, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_38$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs生活與社會的滿意程度", x = "boycott", y = "生活與社會的滿意程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+#您覺得目前的日子過得快不快樂？ 
+counts_39 <- DB.csv%>%
+  group_by(q28_5,q39_1)%>%
+  summarise(count = n())
+ggplot(counts_39, aes(x = as.factor(q28_5), y = q39_1, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_39$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs快樂程度", x = "boycott", y = "快樂程度", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#國民黨讓你感到溫暖的程度，再區分為5個範圍
+DB.csv$q40_cat <- cut(DB.csv$q40_1, 
+                        breaks = c(0, 20, 40, 60, 80, 100), 
+                        labels = c(1, 2, 3, 4, 5), 
+                        right = TRUE)
+DB.csv$q40_cat[is.na(DB.csv$q40_cat)] <- 1
+counts_40 <- DB.csv%>%
+  group_by(q28_5,q40_cat)%>%
+  summarise(count = n())
+ggplot(counts_40, aes(x = as.factor(q28_5), y = q40_cat, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_40$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs國民黨之溫暖", x = "boycott", y = "溫暖", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+
+#民進黨讓你感到溫暖的程度，再區分為5個範圍
+DB.csv$q41_cat <- cut(DB.csv$q41_1, 
+                       breaks = c(0, 20, 40, 60, 80, 100), 
+                       labels = c(1, 2, 3, 4, 5), 
+                       right = TRUE)
+DB.csv$q41_cat[is.na(DB.csv$q41_cat)] <- 1
+counts_41 <- DB.csv%>%
+  group_by(q28_5,q41_cat)%>%
+  summarise(count = n())
+
+ggplot(counts_41, aes(x = as.factor(q28_5), y = q41_cat, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_41$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs民進黨之溫暖", x = "boycott", y = "溫暖", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+#兩岸關係
+counts_42 <- DB.csv%>%
+  group_by(q28_5,q42_1)%>%
+  summarise(count = n())
+
+ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
+  geom_tile() +
+  scale_fill_gradient(low = "lightblue", high = "red") +
+  geom_text(label=counts_42$count,size = 3, color = "black", fontface = "bold")+
+  labs(title = "抵制vs兩岸關係之偏頗", x = "boycott", y = "兩岸關係", fill = "Proportion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
