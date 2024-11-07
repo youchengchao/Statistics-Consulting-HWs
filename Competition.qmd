@@ -26,17 +26,17 @@ documentclass: article
 | q3        | 出生縣市             |                    |
 | q4        | 教育程度             |                    |
 | q5        | 週上網天數           |                    |
-| q6        | 上網時數(工作、學習)     |                |
+| q6        | 上網時數(工作、學習) |                    |
 | q7        | 上網時數(娛樂、休閒) |                    |
 | q8        | 上網原因             |                    |
-| q9        | 使用的即時通訊軟體                 |      |
-| q10       | 使用的社群媒體                     |      |
-| q11       | 使用的影音平台                     |      |
-| q12       | 了解疫情消息的管道        |               |
-| q13_01    | 使用網路平台關注疫情消息的頻率   |        |
-| q13_02    | 疫情相關留言的言論種類      |             |
-| q13_03    | 疫情相關留言對自己的幫助    |             |
-| q13_04    | 疫情相關留言的負面性質      |             |
+| q9        | 使用的即時通訊軟體   |                    |
+| q10       | 使用的社群媒體       |                    |
+| q11       | 使用的影音平台       |                    |
+| q12       | 了解疫情消息的管道   |                    |
+| q13_01    | 使用網路平台關注疫情消息的頻率|           |
+| q13_02    | 疫情相關留言的言論種類        |           |
+| q13_03    | 疫情相關留言對自己的幫助      |           |
+| q13_04    | 疫情相關留言的負面性質        |           |
 | q13_05    | 疫情相關留言對自己的負面影響 |             |
 | q14_01    | 社群媒體上的來源             |             |
 | q14_02    | Line上的來源                 |             |
@@ -85,15 +85,16 @@ library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
 library(showtext)      #show zw-tw in ggplot2
 library(dplyr);library(ggplot2);library(MASS)
-DB.sav <-read_sav("DisruptiveBehavior.sav")
-write.csv(DB.sav,file= "DisruptiveBehavior.csv", row.names= FALSE)
+library(rlang)         #for building function
+#DB.sav <-read_sav("DisruptiveBehavior.sav")
+#write.csv(DB.sav,file= "DisruptiveBehavior.csv", row.names= FALSE)
 DB.csv <-read.csv("DisruptiveBehavior.csv")
+showtext_auto()
 ```
 
 ```{r}
 DB.csv <- DB.csv[,-c(1:4)]
-#str(DB.csv)
-DataExplorer::plot_missing(DB.csv)
+#DataExplorer::plot_missing(DB.csv[,1:20])
 ```
 
 ```{r}
@@ -102,25 +103,226 @@ DataExplorer::plot_missing(DB.csv)
 ```
 
 ```{r}
-library(ggplot2)
-DB.csv$q28_5[!is.na(DB.csv$q28_5)] <- 0
-DB.csv$q28_5[is.na(DB.csv$q28_5)] <- 1
+#第四題沒有人選其他
+DB.csv$q4_88_text <- NULL
 
-#沒有惡搞
-DB.csv$q16_18[DB.csv$q16 == 2 & DB.csv$q18 == 2] <- 0
-#有惡搞但不騙人不傷害
-DB.csv$q16_18[DB.csv$q17_02 == 1] <- 1
-#有惡搞有騙人沒傷害
-DB.csv$q16_18[DB.csv$q17_01 == 1] <- 2
-#有惡搞沒騙人有傷害
-DB.csv$q16_18[DB.csv$q19_02 ==1]<-3
-#有惡搞有騙人有傷害
-DB.csv$q16_18[DB.csv$q19_01 == 1]<-4
+#教育程度重新劃分為四個等級
+DB.csv$q4[DB.csv$q4<=8] <- 1
+DB.csv$q4[DB.csv$q4!=1 & DB.csv$q4<=15] <- 2
+DB.csv$q4[DB.csv$q4>2 & DB.csv$q4<=19] <- 3
+DB.csv$q4[DB.csv$q4>3] <- 4
 
-#16_18對28_5的計數
+#時間統一單位(分)
+DB.csv$q6 <- DB.csv$q6_h*60+DB.csv$q6_m
+DB.csv$q7 <- DB.csv$q7_h*60+DB.csv$q7_m
+
+#第八題沒有人選其他
+DB.csv$q8_88 <- NULL
+DB.csv$q8_88_text <- NULL
+
+#第九題簡化(使用哪些通訊軟體 改成 使用幾個通訊軟體)
+DB.csv$q9 <- rowSums(DB.csv[,18:25], na.rm = TRUE) + sapply(DB.csv[,27], function(entry_i){
+  temp <- gsub(" ","",entry_i)
+  return(length(unlist(strsplit(temp,",|及"))))
+})
+
+#移除疫情相關的問題
+DB.csv[,match("q12_1", colnames(DB.csv)):match("q15_03_1", colnames(DB.csv))] <- NULL
+
+#移除注意力偵測題
+DB.csv[,match("q21a_1", colnames(DB.csv)):match("q21a_6_text", colnames(DB.csv))] <- NULL
+DB.csv$q37a <- NULL
+DB.csv$rq21a <- NULL
+DB.csv$rq37a <- NULL
+DB.csv$r <- NULL
+DB.csv$qrq2 <- NULL
+DB.csv$q2 <- DB.csv$rrq2  #第二題改成年齡的區段
+DB.csv$rrq2 <- NULL
+```
+
+
+```{r}
+#有無抵制行為(1:有,0:沒有)
+DB.csv$q28_5[is.na(DB.csv$q28_5)] <- 0
+
+#歸類28題的選項
+DB.csv[DB.csv$q28_4_text=="會破壞我對他（她）的形象",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="從來都不關注",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="若名人不自我反省就會抵制，但是通常名人都會願意出來面對錯誤",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="未來此人所說的話均會產生疑問",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="用選票來抵制",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="很多時候都是立場不同、換位思考一下後，就可以消弭一些爭議。",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="看看就好",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="拒買相關商品",c('q28_4','q28_4_text')] <- c(NA,"")
+
+DB.csv[DB.csv$q28_4_text=="沒意見",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="看看就好,自己會有自己的判斷",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q28_4_text=="與親朋好友說明事實真相",
+                  c('q28_4','q28_4_text')] <- c(NA,"")
+DB.csv[DB.csv$q28_4_text=="要看是什麼原因決定一時間這麼做還是永久",
+                  c('q28_4','q28_4_text')] <- c(NA,"")
+
+DB.csv[DB.csv$q28_4_text=="指正他的錯誤",
+                  c('q28_4','q28_4_text')] <- c(NA,"")
+DB.csv[
+  DB.csv$q28_4_text=="每個人有合法的言論自由，我只會拒絕觀看有問題違法的影片，不會ㄧ竿子打翻ㄧ條船。",
+  c('q28_2','q28_4','q28_4_text')] <- c(1,NA,"")
+DB.csv[
+  DB.csv$q28_4_text=="減少看他們的發文或影片",
+  c('q28_2','q28_4','q28_4_text')] <- c(1,NA,"")
+DB.csv[
+  DB.csv$q28_4_text=="轉發相關的指正或譴責文章",
+  c('q28_4','q28_4_text')] <- c(NA,"")
+#歸類29題的選項
+#29的第五選項改定義為 錯誤資訊、不當言論
+DB.csv$q29_5_text[DB.csv$q29_5_text=="錯誤資訊"] <- ""
+
+DB.csv[DB.csv$q29_5_text=="道不同不相為謀不理他們",
+       c('q29_2','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="沒有此情況",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv$q29_5_text[DB.csv$q29_5_text=="發表錯誤資訊且不更改"] <- ""
+
+DB.csv[DB.csv$q29_5_text=="不會抵制",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="我沒有特別抵制過呢",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="從來沒有",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="不明白指的是什麼",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="過於私人或主觀意識的回答會讓我反感進而抵制收看",
+       c('q29_2','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="已讀",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv$q29_5_text[DB.csv$q29_5_text=="縵罵"] <- ""
+
+DB.csv[DB.csv$q29_5_text=="不理他們",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv$q29_5_text[DB.csv$q29_5_text=="指鹿為馬，不實言論，刻意誤導輿論方向。"] <- ""
+DB.csv$q29_5_text[DB.csv$q29_5_text=="不當發言"] <- ""
+DB.csv$q29_5_text[
+  DB.csv$q29_5_text=="假名人之姿發表利己損害公眾利益的言論，企圖影響他人判斷的言論者。"] <- ""
+
+DB.csv$q29_5_text[DB.csv$q29_5_text=="散播不正確消息且不認錯"] <- ""
+DB.csv[DB.csv$q29_5_text=="不予置評",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="無",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="不會做無聊的事情",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="目前沒有",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="味全黑心油事件",
+       c('q29_5','q29_5_text')] <- c(NA,"")
+
+DB.csv$q29_5_text[
+  DB.csv$q29_5_text=="對動物議題留下錯誤言論，對疫情走向發出錯誤言論（去年康健發文說嬰幼兒不會染疫，被我指正，卻不改言論，"] <- ""
+
+DB.csv[DB.csv$q29_5_text=="不曾",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="沒遇過要抵制的事",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[
+  DB.csv$q29_5_text=="說謊話（至少是我覺得他在說謊），做錯事不負責還甩鍋給別人。",
+  c('q29_5','q29_5_text')] <- c(NA,"")
+
+#有兩個 沒有
+DB.csv[match("沒有",DB.csv$q29_5_text),
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[match("沒有",DB.csv$q29_5_text),
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv[DB.csv$q29_5_text=="有些事情的看法 做法不同",
+       c('q29_2','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="違反當初自己宣揚的理念",
+       c('q29_4','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[
+  DB.csv$q29_5_text=="泛指公眾人物沒有責任表態但有義務不支持通稱反人類行為，私領域不要太誇張都沒差",
+  c('q29_4','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="沒有抵制過",
+       match("q28_1", colnames(DB.csv)):match("q36_1", colnames(DB.csv))] <- c(rep(NA,4),"",0,rep(NA,5),"",rep(NA,7))
+
+DB.csv$q29_5_text[DB.csv$q29_5_text=="誤導"] <- ""
+DB.csv$q29_5_text <- NULL
+DB.csv$q28_4_text <- NULL
+```
+
+
+```{r}
+DB.csv$q16_18[DB.csv$q16 == 2 & DB.csv$q18 == 2] <- 0 #沒有惡搞
+DB.csv$q16_18[DB.csv$q17_02==1] <- 1                  #有惡搞但不騙人不傷害
+DB.csv$q16_18[DB.csv$q17_01==1] <- 2                  #有惡搞有騙人沒傷害
+DB.csv$q16_18[DB.csv$q19_02==1] <- 3                  #有惡搞沒騙人有傷害
+DB.csv$q16_18[DB.csv$q19_01==1] <- 4                  #有惡搞有騙人有傷害
+
+DB.csv$q22_total <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
+DB.csv$q23_total <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
+DB.csv$q24_total <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
+DB.csv$q25_total <- rowSums(DB.csv[,c("q25_01_1", "q25_02_1", "q25_03_1", "q25_04_1")])
+DB.csv$q26_total <- rowSums(DB.csv[,c("q26_01_1", "q26_02_1", "q26_03_1")])
+DB.csv$q38_total <- rowSums(DB.csv[,c("q38_01_1", "q38_02_1")])
+
+DB.csv$q40_cat <- cut(DB.csv$q40_1, 
+                        breaks = c(0, 20, 40, 60, 80, 100), 
+                        labels = c(1, 2, 3, 4, 5), 
+                        right = TRUE)
+DB.csv$q40_cat[is.na(DB.csv$q40_cat)] <- 1
+DB.csv$q41_cat <- cut(DB.csv$q41_1, 
+                       breaks = c(0, 20, 40, 60, 80, 100), 
+                       labels = c(1, 2, 3, 4, 5), 
+                       right = TRUE)
+DB.csv$q41_cat[is.na(DB.csv$q41_cat)] <- 1
+```
+
+
+```{r}
+myCount_q28 <- function(din, target_label){
+  din %>%
+    group_by(q28_5, !!sym(target_label)) %>%
+    summarise(count = sum(weight))
+}
+
 counts_16_18 <- DB.csv %>%
   group_by(q28_5, q16_18) %>%
-  summarise(count = n())
+  summarise(count = sum(weight))
 #圖
 ggplot(counts_16_18, aes(x = as.factor(q28_5), y = q16_18, fill = count)) +
   geom_tile() +
@@ -159,7 +361,7 @@ ggplot(counts_20_02, aes(x = as.factor(q28_5), y = q20_02_1, fill = count)) +
         plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
 
 #網路世界看到別人的網路攻擊行為
-DB.csv$q22_total <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
+
 counts_22 <- DB.csv%>%
   group_by(q28_5,q22_total)%>%
   summarise(count = n())
@@ -173,7 +375,7 @@ ggplot(counts_22, aes(x = as.factor(q28_5), y = q22_total, fill = count)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
 #網路世界自己做出的網路攻擊行為
-DB.csv$q23_total <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
+
 counts_23 <- DB.csv%>%
   group_by(q28_5,q23_total)%>%
   summarise(count = n())
@@ -187,7 +389,7 @@ ggplot(counts_23, aes(x = as.factor(q28_5), y = q23_total, fill = count)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
 #越容易接收到不是使用者偏好的訊息
-DB.csv$q24_total <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
+
 counts_24 <- DB.csv%>%
   group_by(q28_5,q24_total)%>%
   summarise(count = n())
@@ -201,7 +403,7 @@ ggplot(counts_24, aes(x = as.factor(q28_5), y = q24_total, fill = count)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
 #越能接受網路攻擊
-DB.csv$q25_total <- rowSums(DB.csv[,c("q25_01_1", "q25_02_1", "q25_03_1", "q25_04_1")])
+
 counts_25 <- DB.csv%>%
   group_by(q28_5,q25_total)%>%
   summarise(count = n())
@@ -216,7 +418,7 @@ ggplot(counts_25, aes(x = as.factor(q28_5), y = q25_total, fill = count)) +
         plot.title = element_text(hjust = 0.5))
 
 #推測他人的攻擊意圖
-DB.csv$q26_total <- rowSums(DB.csv[,c("q26_01_1", "q26_02_1", "q26_03_1")])
+
 counts_26 <- DB.csv%>%
   group_by(q28_5,q26_total)%>%
   summarise(count = n())
@@ -243,7 +445,7 @@ ggplot(counts_27, aes(x = as.factor(q28_5), y = q27_1, fill = count)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
 #心理幸福感
-DB.csv$q38_total <- rowSums(DB.csv[,c("q38_01_1", "q38_02_1")])
+
 counts_38 <- DB.csv%>%
   group_by(q28_5,q38_total)%>%
   summarise(count = n())
@@ -270,11 +472,7 @@ ggplot(counts_39, aes(x = as.factor(q28_5), y = q39_1, fill = count)) +
         plot.title = element_text(hjust = 0.5))
 
 #國民黨讓你感到溫暖的程度，再區分為5個範圍
-DB.csv$q40_cat <- cut(DB.csv$q40_1, 
-                        breaks = c(0, 20, 40, 60, 80, 100), 
-                        labels = c(1, 2, 3, 4, 5), 
-                        right = TRUE)
-DB.csv$q40_cat[is.na(DB.csv$q40_cat)] <- 1
+
 counts_40 <- DB.csv%>%
   group_by(q28_5,q40_cat)%>%
   summarise(count = n())
@@ -289,11 +487,7 @@ ggplot(counts_40, aes(x = as.factor(q28_5), y = q40_cat, fill = count)) +
 
 
 #民進黨讓你感到溫暖的程度，再區分為5個範圍
-DB.csv$q41_cat <- cut(DB.csv$q41_1, 
-                       breaks = c(0, 20, 40, 60, 80, 100), 
-                       labels = c(1, 2, 3, 4, 5), 
-                       right = TRUE)
-DB.csv$q41_cat[is.na(DB.csv$q41_cat)] <- 1
+
 counts_41 <- DB.csv%>%
   group_by(q28_5,q41_cat)%>%
   summarise(count = n())
@@ -324,7 +518,6 @@ ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
 
 
 ```{r}
-library(rlang)
 Barplot.p <- function(din){
   split_label<-colnames(din)[1]
   cat_label <- colnames(din)[2]
@@ -335,7 +528,8 @@ Barplot.p <- function(din){
     ungroup()
   ggplot(temp, aes(x = factor(!!sym(split_label)), y = proportion, fill = factor(!!sym(cat_label)))) +
     geom_bar(stat = "identity", position = "stack") +
-    labs(x = "Proportion", y = "Percentage", fill = "A") +
+    labs(x = "Proportion", y = "Percentage") +
+    scale_fill_grey(start = 0.1, end = 0.9) +
     ggtitle(label = cat_label)+
     theme_minimal() +
     coord_flip()
@@ -343,20 +537,20 @@ Barplot.p <- function(din){
 ```
 
 ```{r}
-Barplot.p(din=counts_16_18)
-Barplot.p(din=counts_20_01)
-Barplot.p(din=counts_20_02)
-Barplot.p(din=counts_22)
-Barplot.p(din=counts_23)
-Barplot.p(din=counts_24)
-Barplot.p(din=counts_25)
-Barplot.p(din=counts_26)
-Barplot.p(din=counts_27)
-Barplot.p(din=counts_38)
-Barplot.p(din=counts_39)
-Barplot.p(din=counts_40)
-Barplot.p(din=counts_41)
-Barplot.p(din=counts_42)
+Barplot.p(din=myCount_q28(DB.csv, "q16_18"))
+Barplot.p(din=myCount_q28(DB.csv, "q20_01_1"))
+Barplot.p(din=myCount_q28(DB.csv, "q20_02_1"))
+Barplot.p(din=myCount_q28(DB.csv, "q22_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q23_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q24_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q25_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q26_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q27_1"))
+Barplot.p(din=myCount_q28(DB.csv, "q38_total"))
+Barplot.p(din=myCount_q28(DB.csv, "q39_1"))
+Barplot.p(din=myCount_q28(DB.csv, "q40_cat"))
+Barplot.p(din=myCount_q28(DB.csv, "q41_cat"))
+Barplot.p(din=myCount_q28(DB.csv, "q42_1"))
 ```
 
 ```{r}
@@ -403,13 +597,16 @@ ks.test(counts_42$count[counts_42$q28_5==1],
         counts_42$count[counts_42$q28_5==0])
 ```
 
+
 ```{r}
 fit.logistic <- glm(
-  factor(q28_5)~q24_01_1+q24_02_1+q24_03_1+q24_04_1+q24_05_1 ,
+  factor(q28_5)~q24_01_1+q24_02_1+q24_03_1+q24_04_1+q24_05_1,
   data = DB.csv,
   family = binomial
 )
 summary(fit.logistic)
 ```
+
+
 
 
