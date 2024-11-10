@@ -143,7 +143,8 @@ DB.csv$rrq2 <- NULL
 
 ```{r}
 #有無抵制行為(1:有,0:沒有)
-DB.csv$q28_5[is.na(DB.csv$q28_5)] <- 0
+DB.csv$q28_5[DB.csv$q28_5==1] <- 0
+DB.csv$q28_5[is.na(DB.csv$q28_5)] <- 1
 
 #歸類28題的選項
 DB.csv[DB.csv$q28_4_text=="會破壞我對他（她）的形象",
@@ -608,5 +609,104 @@ summary(fit.logistic)
 ```
 
 
+```{r}
+library(ggplot2)
+library(dplyr)
+library(showtext)
+showtext_auto()
+#把有抵制活動的拉出來變一個新的data
+boycott <- subset(DB.csv, q28_5 == 1)
+boycott[, 94:100] <- lapply(boycott[, 94:100], as.numeric)
 
+library(FactoMineR)
+library(factoextra)
+pca_result <- PCA(boycott[, c(94,96,99)], row.w = boycott$weight, scale.unit = TRUE)#選這三個因為好解釋+解釋程度比較高
+pc1_loadings <- pca_result$var$coord[, 1]
+pc1_loadings
+
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+
+#把pc分數加到資料中
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$pc1<-pc1_scores
+
+
+
+#缺失值轉0
+boycott$q28_1[is.na(boycott$q28_1)] <- 0
+boycott$q28_2[is.na(boycott$q28_2)] <- 0
+boycott$q28_3[is.na(boycott$q28_3)] <- 0
+boycott$q28_4[is.na(boycott$q28_4)] <- 0
+boycott$q29_1[is.na(boycott$q29_1)] <- 0
+boycott$q29_2[is.na(boycott$q29_2)] <- 0
+boycott$q29_3[is.na(boycott$q29_3)] <- 0
+boycott$q29_4[is.na(boycott$q29_4)] <- 0
+boycott$q29_5[is.na(boycott$q29_5)] <- 0
+boycott[, 84:93] <- lapply(boycott[, 84:93], as.numeric)
+dt<- boycott[, c(84,85,86,89,90,91,92,93)]
+#lm
+fit1 <- lm(
+  pc1~(q28_1+q28_2+q28_3+q29_1+q29_2+q29_3+q29_4+q29_5)^2,
+  data = boycott
+)
+summary(fit1)
+
+#試試把pc分數轉成五個ordinal 分數，做ordinal logistic，結果一樣爛
+library(dplyr)
+boycott$pcgroup <- ntile(boycott$pc1, 5)
+library(VGAM)
+model <- vglm(pcgroup~.,family=cumulative(parallel=TRUE),data=data.frame(pcgroup = boycott$pcgroup, dt))
+summary(model)
+
+#沒辦法直接算r squared所以算一些其他的r squared
+calc_pseudo_r2 <- function(model) {
+  # 取得概似函數值
+  loglik_model <- logLik(model)[1]
+  loglik_null <- logLik(update(model, . ~ 1))[1]
+  
+  # McFadden's R²
+  mcfadden <- 1 - loglik_model/loglik_null
+  
+  # Nagelkerke's R²
+  n <- nobs(model)
+  nagelkerke <- (1 - exp((2/n) * (loglik_null - loglik_model))) /
+                (1 - exp(2/n * loglik_null))
+  
+  # Cox & Snell R²
+  cox_snell <- 1 - exp(2 * (loglik_null - loglik_model) / n)
+  
+  # 整理結果
+  results <- data.frame(
+    Measure = c("McFadden R²", "Nagelkerke R²", "Cox & Snell R²"),
+    Value = c(mcfadden, nagelkerke, cox_snell)
+  )
+  
+  return(results)
+}
+
+pseudo_r2 <- calc_pseudo_r2(model)
+pseudo_r2
+
+
+#決策樹(我還沒調參)
+library(rpart)
+library(rpart.plot)
+#library(RWeka)
+cart.model <- rpart(pc1 ~ ., 
+                   data = data.frame(pc1 = boycott$pc1, dt),
+                   method = "anova") 
+                    
+prp(cart.model,         # 模型
+    faclen=0,           # 呈現的變數不要縮寫
+    fallen.leaves=TRUE, # 讓樹枝以垂直方式呈現
+    shadow.col="gray",  # 最下面的節點塗上陰影
+    # number of correct classifications / number of observations in that node
+    extra=0)  
+summary(cart.model)
+p.rpart <- predict(cart.model
+                   , dt)
+plot(p.rpart,boycott$pc1)
+
+```
 
