@@ -1,0 +1,123 @@
+---
+title: "HW: Conjoint Measurement anlaysis"
+date: today
+author: 高嘉妤、柯堯珹、趙友誠、吳承恩
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+---
+# 問題敘述
+
+針對slides page 129中的例子，評估對排序值進行線性轉換的影響。
+
+# Ranked by levels 1 to 6
+
+```{r}
+rank <- matrix(c(1,3,2,6,4,5),nrow = 3,ncol = 2,byrow = TRUE)
+
+rownames(rank) <- c('50kW','70kW','90kW')
+colnames(rank) <- c('No','Yes')
+
+p1bar <- rowMeans(rank); p2bar <- colMeans(rank)
+mu1 <- mean(c(rank))
+beta1 <- p1bar - mu1; beta2 <- p2bar - mu1
+
+fitted <- outer(beta1, beta2, function(x,y) x+y+mu1)
+round(fitted, 3)
+```
+
+# 線性轉換
+
+## Ranked by orginal levels +5
+
+```{r}
+rank2 <- matrix(c(6,8,7,11,9,10),nrow = 3,ncol = 2,byrow = TRUE)
+
+rownames(rank2) <- c('50kW','70kW','90kW')
+colnames(rank2) <- c('No','Yes')
+
+p1bar2 <- rowMeans(rank2); p2bar2 <- colMeans(rank2)
+mu2 <- mean(c(rank2))
+beta12 <- p1bar2 - mu2; beta22 <- p2bar2 - mu2
+
+fitted2 <- outer(beta12, beta22, function(x,y) x+y+mu2)
+round(fitted2, 3)
+```
+
+## Ranked by orginal levels times 10
+
+```{r}
+rank3 <- matrix(c(10,30,20,60,40,50),nrow = 3,ncol = 2,byrow = TRUE)
+
+rownames(rank3) <- c('50kW','70kW','90kW')
+colnames(rank3) <- c('No','Yes')
+
+p1bar3 <- rowMeans(rank3); p2bar3 <- colMeans(rank3)
+mu3 <- mean(c(rank3))
+beta13 <- p1bar3 - mu3; beta23 <- p2bar3 - mu3
+
+fitted3 <- outer(beta13, beta23, function(x,y) x+y+mu3)
+round(fitted3, 3)
+```
+
+## Ranked by orginal levels ×10 and then +5
+
+```{r}
+rank4 <- matrix(c(15,35,25,65,45,55),nrow = 3,ncol = 2,byrow = TRUE)
+
+rownames(rank4) <- c('50kW','70kW','90kW')
+colnames(rank4) <- c('No','Yes')
+
+p1bar4 <- rowMeans(rank4); p2bar4 <- colMeans(rank4)
+mu4 <- mean(c(rank4))
+beta14 <- p1bar4 - mu4; beta24 <- p2bar4 - mu4
+
+fitted4 <- outer(beta14, beta24, function(x,y) x+y+mu4)
+round(fitted4, 3)
+```
+
+# 非線性轉換(Exponential)
+
+```{r}
+#Exponential
+rank5 <- matrix(c(exp(1),exp(3),exp(2),exp(6),exp(4),exp(5)),nrow = 3,ncol = 2,byrow = TRUE)
+
+rownames(rank5) <- c('50kW','70kW','90kW')
+colnames(rank5) <- c('No','Yes')
+
+p1bar5 <- rowMeans(rank5)
+p2bar5 <- colMeans(rank5)
+
+mu5 <- mean(c(rank5))
+
+beta15 <- p1bar5 - mu5
+beta25 <- p2bar5 - mu5
+
+fitted5 <- outer(beta15, beta25, function(x,y) x+y+mu5)
+round(fitted5, 3)
+```
+
+# 結論
+
+由上述的資料可以看出，對一開始的排序值進行了線性轉換並不會影響最後排序的結果。
+
+這是由於在排序新rank的算法是以"mean的row" + "mean的col" 去扣掉整體的mean
+(因為$\beta_1+\beta_2+\mu=\bar{p}_1+\bar{p}_2-2\mu+\mu=\bar{p}_1+\bar{p}_2-\mu$)。
+
+也因此如果同時對整筆資料進行線性轉換相當於是將最後的結果去做一個尺度上的轉換，唯一改變的可能只有差值(difference)，而他們之間的排序是不會改變的。舉例來說，rank4是將rank去乘上10再加上5，由最後rank4的結果可以看出來他就是將rank的結果乘上10再加上5。
+
+然而對於非線性轉換的結果就可能會差很多了，因為轉換過後的值之間差距並不一致，例如:
+
+加上exponential後，我們可以發現最後結果的rank與原本的結果不一致。
