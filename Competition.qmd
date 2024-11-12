@@ -29,8 +29,8 @@ execute:
 | q3        | 出生縣市    | 1\~19是台灣的縣市(資料沒有連江、澎湖、金門), 24是其他   |
 | q4        | 教育程度    | 1:高中及以下, 2:專科, 3:大學, 4:研究所         |
 | q5        | 週上網天數           |                    |
-| q6        | 上網時數(工作、學習) |                    |
-| q7        | 上網時數(娛樂、休閒) |                    |
+| q6        | 上網分鐘(工作、學習) |                    |
+| q7        | 上網分鐘(娛樂、休閒) |                    |
 | q8        | 上網原因             |                    |
 | q9        | 使用的即時通訊軟體   |                    |
 | q10       | 使用的社群媒體       |                    |
@@ -91,13 +91,8 @@ library(dplyr);library(ggplot2);library(MASS)
 library(rlang)         #for building function
 #DB.sav <-read_sav("DisruptiveBehavior.sav")
 #write.csv(DB.sav,file= "DisruptiveBehavior.csv", row.names= FALSE)
-DB.csv <-read.csv("DisruptiveBehavior.csv")
+DB.csv <-read.csv("DisruptiveBehavior.csv")[,-c(1:4)]
 showtext_auto()
-```
-
-```{r}
-DB.csv <- DB.csv[,-c(1:4)]
-#DataExplorer::plot_missing(DB.csv[,1:20])
 ```
 
 ```{r}
@@ -127,21 +122,19 @@ DB.csv$q4[DB.csv$q4>2 & DB.csv$q4<=19] <- 3
 DB.csv$q4[DB.csv$q4>3] <- 4
 ```
 
-## 第五題~第十一題
+## 第五題~第十一題整理
 
 第八題: 
 
-檢視資料後發現大部分人都會透過網路接觸名人的資訊(只有四個山頂洞人)，
+檢視資料後發現大部分人都會透過網路接觸名人的資訊(只有四個山頂洞人)，所以先決定移除第八題。
 
-所以先決定移除第八題。
+第九題: 感覺可以拿掉，應該都還是跟認識的人聊天，比較難突破同溫層。
 
-第九題: 感覺可以拿掉，應該都還是跟認識的人聊天，比較難突破同溫層
+第十題(使用幾個與yt名人討論相關的社群媒體): 
 
-第十題(使用的社群媒體): 
+Pinterest,Linkedin,+其他類Pixiv,Mobile01,Komica,MeWe 跟yt名人相關的討論比較無關;
 
-Pinterest,Linkedin,Pixiv,Mobile01,Komica,MeWe 跟yt名人相關的討論比較無關;
-
-巴哈姆特, 巴哈姆特場外休憩區 兩個則要計算 
+巴哈姆特, 巴哈姆特場外休憩區 兩個則要計算
 
 第十一題: 改成 1:有使用YT, Twitch, +(其他:bilibili)
 
@@ -153,15 +146,25 @@ DB.csv$q6_h <- NULL; DB.csv$q6_m <- NULL
 DB.csv$q7_h <- NULL; DB.csv$q7_m <- NULL
 
 #移除q8,q9
-DB.csv[,which(colnames(DB.csv)=="q8_1"):which(colnames(DB.csv)=="q8_88_text")] <- NULL
-DB.csv[,match("q9_1",colnames(DB.csv)):match("q9_90",colnames(DB.csv))] <- NULL
+DB.csv[, match("q8_1", colnames(DB.csv)):match("q8_90", colnames(DB.csv))] <- NULL
+DB.csv[, match("q9_1",colnames(DB.csv)):match("q9_90",colnames(DB.csv))] <- NULL
 
-#移除第十、十一題
-unique(DB.csv$q11_88_text)
+#整理第十題
+DB.csv$q10_4 <- NULL
+DB.csv$q10_10 <- NULL
+DB.csv$q10_90 <- NULL
+DB.csv$q10_88[DB.csv$q10_88_text!="巴哈姆特場外休憩區"&DB.csv$q10_88_text!="巴哈姆特"] <- NA
+DB.csv$q10_88_text <- NULL
+DB.csv$q10 <- apply(DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_7", "q10_8", "q10_9","q10_88")],
+                    1, function(row){sum(!is.na(row))})
+DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_7", "q10_8", "q10_9", "q10_88")] <- NULL
 
-DB.csv[,match("q10_1",colnames(DB.csv)):match("q10_90",colnames(DB.csv))] <- NULL
-DB.csv[,match("q11_1",colnames(DB.csv)):match("q11_90",colnames(DB.csv))] <- NULL
 
+```
+
+## 第十二題是疫情相關題目(移除)
+
+```{r}
 #移除疫情相關的問題(12題到15題)
 DB.csv[,match("q12_1", colnames(DB.csv)):match("q15_03_1", colnames(DB.csv))] <- NULL
 
@@ -372,6 +375,26 @@ DB.csv$q41_cat[is.na(DB.csv$q41_cat)] <- 1
 ```
 
 ```{r}
+DB.csv[] <- as.data.frame(
+  apply(DB.csv,2,function(col){
+    col <- as.numeric(col)
+    col[is.na(col)] <- 0
+    return(col)
+}))
+DB.csv$q28_4 <- NULL
+DB.csv$q29_2 <- ifelse(DB.csv$q29_2 | DB.csv$q29_3, 1,0)
+DB.csv$q29_3 <- ifelse(DB.csv$q29_4|DB.csv$q29_5, 1,0)
+DB.csv$q29_4 <- NULL
+DB.csv$q29_5 <- NULL
+
+index.q28_1 <- match("q28_1",colnames(DB.csv))
+index.q28_3 <- match("q28_3",colnames(DB.csv))
+index.q29_1 <- match("q29_1",colnames(DB.csv))
+index.q29_3 <- match("q29_3",colnames(DB.csv))
+```
+
+
+```{r}
 myCount_q28 <- function(din, target_label){
   din %>%
     group_by(q28_5, !!sym(target_label)) %>%
@@ -397,19 +420,18 @@ Barplot.p <- function(din){
 
 ```{r}
 #| eval: false
-counts_16_18 <- DB.csv %>%
-  group_by(q28_5, q16_18) %>%
-  summarise(count = sum(weight))
+counts_17_19 <- DB.csv %>%
+  group_by(q28_5, q1719.label) %>%
+  summarise(count = n())
 #圖
-ggplot(counts_16_18, aes(x = as.factor(q28_5), y = q16_18, fill = count)) +
+ggplot(counts_17_19, aes(x = as.factor(q28_5), y = q1719.label, fill = count)) +
   geom_tile() +
   scale_fill_gradient(low = "lightblue", high = "red") +
-  geom_text(label=counts_16_18$count,size = 3, color = "black", fontface = "bold")+
+  geom_text(label=counts_17_19$count,size = 3, color = "black", fontface = "bold")+
   labs(title = "抵制vs網路惡搞", x = "boycott", y = "網路惡搞行為", fill = "Proportion") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))  # 旋轉 x 軸刻度標籤，以避免重疊
-which(is.na(DB.csv$q16_18))
 
 #為了讓討厭的人知道他不屬於您的團體，在網路上罵他，您覺得可不可以接受?計數
 counts_20_01 <- DB.csv%>%
@@ -595,7 +617,7 @@ ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
 
 ```{r}
 #| eval: false
-Barplot.p(din=myCount_q28(DB.csv, "q16_18"))
+Barplot.p(din=myCount_q28(DB.csv, "q1719.label"))
 Barplot.p(din=myCount_q28(DB.csv, "q20_01_1"))
 Barplot.p(din=myCount_q28(DB.csv, "q20_02_1"))
 Barplot.p(din=myCount_q28(DB.csv, "q22_total"))
@@ -656,135 +678,7 @@ ks.test(counts_42$count[counts_42$q28_5==1],
         counts_42$count[counts_42$q28_5==0])
 ```
 
-# 嘗試PCA與決策樹
-
 ```{r}
-#| eval: false
-library(ggplot2)
-library(dplyr)
-library(showtext)
-showtext_auto()
-#把有抵制活動的拉出來變一個新的data
-boycott <- subset(DB.csv, q28_5 == 1)
-boycott[, 94:100] <- lapply(boycott[, 94:100], as.numeric)
-
-library(FactoMineR)
-library(factoextra)
-pca_result <- PCA(boycott[, c(94,96,99)], row.w = boycott$weight, scale.unit = TRUE)#選這三個因為好解釋+解釋程度比較高
-pc1_loadings <- pca_result$var$coord[, 1]
-pc1_loadings
-
-pc1_explained_variance <- pca_result$eig[1, 2]
-pc1_explained_variance
-
-#把pc分數加到資料中
-pc1_scores <- pca_result$ind$coord[, 1]
-boycott$pc1<-pc1_scores
-
-
-
-#缺失值轉0
-boycott$q28_1[is.na(boycott$q28_1)] <- 0
-boycott$q28_2[is.na(boycott$q28_2)] <- 0
-boycott$q28_3[is.na(boycott$q28_3)] <- 0
-boycott$q28_4[is.na(boycott$q28_4)] <- 0
-boycott$q29_1[is.na(boycott$q29_1)] <- 0
-boycott$q29_2[is.na(boycott$q29_2)] <- 0
-boycott$q29_3[is.na(boycott$q29_3)] <- 0
-boycott$q29_4[is.na(boycott$q29_4)] <- 0
-boycott$q29_5[is.na(boycott$q29_5)] <- 0
-boycott[, 84:93] <- lapply(boycott[, 84:93], as.numeric)
-dt<- boycott[, c(84,85,86,89,90,91,92,93)]
-#lm
-fit1 <- lm(
-  pc1~(q28_1+q28_2+q28_3+q29_1+q29_2+q29_3+q29_4+q29_5)^2,
-  data = boycott
-)
-summary(fit1)
-
-#試試把pc分數轉成五個ordinal 分數，做ordinal logistic，結果一樣爛
-library(dplyr)
-boycott$pcgroup <- ntile(boycott$pc1, 5)
-library(VGAM)
-model <- vglm(pcgroup~.,family=cumulative(parallel=TRUE),data=data.frame(pcgroup = boycott$pcgroup, dt))
-summary(model)
-
-#沒辦法直接算r squared所以算一些其他的r squared
-calc_pseudo_r2 <- function(model) {
-  # 取得概似函數值
-  loglik_model <- logLik(model)[1]
-  loglik_null <- logLik(update(model, . ~ 1))[1]
-  
-  # McFadden's R²
-  mcfadden <- 1 - loglik_model/loglik_null
-  
-  # Nagelkerke's R²
-  n <- nobs(model)
-  nagelkerke <- (1 - exp((2/n) * (loglik_null - loglik_model))) /
-                (1 - exp(2/n * loglik_null))
-  
-  # Cox & Snell R²
-  cox_snell <- 1 - exp(2 * (loglik_null - loglik_model) / n)
-  
-  # 整理結果
-  results <- data.frame(
-    Measure = c("McFadden R²", "Nagelkerke R²", "Cox & Snell R²"),
-    Value = c(mcfadden, nagelkerke, cox_snell)
-  )
-  
-  return(results)
-}
-
-pseudo_r2 <- calc_pseudo_r2(model)
-pseudo_r2
-
-
-#決策樹(我還沒調參)
-library(rpart)
-library(rpart.plot)
-#library(RWeka)
-cart.model <- rpart(pc1 ~ ., 
-                   data = data.frame(pc1 = boycott$pc1, dt),
-                   method = "anova") 
-                    
-prp(cart.model,         # 模型
-    faclen=0,           # 呈現的變數不要縮寫
-    fallen.leaves=TRUE, # 讓樹枝以垂直方式呈現
-    shadow.col="gray",  # 最下面的節點塗上陰影
-    # number of correct classifications / number of observations in that node
-    extra=0)  
-summary(cart.model)
-p.rpart <- predict(cart.model
-                   , dt)
-plot(p.rpart,boycott$pc1)
-
-```
-
-# 重新定義反應變數(複選題)
-
-因為已經將q28(q28_1~q28_4)跟有沒有抵制行為(q28_5)
-因此可以將28題的複選題轉成多類別單選(C4取0~C4取4): 八種組合
-
-預期每一種抵制行為模式的背後，有固定的族群輪廓
-
-```{r}
-DB.csv[] <- as.data.frame(
-  apply(DB.csv,2,function(col){
-    col <- as.numeric(col)
-    col[is.na(col)] <- 0
-    return(col)
-}))
-DB.csv$q28_4 <- NULL
-DB.csv$q29_2 <- ifelse(DB.csv$q29_2 | DB.csv$q29_3, 1,0)
-DB.csv$q29_3 <- ifelse(DB.csv$q29_4|DB.csv$q29_5, 1,0)
-DB.csv$q29_4 <- NULL
-DB.csv$q29_5 <- NULL
-
-index.q28_1 <- match("q28_1",colnames(DB.csv))
-index.q28_3 <- match("q28_3",colnames(DB.csv))
-index.q29_1 <- match("q29_1",colnames(DB.csv))
-index.q29_3 <- match("q29_3",colnames(DB.csv))
-
 q28.label <- as.factor(apply(
   DB.csv[,index.q28_1:index.q28_3],
   MARGIN = 1,
@@ -825,8 +719,42 @@ table(q2829.label)
 分成 : 1自己, 23至少選一, 45至少選一 
 
 ```{r}
-which(colnames(DB.csv)=="weight")
-which(colnames(DB.csv)=="q28_5")
+boycott <- subset(DB.csv, q28_5 == 1)
+#缺失值轉0
+boycott$q28_1[is.na(boycott$q28_1)] <- 0
+boycott$q28_2[is.na(boycott$q28_2)] <- 0
+boycott$q28_3[is.na(boycott$q28_3)] <- 0
+boycott$q28_4[is.na(boycott$q28_4)] <- 0
+boycott$q29_1[is.na(boycott$q29_1)] <- 0
+boycott$q29_2[is.na(boycott$q29_2)] <- 0
+boycott$q29_3[is.na(boycott$q29_3)] <- 0
+boycott$q29_4[is.na(boycott$q29_4)] <- 0
+boycott$q29_5[is.na(boycott$q29_5)] <- 0
+boycott[,c('q30_1','q32_1','q35_1')] <- lapply(boycott[, c('q30_1','q32_1','q35_1')], as.numeric)
+y <-boycott[,c('q30_1','q32_1','q35_1')]
+boycott
+boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
+boycott$q29_2_3 <- ifelse(boycott$q29_2==1 | boycott$q29_3==1,1,0)
+boycott$q29_4_5 <- ifelse(boycott$q29_4==1 | boycott$q29_5==1,1,0)
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")], as.numeric)
+x <-boycott[,c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")]
+
+cca <-cancor(x,y)
+#典型相關係數
+cca$cor
+#最大典型相關係數為0.26，且第一典型變數主要由  q29_4_5 和q35_1 貢獻組成
+x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
+y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
+x_lodings
+y_lodings
+#自我相關係數
+round((colSums(x_lodings^2)[1:2]/4),4)
+round((colSums(y_lodings^2)[1:2]/4),4)
+#典型相關係數平方
+num<-round(cca$cor^2,4)[1:2]
+
+round((colSums(x_lodings^2)[1:2]/4)*num,4)
+round((colSums(y_lodings^2)[1:2]/4)*num,4)
 ```
 
 ```{r}
