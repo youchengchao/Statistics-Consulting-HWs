@@ -17,6 +17,9 @@ format:
          \setCJKmainfont{標楷體}
 toc: true
 documentclass: article
+execute: 
+  cache: true
+  echo: true
 ---
 
 | Variables | Explanation          | remark             |
@@ -80,7 +83,7 @@ documentclass: article
 ```{r}
 #| output: FALSE
 #| warning: FALSE
-library(haven)           #read sav file
+library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
 library(showtext)      #show zw-tw in ggplot2
@@ -102,6 +105,10 @@ DB.csv <- DB.csv[,-c(1:4)]
 #latex(describe(DB.csv),title="",file="")
 ```
 
+# 變數前處理
+
+## 人口結構變數處理
+
 ```{r}
 #第二題(出生年)改成年齡的區段
 DB.csv$q2 <- DB.csv$rrq2
@@ -118,29 +125,40 @@ DB.csv$q4[DB.csv$q4<=8] <- 1
 DB.csv$q4[DB.csv$q4!=1 & DB.csv$q4<=15] <- 2
 DB.csv$q4[DB.csv$q4>2 & DB.csv$q4<=19] <- 3
 DB.csv$q4[DB.csv$q4>3] <- 4
+```
 
+## 第五題~第十一題
+
+第八題: 
+
+檢視資料後發現大部分人都會透過網路接觸名人的資訊(只有四個山頂洞人)，
+
+所以先決定移除第八題。
+
+第九題: 感覺可以拿掉，應該都還是跟認識的人聊天，比較難突破同溫層
+
+第十題(使用的社群媒體): 
+
+Pinterest,Linkedin,Pixiv,Mobile01,Komica,MeWe 跟yt名人相關的討論比較無關;
+
+巴哈姆特, 巴哈姆特場外休憩區 兩個則要計算 
+
+第十一題: 改成 1:有使用YT, Twitch, +(其他:bilibili)
+
+```{r}
 #時間統一單位(分)
 DB.csv$q6 <- DB.csv$q6_h*60+DB.csv$q6_m
 DB.csv$q7 <- DB.csv$q7_h*60+DB.csv$q7_m
 DB.csv$q6_h <- NULL; DB.csv$q6_m <- NULL
 DB.csv$q7_h <- NULL; DB.csv$q7_m <- NULL
 
-#第八題沒有人選其他
-DB.csv$q8_88 <- NULL
-DB.csv$q8_88_text <- NULL
-DB.csv$q8_90 <- NULL
-
-#第九題簡化(使用哪些通訊軟體 改成 使用幾個通訊軟體)
-DB.csv$q9 <- rowSums(
-  DB.csv[,match("q9_1",colnames(DB.csv)):match("q9_8",colnames(DB.csv))],
-  na.rm = TRUE) +
-  sapply(DB.csv[,"q9_88_text"], function(entry_i){
-    temp <- gsub(" ","",entry_i)
-    return(length(unlist(strsplit(temp,",|及"))))
-  })
+#移除q8,q9
+DB.csv[,which(colnames(DB.csv)=="q8_1"):which(colnames(DB.csv)=="q8_88_text")] <- NULL
 DB.csv[,match("q9_1",colnames(DB.csv)):match("q9_90",colnames(DB.csv))] <- NULL
 
 #移除第十、十一題
+unique(DB.csv$q11_88_text)
+
 DB.csv[,match("q10_1",colnames(DB.csv)):match("q10_90",colnames(DB.csv))] <- NULL
 DB.csv[,match("q11_1",colnames(DB.csv)):match("q11_90",colnames(DB.csv))] <- NULL
 
@@ -155,6 +173,7 @@ DB.csv$rq37a <- NULL
 DB.csv$r <- NULL
 DB.csv$qrq2 <- NULL
 ```
+
 
 
 ```{r}
@@ -302,8 +321,15 @@ DB.csv$q29_5_text <- NULL
 DB.csv$q28_4_text <- NULL
 ```
 
+## 惡搞行為性質
+
+先初步把惡搞行為分成 
+
+1: 有惡搞行為(17,19的四題至少選一)
+0: 沒有惡搞(17,19的四題完全都沒選)
+
 ```{r}
-#| eval: true
+#| eval: false
 DB.csv$q16 <- NULL
 DB.csv$q18 <- NULL
 DB.csv$q17_01[is.na(DB.csv$q17_01)|DB.csv$q17_01==2] <- 0
@@ -311,16 +337,19 @@ DB.csv$q17_02[is.na(DB.csv$q17_02)|DB.csv$q17_02==2] <- 0
 
 DB.csv$q19_01[is.na(DB.csv$q19_01)|DB.csv$q19_01==2] <- 0
 DB.csv$q19_02[is.na(DB.csv$q19_02)|DB.csv$q19_02==2] <- 0
+
+DB.csv$q1719.label <- apply(
+  DB.csv[,match("q17_01",colnames(DB.csv)):match("q19_02",colnames(DB.csv))],
+  MARGIN = 1,
+  function(row){
+    return(paste0(row,collapse = ""))
+  })
+unique(DB.csv$q1719.label)
+DB.csv$q1719.label <- ifelse(DB.csv$q1719.label=="0000", 0, 1)
 ```
 
 ```{r}
-#| eval: false
-DB.csv$q16_18[DB.csv$q16 == 2 & DB.csv$q18 == 2] <- 0 #沒有惡搞
-DB.csv$q16_18[DB.csv$q17_02==1] <- 1                  #有惡搞但不騙人不傷害
-DB.csv$q16_18[DB.csv$q17_01==1] <- 2                  #有惡搞有騙人沒傷害
-DB.csv$q16_18[DB.csv$q19_02==1] <- 3                  #有惡搞沒騙人有傷害
-DB.csv$q16_18[DB.csv$q19_01==1] <- 4                  #有惡搞有騙人有傷害
-
+#| eval: true
 DB.csv$q22_total <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
 DB.csv$q23_total <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
 DB.csv$q24_total <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
@@ -734,28 +763,30 @@ plot(p.rpart,boycott$pc1)
 # 重新定義反應變數(複選題)
 
 因為已經將q28(q28_1~q28_4)跟有沒有抵制行為(q28_5)
-因此可以將28題的複選題轉成多類別單選(C4取0~C4取4): 16個類別
-C4取4: 1111
-C4取3: 1110, 1101, 1011, 0111
-C4取2: 1100, 1010, 1001, 0110, 0101, 0011
-C4取1: 1000, 0100, 0010, 0001
-C4取0: 0000
+因此可以將28題的複選題轉成多類別單選(C4取0~C4取4): 八種組合
 
-實際資料中只有八種組合，
 預期每一種抵制行為模式的背後，有固定的族群輪廓
 
 ```{r}
-DB.csv <- as.data.frame(apply(DB.csv, MARGIN = 2, function(col){
-  col <- as.numeric(col)
-  col[is.na(col)] <- 0
-  return(col)
+DB.csv[] <- as.data.frame(
+  apply(DB.csv,2,function(col){
+    col <- as.numeric(col)
+    col[is.na(col)] <- 0
+    return(col)
 }))
-match("q28_1",colnames(DB.csv))
-match("q28_5",colnames(DB.csv))
-match("q29_5",colnames(DB.csv))
+DB.csv$q28_4 <- NULL
+DB.csv$q29_2 <- ifelse(DB.csv$q29_2 | DB.csv$q29_3, 1,0)
+DB.csv$q29_3 <- ifelse(DB.csv$q29_4|DB.csv$q29_5, 1,0)
+DB.csv$q29_4 <- NULL
+DB.csv$q29_5 <- NULL
+
+index.q28_1 <- match("q28_1",colnames(DB.csv))
+index.q28_3 <- match("q28_3",colnames(DB.csv))
+index.q29_1 <- match("q29_1",colnames(DB.csv))
+index.q29_3 <- match("q29_3",colnames(DB.csv))
 
 q28.label <- as.factor(apply(
-  DB.csv[,c(41:44)],
+  DB.csv[,index.q28_1:index.q28_3],
   MARGIN = 1,
   function(row){
     return(paste0(row,collapse = ""))
@@ -763,7 +794,7 @@ q28.label <- as.factor(apply(
 unique(q28.label)
 
 q29.label <- as.factor(apply(
-  DB.csv[,c(46:50)],
+  DB.csv[,index.q29_1:index.q29_3],
   MARGIN = 1,
   function(row){
     return(paste0(row,collapse = ""))
@@ -771,13 +802,27 @@ q29.label <- as.factor(apply(
 unique(q29.label)
 
 q2829.label <- as.factor(apply(
-  DB.csv[,c(41:44,46:50)],
+  DB.csv[,c(index.q28_1:index.q28_3,index.q29_1:index.q29_3)],
   MARGIN = 1,
   function(row){
     return(paste0(row,collapse = ""))
   }))
 unique(q2829.label)
+
+table(q28.label)
+table(q29.label)
+table(q2829.label)
 ```
+
+預期28題有選三(發文等抵制行為)的抵制程度較高
+
+法一: 1,0
+法二: 選項一二合併 vs. 有選三(11,10,01,00)
+
+
+第29題: 
+
+分成 : 1自己, 23至少選一, 45至少選一 
 
 ```{r}
 which(colnames(DB.csv)=="weight")
