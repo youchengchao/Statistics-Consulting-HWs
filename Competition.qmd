@@ -159,6 +159,19 @@ DB.csv$q10 <- apply(DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_
                     1, function(row){sum(!is.na(row))})
 DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_7", "q10_8", "q10_9", "q10_88")] <- NULL
 
+#整理第十一題
+DB.csv$q11_2 <- NULL
+DB.csv$q11_3 <- NULL
+DB.csv$q11_4 <- NULL
+DB.csv$q11_5 <- NULL
+DB.csv$q11_6 <- NULL
+DB.csv$q11_8 <- NULL
+DB.csv$q11_90 <- NULL
+DB.csv$q11_88[DB.csv$q11_88_text!="bilibili"] <- NA
+DB.csv$q11_88_text <- NULL
+DB.csv$q11 <- apply(DB.csv[,c("q11_1", "q11_7")],
+                    1, function(row){sum(!is.na(row))})
+DB.csv[,c("q11_1", "q11_7","q11_88")] <- NULL
 
 ```
 
@@ -613,6 +626,76 @@ ggplot(counts_42, aes(x = as.factor(q28_5), y = q42_1, fill = count)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
+```
+Logistic and Decision tree and PCA and XGboost
+```{r}
+glm_log <- glm(as.factor(q28_5)~q1+as.factor(q2)+q3+as.factor(q4)+q5_1+q6+q7+q10+as.factor(q11)+q1719.label+as.factor(q20_01_1)+as.factor(q20_02_1)+q22_total+q23_total+q24_total+q25_total+q26_total+as.factor(q27_1), family = binomial(), data = DB.csv,weights = weight)
+
+summary(stepAIC(glm_log, direction = 'both'))
+summary(glm_log)
+
+#Decision tree
+library(rpart)
+library(rpart.plot)
+
+tree_model <- rpart(as.factor(q28_5) ~  q1 + q2 + as.factor(q4) + q5_1 +q6 + q7 + as.factor(q10) + as.factor(q11) + q1719.label + as.factor(q20_01_1)+q20_02_1 + q22_total + q23_total + q24_total + q25_total + q26_total + q27_1,data = DB.csv, method = "class",weights = weight)
+
+rpart.plot(tree_model, 
+           type = 3,          
+           extra = 106,       
+           under = TRUE,      
+           faclen = 0,       
+           fallen.leaves = TRUE, 
+           box.palette = "RdYlGn",  
+           shadow.col = "gray",    
+           cex = 0.75)
+
+#pca
+pca<-prcomp(DB.csv[,c('q1','q4','q5_1','q6','q7','q10','q11','q1719.label','q20_01_1','q20_02_1','q22_total','q23_total','q24_total','q25_total','q26_total','q27_1')],center = T)
+#做Scree plot 可以發現到3斜率都還很大
+screeplot(pca,type = 'line', main= "Fig 1: Scree plot of explained variabilities in PCA")
+rec_pc <- as.data.frame(pca$x[,1:3])
+#將數字的label 加進去pc1 跟 pc2 的dataset
+rec_pc$label<-DB.csv$q28_5
+pca_rotation<-pca$rotation
+pca_rotation_df <- data.frame(Variable = rownames(pca_rotation),
+                              PC1 = pca_rotation[, 1],
+                              PC2 = pca_rotation[, 2],
+                              PC3 = pca_rotation[, 3])
+pca_rotation_longs <- tidyr::pivot_longer(pca_rotation_df,
+                                          cols = -Variable,
+                                          names_to = "PCA",
+                                          values_to = "Rotation")
+pca_rotation1<-pca_rotation_longs%>%
+  filter(PCA=='PC1')
+pca_rotation2<-pca_rotation_longs%>%
+  filter(PCA=='PC2')
+pca_rotation3<-pca_rotation_longs%>%
+  filter(PCA=='PC3')
+ggplot(pca_rotation_longs, aes(x = Variable, y = Rotation, fill = PCA)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Fig 2: Loadings of PCs", x = "Variable", y = "Loading") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+ggplot(rec_pc,aes(x = PC2, y = PC3,colour = label))+
+  geom_point()+ labs(title = 'Fig 5: PC1 vs. PC2')+
+  theme(plot.title = element_text(hjust = 0.5), legend.position = 'right')
+
+# glmnet and xgboost
+library(glmnet)
+x <- model.matrix(as.factor(q28_5) ~ q1+q2+q3+q4+q5_1+q6+q7+q10+q11+q1719.label+q20_01_1+q20_02_1+q22_total+q23_total+q24_total+q25_total+q26_total+q27_1, data = DB.csv)[, -1]
+y <- as.factor(DB.csv$q28_5)
+glmnet_model <- cv.glmnet(x, y, family = "binomial", alpha = 1)
+glmnet_model
+
+library(xgboost)
+xgb_data <- xgb.DMatrix(data = x, label = as.numeric(y) - 1, weight = DB.csv$weight)
+xgb_model <- xgboost(data = xgb_data, objective = "binary:logistic", nrounds = 100)
+importance_matrix <- xgb.importance(model = xgb_model)
+importance_matrix
+xgb.plot.importance(importance_matrix)
 ```
 
 ```{r}
