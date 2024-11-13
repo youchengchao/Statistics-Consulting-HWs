@@ -801,35 +801,73 @@ table(q2829.label)
 
 分成 : 1自己, 23至少選一, 45至少選一 
 
+抵制程度~其他因素 關聯分析
 ```{r}
 boycott <- subset(DB.csv, q28_5 == 1)
 #缺失值轉0
-boycott$q28_1[is.na(boycott$q28_1)] <- 0
-boycott$q28_2[is.na(boycott$q28_2)] <- 0
-boycott$q28_3[is.na(boycott$q28_3)] <- 0
-boycott$q28_4[is.na(boycott$q28_4)] <- 0
-boycott$q29_1[is.na(boycott$q29_1)] <- 0
-boycott$q29_2[is.na(boycott$q29_2)] <- 0
-boycott$q29_3[is.na(boycott$q29_3)] <- 0
-boycott$q29_4[is.na(boycott$q29_4)] <- 0
-boycott$q29_5[is.na(boycott$q29_5)] <- 0
+
 boycott[,c('q30_1','q32_1','q35_1')] <- lapply(boycott[, c('q30_1','q32_1','q35_1')], as.numeric)
 y <-boycott[,c('q30_1','q32_1','q35_1')]
 boycott
+boycott$q11_yt<- ifelse(boycott$q11_1==1 & boycott$q11_7==1,2,ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0))
 boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
-boycott$q29_2_3 <- ifelse(boycott$q29_2==1 | boycott$q29_3==1,1,0)
-boycott$q29_4_5 <- ifelse(boycott$q29_4==1 | boycott$q29_5==1,1,0)
-boycott[, c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")], as.numeric)
-x <-boycott[,c("q28_1_2","q28_3","q29_1","q29_2_3","q29_4_5")]
+boycott$q28_1_2_3_inter<-boycott$q28_1_2*boycott$q28_3
+boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3_inter<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
+
+pca_result <-PCA(boycott[, c("q20_01_1","q20_02_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q20pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q22_01_1","q22_02_1","q22_03_1","q22_04_1","q22_05_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q22pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q23_01_1","q23_02_1","q23_03_1","q23_04_1","q23_05_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q23pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q24_01_1","q24_02_1","q24_03_1","q24_04_1","q24_05_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q24pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q25_01_1","q25_02_1","q25_03_1","q25_04_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q25pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q26_01_1","q26_02_1","q26_03_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+pc1_scores <- pca_result$ind$coord[, 1]
+boycott$q26pc1<-pc1_scores
+pca_result <-PCA(boycott[, c("q38_01_1","q38_02_1")],scale.unit = TRUE)
+pc1_explained_variance <- pca_result$eig[1, 2]
+pc1_explained_variance
+
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+y <-scale(boycott[,c('q30_1','q32_1','q35_1')],center=TRUE,scale=TRUE)
+boycott[,c("q1","q2","q4","q31_1",'q33_1','q34_1','q36_1')]<-scale(boycott[,c("q1","q2","q4","q31_1",'q33_1','q34_1','q36_1')],center=TRUE,scale=TRUE)
+
+x <-boycott[,c("q2","q4","q6","q7","q10","q11_yt","q1719.label","q20pc1","q22_total","q23_total","q24_total","q25_total","q26_total","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40_cat","q42_1")]
 
 cca <-cancor(x,y)
 #典型相關係數
 cca$cor
-#最大典型相關係數為0.26，且第一典型變數主要由  q29_4_5 和q35_1 貢獻組成
+#最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33_1 和q35_1貢獻組成
 x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
 y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
-x_lodings
-y_lodings
+x_lodings[,c(1,2)]
+y_lodings[,c(1,2)]
+#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3_inter中度相關
+#第一典型變數與q35_1高度相關,q30_1中度相關
+#越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
+
 #自我相關係數
 round((colSums(x_lodings^2)[1:2]/4),4)
 round((colSums(y_lodings^2)[1:2]/4),4)
@@ -838,6 +876,7 @@ num<-round(cca$cor^2,4)[1:2]
 
 round((colSums(x_lodings^2)[1:2]/4)*num,4)
 round((colSums(y_lodings^2)[1:2]/4)*num,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
 ```{r}
