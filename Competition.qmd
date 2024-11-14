@@ -474,7 +474,8 @@ Barplot.p <- function(din){
               theme(strip.placement = "outside",
                     strip.background = element_rect(fill = NA, color = "white"),
                     panel.spacing = unit(-.01,"cm"),
-                    legend.position = "none")
+                    legend.position = "none",
+                    plot.margin = unit(c(0, 0.15, 0.1, 0),"inches"))
     return(pic)
   }
   #多label的case
@@ -487,7 +488,7 @@ Barplot.p <- function(din){
 }
 ```
 
-```{r}
+```{r, fig.align='center', fig.width=7, fig.height=5, out.width='100%'}
 #test code chunk
 Barplot.p(myCount_q28(DB.csv, colnames(DB.csv)[-match("q28_YN",colnames(DB.csv))]))
 ```
