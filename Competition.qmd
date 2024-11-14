@@ -674,40 +674,62 @@ round((colSums(y_lodings^2)[1:2]/4)*num,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
-# t-SNE 還沒更改
+# t-SNE visualization
 
 ```{r}
 library(Rtsne)
 library(ggpubr)
-set.seed(2024)
-tsne_result <- Rtsne(DB.csv[,-c(45,64)], dims = 2)
-tsne_df <- as.data.frame(tsne_result$Y)
-tsne_df$cluster <- q29.label
-centroids <- tsne_df %>%
-  group_by(cluster) %>%
-  summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop')
-
-ggscatter(data = tsne_df, x = "V1", y = "V2",
-          size = 1, color = "cluster", # 使用 cluster 列进行颜色映射
-          ellipse = TRUE, 
-          ellipse.type = "convex", 
-          repel = TRUE, # 防止标签重叠
-          title = "t-SNE Visualization labelled by DBscan",
-          xlab = "Dimension 1", ylab = "Dimension 2") +
-  scale_color_discrete()+
-  geom_text(data = centroids, aes(x = V1, y = V2, label = cluster), 
-            vjust = -1, size = 8, color = "black")+
-  theme(legend.position = "right")
-
-ggplot(data = tsne_df)+
-  geom_point(aes(x=V1, y=V2, color  = as.factor(cluster)))+
-  labs(title = "t-SNE Visualization labelled by DBscan",
-       x = "Dimension 1",
-       y = "Dimension 2",
-       color = "Number") +
-  geom_text(data = centroids, aes(x = V1, y = V2, label = cluster),
-            vjust = -1, size = 10, color = "black")+
-  theme(legend.position = "right")
+library(magrittr)
+tSNE.2d <- function(X, label_vector,seed=123, theta = 0.5, perplexity = 30, size = 1.5, num_threads = 1L ){
+  label <- apply(X[,label_vector],1,paste0, collapse = "")
+  X <- X[,-which(colnames(X) %in% label_vector)]
+  set.seed(seed)
+  tsne_result <-  X%>%
+    Rtsne(dims=2,theta=theta,perplexity=perplexity,num_threads=num_threads)%>%
+    {.$Y}%>%
+    {colnames(.) <- c("V1", "V2"); .} %>%
+    as_tibble(.name_repair = "unique")%>%
+    mutate(cluster=label)
+  pic <- ggscatter(data = tsne_result, x = "V1", y = "V2",
+                   color = "cluster",
+                   title = "t-SNE Visualization",
+                   xlab = "Dimension 1", ylab = "Dimension 2",
+                   size = size, 
+                   ellipse = TRUE,
+                   ellipse.type = "convex",
+                   repel = TRUE) +
+            scale_color_discrete()+
+            geom_text(data = tsne_result %>% 
+                        group_by(cluster) %>%
+                        summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop'),
+                      aes(x = V1, y = V2, label = cluster),
+                      vjust = -1,
+                      size = 8,
+                      color = "black")+
+            theme(legend.position = "right")
+  return(pic)
+}
 ```
 
+## tuning parameters
+
+參數待微調
+
+```{r}
+tSNE.2d(X = DB.csv,
+        label_vector = c("q29_1", "q29_2", "q29_3"),
+        seed = 2012,
+        theta = 0.3, perplexity=70,
+        size=1.5, num_threads=4L)
+tSNE.2d(X = DB.csv,
+        label_vector = c("q29_1", "q29_2", "q29_3"),
+        seed = 2012,
+        theta = 0.3, perplexity=50,
+        size=1.5, num_threads=4L)
+tSNE.2d(X = DB.csv,
+        label_vector = c("q29_1", "q29_2", "q29_3"),
+        seed = 2012,
+        theta = 0.1, perplexity=50,
+        size=1.5, num_threads=4L)
+```
 
