@@ -20,6 +20,7 @@ documentclass: article
 execute: 
   cache: true
   echo: true
+
 ---
 
 # report的重要頁碼
@@ -112,7 +113,7 @@ DB.csv$q4[DB.csv$q4>3] <- 4
 
 11題: 改成"有無使用YT, Twitch,或bilibili"(1:有使用,0:沒有使用)，原因與第十題類似。
 
-```{r}
+```{r, wrap=TRUE}
 #時間統一單位(分)
 DB.csv$q6 <- DB.csv$q6_h*60+DB.csv$q6_m
 DB.csv$q7 <- DB.csv$q7_h*60+DB.csv$q7_m
@@ -123,11 +124,14 @@ DB.csv$q7_h <- NULL; DB.csv$q7_m <- NULL
 DB.csv$q10_4 <- NULL
 DB.csv$q10_10 <- NULL
 DB.csv$q10_90 <- NULL
-DB.csv$q10_88[DB.csv$q10_88_text!="巴哈姆特場外休憩區"&DB.csv$q10_88_text!="巴哈姆特"] <- NA
+DB.csv$q10_88[DB.csv$q10_88_text!="巴哈姆特場外休憩區"&
+                DB.csv$q10_88_text!="巴哈姆特"] <- NA
 DB.csv$q10_88_text <- NULL
-DB.csv$q10 <- apply(DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_7", "q10_8", "q10_9","q10_88")],
+DB.csv$q10 <- apply(DB.csv[,c("q10_1", "q10_2", "q10_3","q10_5",
+                              "q10_6", "q10_7", "q10_8", "q10_9","q10_88")],
                     1, function(row){sum(!is.na(row))})
-DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5", "q10_6", "q10_7", "q10_8", "q10_9", "q10_88")] <- NULL
+DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5",
+          "q10_6", "q10_7", "q10_8", "q10_9", "q10_88")] <- NULL
 
 #整理第十一題
 DB.csv$q11_2 <- NULL
@@ -573,6 +577,7 @@ importance_matrix
 xgb.plot.importance(importance_matrix)
 ```
 
+可以知道有使用youtube和twitch的人、越不能接受別人因為一些因素而罵他的人做出抵制行為的機率越小，越常做出網路攻擊行為和看到別人的攻擊行為、越想抵制名人的話就越有可能做出抵制行為。
 
 ```{r}
 index.q28_1 <- match("q28_1",colnames(DB.csv))
@@ -668,6 +673,8 @@ round((colSums(x_lodings^2)[1:2]/4)*num,4)
 round((colSums(y_lodings^2)[1:2]/4)*num,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
+
+# t-SNE 還沒更改
 
 ```{r}
 library(Rtsne)
