@@ -180,12 +180,13 @@ DB.csv$q1719_label <- ifelse(DB.csv$q1719_label=="0000", 0, 1)
 26題(推測對他人之攻擊意圖): 受訪者對網路攻擊行為的看法，分數越高代表受訪者越覺得網路攻擊行為容易引起他人的攻擊性。
 
 ```{r}
+DB.csv$q20 <- rowSums(DB.csv[,c('q20_01_1','q20_02_1')])
 DB.csv$q22 <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
 DB.csv$q23 <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
 DB.csv$q24 <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
 DB.csv$q25 <- rowSums(DB.csv[,c("q25_01_1", "q25_02_1", "q25_03_1", "q25_04_1")])
 DB.csv$q26 <- rowSums(DB.csv[,c("q26_01_1", "q26_02_1", "q26_03_1")])
-DB.csv[,match("q22_01_1",colnames(DB.csv)):match("q26_03_1",colnames(DB.csv))] <- NULL
+DB.csv[,match("q20_01_1",colnames(DB.csv)):match("q26_03_1",colnames(DB.csv))] <- NULL
 ```
 
 38題\~42題(最後一題)
@@ -360,7 +361,7 @@ DB.csv$q28_YN[!(DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3)] <- 0
 #重新調整欄位index
 #colnames(DB.csv)
 #colnames(DB.csv)[c(1:2,29,3:5,30:33,6:9,34,10:11,35:39,12,43,13:25,40,26,41:42,27,28)]
-DB.csv <- DB.csv[,c(1:2,29,3:5,30:33,6:9,34,10:11,35:39,12,43,13:25,40,26,41:42,27,28)]
+DB.csv <- DB.csv[,c('q1','q2','q2_rr','q3','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719_label','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
 for(i in c(1:5,7:42)){
   DB.csv[,i] <- as.integer(DB.csv[,i])
 }
@@ -508,8 +509,7 @@ glm_log <- glm(
     q10+
     factor(q11)+
     q1719_label+
-    factor(q20_01_1)+
-    factor(q20_02_1)+
+    q20+
     q22+ q23+ q24+ q25+ q26+
     factor(q27_1), family = binomial, data = DB.csv, weights = weight)
 
@@ -532,8 +532,7 @@ tree_model <- rpart(
     q10+
     factor(q11)+
     q1719_label+
-    factor(q20_01_1)+
-    factor(q20_02_1)+
+    q20+
     q22+ q23+ q24+ q25+ q26+
     factor(q27_1),data = DB.csv, method = "class",weights = weight)
 
@@ -545,7 +544,7 @@ rpart.plot(tree_model,
            fallen.leaves = TRUE, 
            box.palette = "RdYlGn",  
            shadow.col = "gray",    
-           cex = 0.75)
+           cex = 0.5)
 # glmnet and xgboost
 library(glmnet)
 x <- model.matrix(factor(q28_YN)~
@@ -559,8 +558,7 @@ x <- model.matrix(factor(q28_YN)~
     q10+
     factor(q11)+
     q1719_label+
-    factor(q20_01_1)+
-    factor(q20_02_1)+
+    q20+
     q22+ q23+ q24+ q25+ q26+
     factor(q27_1), data = DB.csv)[, -1]
 y <- as.factor(DB.csv$q28_YN)
@@ -646,7 +644,7 @@ boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q
 y <-boycott[,c('q30_1','q32_1','q35_1')]
 
 
-x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q20_01_1","q20_02_1","q22","q23","q24","q25","q26","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
+x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
 
 cca <-cancor(x,y)
 #典型相關係數
