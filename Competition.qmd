@@ -20,7 +20,7 @@ documentclass: article
 execute: 
   cache: true
   echo: true
-
+  warning: false
 ---
 
 # report的重要頁碼
@@ -517,7 +517,7 @@ glm_log <- glm(
     q22+ q23+ q24+ q25+ q26+
     factor(q27_1), family = binomial, data = DB.csv, weights = weight)
 
-summary(stepAIC(glm_log, direction = 'both'))
+summary(stepAIC(glm_log, direction = 'both', trace = 0))
 summary(glm_log)
 
 #Decision tree
