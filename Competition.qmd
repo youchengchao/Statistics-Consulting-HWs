@@ -435,8 +435,11 @@ myCount_q28 <- function(din, target_label){
     temp <- purrr::map(target_label, ~ {
       din %>%
         group_by(q28_YN, !!sym(.x)) %>%
-        summarise(count = n(), .groups = "drop")
+        summarise(count = n(), .groups = "drop")%>%
+        mutate(var = .x) %>%
+        rename(cat_var = !!sym(.x))
     })
+    temp <- bind_rows(temp)
   } else {
     temp <- din %>%
       group_by(q28_YN, !!sym(target_label)) %>%
@@ -445,27 +448,38 @@ myCount_q28 <- function(din, target_label){
   return(temp)
 }
 Barplot.p <- function(din){
-  my.innerplot <- function(df){
-    split_label<-colnames(df)[1]
+  my.innerplot <- function(df, multi=F){
+    split_label<- colnames(df)[1]
     cat_label <- colnames(df)[2]
-    c_label <- colnames(df)[3]
+    count_label <- colnames(df)[3]
+    if(multi)var_label = colnames(df)[4]
     temp <- df %>%
-      group_by(!!sym(split_label)) %>%
-      mutate(proportion = !!sym(c_label) / sum(!!sym(c_label))) %>%
-      ungroup()
-    return(ggplot(temp, aes(x = !!sym(split_label), y = proportion, fill = factor(!!sym(cat_label)))) +
-      geom_bar(stat = "identity", position = "stack") +
-      labs(x = "Proportion", y = "Percentage") +
-      scale_fill_grey(start = 0.2, end = 0.8) +
-      ggtitle(label = cat_label)+
-      theme_minimal() +
-      coord_flip()
-    )
+        {
+          if(multi) group_by(.,!!sym(split_label), !!sym(var_label))
+          else group_by(.,!!sym(split_label))
+        }%>%
+        mutate(proportion = round(!!sym(count_label)/sum(!!sym(count_label)), 4) ) %>%
+        ungroup()
+    pic <- ggplot(temp) +
+              geom_bar(aes(x = factor(!!sym(split_label)),
+                           y = proportion,
+                           fill = as.character(!!sym(cat_label))),
+                       position = "stack",
+                       stat = "identity") +
+              { 
+                if (multi) facet_grid(reformulate(var_label, "."), switch = "x")
+                else NULL  
+              }+
+              scale_fill_grey(start = 0.2, end = 0.8)+
+              theme(strip.placement = "outside",
+                    strip.background = element_rect(fill = NA, color = "white"),
+                    panel.spacing = unit(-.01,"cm"),
+                    legend.position = "none")
+    return(pic)
   }
   #多label的case
-  if(is.null(dim(din))){
-    plot_list <- lapply(din, my.innerplot)
-    return(do.call(gridExtra::grid.arrange, plot_list))
+  if(dim(din)[2]==4){
+    return(my.innerplot(din, multi=T))
   }else{
   #單一個label的case
     return(my.innerplot(din))
@@ -475,7 +489,7 @@ Barplot.p <- function(din){
 
 ```{r}
 #test code chunk
-Barplot.p(din = myCount_q28(DB.csv,colnames(DB.csv)[-match("q28_YN", colnames(DB.csv))][1:20]))
+Barplot.p(myCount_q28(DB.csv, colnames(DB.csv)[-match("q28_YN",colnames(DB.csv))]))
 ```
 
 # Logistic and Decision tree and PCA and XGboost
