@@ -1,7 +1,7 @@
 ---
 title: "取消文化之現象分析"
 date: today
-author: 高嘉妤、柯堯珹、吳承恩、趙友誠
+author: 高嘉妤、柯堯珹、趙友誠
 format:
  pdf:
     fig-pos: 'h'
