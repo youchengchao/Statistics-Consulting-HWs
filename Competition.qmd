@@ -1,6 +1,5 @@
 ---
-title: "取消文化之現象分析"
-date: today
+title: "抵制文化之現象分析"
 author: 高嘉妤、柯堯珹、趙友誠
 format:
  pdf:
@@ -35,26 +34,28 @@ report的重要頁碼:
 
 # 資料簡介
 
-| Variables | Manipulation  |
-|----------|---------------------------------------------------------|
-| q2        | 出生年改成年齡     |
-| q2_rr    | 將 rrq2 的年齡分層變數重新命名q2_rr  |
-| q3        | 移除。不關心地區造成的差異 |
-| q4        | 重新劃分為四個等級，劃分參考人口結構表格的分類方式 |
-| q6,q7     | 時間統一單位 (分)    |
-| q8        | 移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。   |
-| q9        | 移除。無法界定是工作性質或娛樂性質 |
-| q10       | 改成"使用幾個與yt名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。 |
-| q11       | 改成"有無使用YT或Twitch"，原因與第十題類似。 |
-| q12\~q15  | 移除。q28,q29關心的時間範圍較廣並不只局限於疫情期間。 |
-| q16\~q19  | 將每個類別補 0(變成1,0)，再創建一個標籤變數1719_label   |
-| q20\~q26  | 參考碩士論文:台灣消費者抵制行為之研究 -以台商親中言論衍生之抵制為例 (https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)之做法，將相同大主題的ordinal主觀評分加總 作為該主題程度的分數。                       |
+| Variables | Manipulation                                                                                                                                                                                         |
+|-----------------|-------------------------------------------------------|
+| q2        | 出生年改成年齡                                                                                                                                                                                       |
+| q2_rr     | 將 rrq2 的年齡分層變數重新命名q2_rr                                                                                                                                                                  |
+| q3        | 移除。不關心地區造成的差異                                                                                                                                                                           |
+| q4        | 重新劃分為四個等級，劃分參考人口結構表格的分類方式                                                                                                                                                   |
+| q6,q7     | 時間統一單位 (分)                                                                                                                                                                                    |
+| q8        | 移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。                                                                                                                                  |
+| q9        | 移除。無法界定是工作性質或娛樂性質                                                                                                                                                                   |
+| q10       | 改成"使用幾個與yt名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。                                                                                                                     |
+| q11       | 改成"有無使用YT或Twitch"，原因與第十題類似。                                                                                                                                                         |
+| q12\~q15  | 移除。q28,q29關心的時間範圍較廣並不只局限於疫情期間。                                                                                                                                                |
+| q16\~q19  | 將每個類別補 0(變成1,0)，再創建一個標籤變數1719_label                                                                                                                                                |
+| q20\~q26  | 參考碩士論文:台灣消費者抵制行為之研究 -以台商親中言論衍生之抵制為例 (https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)之做法，將相同大主題的ordinal主觀評分加總 作為該主題程度的分數。 |
 
 : 變數前處理
 
 原始資料維度: rows$\times$columns = $1004\times207$
 
 處理後資料維度: rows$\times$columns = $1004\times42$
+
+表格需要再整理一下
 
 | Variables   | Explanation                               | remark                                                          |
 |------------------|----------------------------|--------------------------|
@@ -72,17 +73,17 @@ report的重要頁碼:
 | q19_01      | 是否參與過:傷害、騙人                     | 1:是,0:否                                                       |
 | q19_02      | 是否參與過:傷害、不騙人                   | 1:是,0:否                                                       |
 | q1719_label | 是否至少有參與過一種網路惡搞              | 1:是,0:否                                                       |
-| q20         | 主動激化(引戰)行為接受度   | (接受)2\~10(可以接受) |
-| q22         | 他人攻擊行為的頻率   | (從來沒有)5\~20(經常) |
-| q23         | 自己攻擊行為的頻率   | (從來沒有)5\~20(經常) |
-| q24         | 媒體識讀素養         | (低)5\~20(高)         |
-| q25         | 網路論戰接受度       | (低)4\~20(高)                 |
-| q26         | 不文明留言的影響力    | (低)3\~12(高)|
-| q27_1       | 抵制意圖              | (弱)1\~5(強) |
-| q28_YN      | 是否採取過抵制行為    | 1:是, 0:否 |
-| q28_1       | 採取過:取消關注       | 1:是, 0:否 |
-| q28_2       | 採取過:拒絕觀看       | 1:是, 0:否 |
-| q28_3       | 採取過:在網路上留言或發文指責    | 1:是, 0:否                                                      |
+| q20         | 主動激化(引戰)行為接受度                  | (接受)2\~10(可以接受)                                           |
+| q22         | 他人攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
+| q23         | 自己攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
+| q24         | 媒體識讀素養                              | (低)5\~20(高)                                                   |
+| q25         | 網路論戰接受度                            | (低)4\~20(高)                                                   |
+| q26         | 不文明留言的影響力                        | (低)3\~12(高)                                                   |
+| q27_1       | 抵制意圖                                  | (弱)1\~5(強)                                                    |
+| q28_YN      | 是否採取過抵制行為                        | 1:是, 0:否                                                      |
+| q28_1       | 採取過:取消關注                           | 1:是, 0:否                                                      |
+| q28_2       | 採取過:拒絕觀看                           | 1:是, 0:否                                                      |
+| q28_3       | 採取過:在網路上留言或發文指責             | 1:是, 0:否                                                      |
 | q29_1       | 抵制的原因:歧視特定國家、種族或性別       | 1:是, 0:否                                                      |
 | q29_2       | 抵制的原因:有不同的政治意識型態或價值觀   | 1:是, 0:否                                                      |
 | q29_3       | 抵制的原因:做出不道德、不正當或不合法行為 | 1:是, 0:否                                                      |
@@ -93,11 +94,11 @@ report的重要頁碼:
 | q34_1       | 抵制成本                                  | (非常少)1\~5(非常多)                                            |
 | q35_1       | 抵制規模感知                              | (小)1\~5(大)                                                    |
 | q36_1       | 抵制的社會壓力                            | (小)1\~4(大)                                                    |
-| q38         | 心理幸福感                                | (不滿意)2\~10(滿意)                                                  |
-| q39_1       | 生活品質                                  | (不快樂)1\~5(快樂)                                                  |
-| q40         | 國民黨喜好程度                            | (不喜歡)0\~5 (喜歡)                                                |
-| q41         | 民進黨喜好程度                            | (不喜歡) 0\~5 (喜歡)                                                |
-| q42_1       | 意識形態                                  | (台獨)0\~10: (統一)                                               |
+| q38         | 心理幸福感                                | (不滿意)2\~10(滿意)                                             |
+| q39_1       | 生活品質                                  | (不快樂)1\~5(快樂)                                              |
+| q40         | 國民黨喜好程度                            | (不喜歡)0\~5 (喜歡)                                             |
+| q41         | 民進黨喜好程度                            | (不喜歡) 0\~5 (喜歡)                                            |
+| q42_1       | 意識形態                                  | (台獨)0\~10: (統一)                                             |
 | weight      | 人口結構修正權重                          |                                                                 |
 
 : 變數解釋
@@ -351,6 +352,11 @@ DB.csv <- DB.csv[,c('q1','q2','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01'
 for(i in c(1:4,6:41)){
   DB.csv[,i] <- as.integer(DB.csv[,i])
 }
+
+# V <- c("q1","q2_rr","q4",'q17_01','q17_02','q19_01','q19_02','q1719_label',
+#        "q28_YN",'q28_1','q28_2','q28_3','q29_1','q29_2','q29_3')
+# for(name in V) DB.csv[,name] <- as.factor(DB.csv[,name])
+# str(DB.csv)
 ```
 
 ## 敘述統計
@@ -363,7 +369,6 @@ latex(describe(DB.csv,title=""),file="")
 ```{r}
 #DataExplorer::plot_correlation(DB.csv[,-41], cor_args = list(method="spearman"))
 ```
-
 
 ```{r}
 #針對q28_YN二元變數對其他類別變數畫圖
@@ -424,7 +429,7 @@ Barplot.p <- function(din){
 
 ## 各變數依有無抵制行為分類畫比例圖
 
-```{r, fig.align='center', fig.width=8, fig.height=6, out.width='100%'}
+```{r, fig.align='center', fig.width=10, fig.height=6, out.width='100%'}
 var.label <- c("q1","q2_rr","q4","q11",
                "q17_01","q17_02","q19_01","q19_02","q1719_label",
                "q29_1","q29_2","q29_3")
@@ -494,10 +499,8 @@ Barplot.p(din = myCount_q28(DB.csv, var.label))
 #| error: true
 library(FactoMineR)
 library(factoextra)
-boycott <- subset(DB.csv, q28_YN == 1)
+boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
 #缺失值轉0
-
-
 boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
 boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
 boycott$q29_1_3_inter<-boycott$q29_1*boycott$q29_3
@@ -561,8 +564,6 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 #| error: true
 
 y <-boycott[,c('q30_1','q32_1','q35_1')]
-
-
 x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q22","q23","q24","q26","q27_1","q29_1","q29_2","q29_3","q31_1",'q33_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
 
 cca <-cancor(x,y)
@@ -611,6 +612,12 @@ round((colSums(y_lodings^2)[1:2]/4)*num,4)
 可以知道有使用youtube和twitch的人、越不能接受別人因為一些因素而罵他的人做出抵制行為的機率越小，越常做出網路攻擊行為和看到別人的攻擊行為、越想抵制名人的話就越有可能做出抵制行為。
 
 q10跟q24注意一下可能有關連
+
+Logistic model的變數選取方法參照[Variable selection – A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067)整理出的建議標準。
+
+
+我們的EPV(Event Per Variable)是
+以q28_YN作為反應變數的情況下，可使用的解釋變數是36=41-weight-q28_1\~q28_3-q28_YN(反應變數)=
 
 ```{r}
 glm_log <- glm(
@@ -704,6 +711,7 @@ summary(lasso.glm)
 
 ```{r}
 library(xgboost)
+library(DiagrammeR)
 y <-as.factor(DB.csv$q28_YN) 
 xgb_data <- xgb.DMatrix(data = x,
                         label = as.numeric(y) - 1,
@@ -712,42 +720,38 @@ xgb_model <- xgboost(data = xgb_data, objective = "binary:logistic", nrounds = 1
 importance_matrix <- xgb.importance(model = xgb_model)
 importance_matrix
 xgb.plot.importance(importance_matrix)
+
+xgb.plot.tree(model = xgb_model,trees = 1:5,show_node_id = T)
+
 ```
+
 
 ```{r}
-index.q28_1 <- match("q28_1",colnames(DB.csv))
-index.q28_3 <- match("q28_3",colnames(DB.csv))
-index.q29_1 <- match("q29_1",colnames(DB.csv))
-index.q29_3 <- match("q29_3",colnames(DB.csv))
+library(caTools)
+selected <- caTools::sample.split(DB.csv$q28_YN, SplitRatio = 0.7)
+trainDB <- DB.csv[selected,]
+testDB <- DB.csv[!selected,]
+                
+library(Matrix)
+library(MLmetrics)
+library(lightgbm)
+set.seed(257)                                                                                                  
 
-q28.label <- as.factor(apply(
-  DB.csv[,index.q28_1:index.q28_3],
-  MARGIN = 1,
-  function(row){
-    return(paste0(row,collapse = ""))
-  }))
-#unique(q28.label)
 
-q29.label <- as.factor(apply(
-  DB.csv[,index.q29_1:index.q29_3],
-  MARGIN = 1,
-  function(row){
-    return(paste0(row,collapse = ""))
-  }))
-#unique(q29.label)
 
-q2829.label <- as.factor(apply(
-  DB.csv[,c(index.q28_1:index.q28_3,index.q29_1:index.q29_3)],
-  MARGIN = 1,
-  function(row){
-    return(paste0(row,collapse = ""))
-  }))
-# unique(q2829.label)
-# table(q28.label)
-# table(q29.label)
-# table(q2829.label)
+
+
 ```
+
+
+
 
 # 參考文獻
 
-台灣消費者抵制行為之研究 ---以台商親中言論衍生之抵制為例(https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)
+\[1\] [台灣消費者抵制行為之研究 ---以台商親中言論衍生之抵制為例](https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)
+
+\[2\] [Variable selection – A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067)
+
+
+
+
