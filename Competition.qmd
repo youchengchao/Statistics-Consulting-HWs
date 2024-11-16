@@ -42,7 +42,7 @@ report的重要頁碼:
 | q1          | 性別                                      | 1:男性, 2:女性                                                 |
 | q2          | 年齡                                      |                                                                |
 | q2_rr       | 年齡分層                                  | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
-| q3          | 出生縣市                                  | 1\~19:台灣的縣市\newline 24:其他                                |
+
 | q4          | 教育程度                                  | 1:高中及以下, 2:專科,\newline 3:大學, 4:研究所                  |
 | q5_1        | 週平均上網天數                            |                                                                |
 | q6          | 上網分鐘(工作、學習)                      |                                                                |
@@ -122,6 +122,7 @@ DB.csv$rrq2 <- NULL
 
 #把第三題(出生地)的其他類別歸為一類
 DB.csv$q3_other <- NULL
+DB.csv$q3 <- NULL
 
 #第四題沒有人選其他
 DB.csv$q4_88_text <- NULL
@@ -335,6 +336,10 @@ for(i in c(1:5,7:42)){
 }
 ```
 
+
+
+
+
 ## 敘述統計
 
 ```{r}
@@ -469,6 +474,56 @@ tSNE.2d <- function(X, label_vector,seed=123, theta = 0.5, perplexity = 30, size
 # Pictures[]
 ```
 
+# 抵制程度與其他因素之關聯分析
+
+## Canonical analysis and PCA
+
+```{r}
+#| error: true
+library(FactoMineR)
+library(factoextra)
+boycott <- subset(DB.csv, q28_YN == 1)
+#缺失值轉0
+
+boycott[,c('q30_1','q32_1','q35_1')] <- lapply(boycott[, c('q30_1','q32_1','q35_1')], as.numeric)
+y <-boycott[,c('q30_1','q32_1','q35_1')]
+
+
+boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
+boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3_inter<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
+
+
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+y <-boycott[,c('q30_1','q32_1','q35_1')]
+
+
+x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
+
+cca <-cancor(x,y)
+#典型相關係數
+cca$cor
+#最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33_1 和q35_1貢獻組成
+x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
+y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
+x_lodings[,c(1,2)]
+y_lodings[,c(1,2)]
+#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3_inter中度相關
+#第一典型變數與q35_1高度相關,q30_1中度相關
+#越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
+
+#自我相關係數
+round((colSums(x_lodings^2)[1:2]/4),4)
+round((colSums(y_lodings^2)[1:2]/4),4)
+#典型相關係數平方
+num<-round(cca$cor^2,4)[1:2]
+
+round((colSums(x_lodings^2)[1:2]/4)*num,4)
+round((colSums(y_lodings^2)[1:2]/4)*num,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+```
+
 # Logistic regression model
 
 可以知道有使用youtube和twitch的人、越不能接受別人因為一些因素而罵他的人做出抵制行為的機率越小，越常做出網路攻擊行為和看到別人的攻擊行為、越想抵制名人的話就越有可能做出抵制行為。
@@ -478,7 +533,6 @@ glm_log <- glm(
   factor(q28_YN)~
     factor(q1)+
     factor(q2_rr)+
-    factor(q3)+
     factor(q4)+
     q5_1+
     q6+
@@ -487,8 +541,7 @@ glm_log <- glm(
     factor(q11)+
     q1719_label+
     q20+
-    q22+ q23+ q24+ q25+ q26+
-    factor(q27_1), family = binomial, data = DB.csv, weights = weight)
+    q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
 
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
 stepmodel$coefficients
@@ -535,7 +588,6 @@ library(glmnet)
 x <- model.matrix(factor(q28_YN)~
     factor(q1)+
     factor(q2_rr)+
-    factor(q3)+
     factor(q4)+
     q5_1+
     q6+
@@ -544,8 +596,7 @@ x <- model.matrix(factor(q28_YN)~
     factor(q11)+
     q1719_label+
     q20+
-    q22+ q23+ q24+ q25+ q26+
-    factor(q27_1), data = DB.csv)[, -1]
+    q22+ q23+ q24+ q25+ q26+ q27_1, data = DB.csv)[, -1]
 y <- as.factor(DB.csv$q28_YN)
 glmnet_model <- cv.glmnet(x, y, family = "binomial", alpha = 1)
 glmnet_model
@@ -601,56 +652,6 @@ q2829.label <- as.factor(apply(
 ```
 
 
-
-# 抵制程度與其他因素之關聯分析
-
-## Canonical analysis and PCA
-
-```{r}
-#| error: true
-library(FactoMineR)
-library(factoextra)
-boycott <- subset(DB.csv, q28_YN == 1)
-#缺失值轉0
-
-boycott[,c('q30_1','q32_1','q35_1')] <- lapply(boycott[, c('q30_1','q32_1','q35_1')], as.numeric)
-y <-boycott[,c('q30_1','q32_1','q35_1')]
-
-
-boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
-boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
-boycott$q29_1_3_inter<-boycott$q29_1*boycott$q29_3
-boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
-
-
-boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
-y <-boycott[,c('q30_1','q32_1','q35_1')]
-
-
-x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
-
-cca <-cancor(x,y)
-#典型相關係數
-cca$cor
-#最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33_1 和q35_1貢獻組成
-x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
-y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
-x_lodings[,c(1,2)]
-y_lodings[,c(1,2)]
-#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3_inter中度相關
-#第一典型變數與q35_1高度相關,q30_1中度相關
-#越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
-
-#自我相關係數
-round((colSums(x_lodings^2)[1:2]/4),4)
-round((colSums(y_lodings^2)[1:2]/4),4)
-#典型相關係數平方
-num<-round(cca$cor^2,4)[1:2]
-
-round((colSums(x_lodings^2)[1:2]/4)*num,4)
-round((colSums(y_lodings^2)[1:2]/4)*num,4)
-#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
-```
 
 
 # 參考文獻
