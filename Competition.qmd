@@ -353,14 +353,17 @@ for(i in c(1:4,6:41)){
 }
 ```
 
-
-
 ## 敘述統計
 
 ```{r}
 #| output: asis
 latex(describe(DB.csv,title=""),file="")
 ```
+
+```{r}
+#DataExplorer::plot_correlation(DB.csv[,-41], cor_args = list(method="spearman"))
+```
+
 
 ```{r}
 #針對q28_YN二元變數對其他類別變數畫圖
@@ -429,62 +432,56 @@ showtext_auto()
 Barplot.p(din = myCount_q28(DB.csv, var.label))
 ```
 
-## t-SNE visualization
-
 ```{r}
-library(Rtsne)
-library(ggpubr)
-library(magrittr)
-tSNE.2d <- function(X, label_vector,seed=123, theta = 0.5, perplexity = 30, size = 1.5, num_threads = 1L ){
-  label <- apply(X[,label_vector],1,paste0, collapse = "")
-  X <- X[,-which(colnames(X) %in% label_vector)]
-  set.seed(seed)
-  tsne_result <-  X%>%
-    Rtsne(dims=2,theta=theta,perplexity=perplexity,num_threads=num_threads)%>%
-    {.$Y}%>%
-    {colnames(.) <- c("V1", "V2"); .} %>%
-    as_tibble(.name_repair = "unique")%>%
-    mutate(cluster=label)
-  pic <- ggscatter(data = tsne_result, x = "V1", y = "V2",
-                   color = "cluster",
-                   title = "t-SNE Visualization",
-                   xlab = "Dimension 1", ylab = "Dimension 2",
-                   size = size, 
-                   ellipse = TRUE,
-                   ellipse.type = "convex",
-                   repel = TRUE) +
-            scale_color_discrete()+
-            geom_text(data = tsne_result %>% 
-                        group_by(cluster) %>%
-                        summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop'),
-                      aes(x = V1, y = V2, label = cluster),
-                      vjust = -1,
-                      size = 8,
-                      color = "black")+
-            theme(legend.position = "right")
-  return(pic)
-}
-```
-
-## tuning parameters
-
-參數待微調
-
-```{r}
-#| error: true
-#| eval: false
+# t-SNE visualization
+# library(Rtsne)
+# library(ggpubr)
+# library(magrittr)
+# tSNE.2d <- function(X, label_vector
+#                     seed=123,
+#                     theta = 0.5,
+#                     perplexity = 30,
+#                     size = 1.5, num_threads = 1L ){
+#   label <- apply(X[,label_vector],1,paste0, collapse = "")
+#   X <- X[,-which(colnames(X) %in% label_vector)]
+#   set.seed(seed)
+#   tsne_result <-  X%>%
+#     Rtsne(dims=2,theta=theta,perplexity=perplexity,num_threads=num_threads)%>%
+#     {.$Y}%>%
+#     {colnames(.) <- c("V1", "V2"); .} %>%
+#     as_tibble(.name_repair = "unique")%>%
+#     mutate(cluster=label)
+#   pic <- ggscatter(data = tsne_result, x = "V1", y = "V2",
+#                    color = "cluster",
+#                    title = "t-SNE Visualization",
+#                    xlab = "Dimension 1", ylab = "Dimension 2",
+#                    size = size, 
+#                    ellipse = TRUE,
+#                    ellipse.type = "convex",
+#                    repel = TRUE) +
+#             scale_color_discrete()+
+#             geom_text(data = tsne_result %>% 
+#                         group_by(cluster) %>%
+#                         summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop'),
+#                       aes(x = V1, y = V2, label = cluster),
+#                       vjust = -1,
+#                       size = 8,
+#                       color = "black")+
+#             theme(legend.position = "right")
+#   return(pic)
+# }
+# 參數微調，結果都不太好
 # mygrid <- expand.grid(
 #   theta = seq(0.01,0.7,0.02),
 #   perplexity=c(5,25,50,100,300)
 # )
-# i=1
 # Pictures <- list()
 # for(i in 1:dim(mygrid)[1]){
-#   Pictures[i] <- tSNE.2d(X = DB.csv,
+#   Pictures[[i]] <- tSNE.2d(X = DB.csv,
 #         label_vector = c("q29_1", "q29_2", "q29_3"),
 #         seed = 2012,
 #         theta = mygrid[i,1], perplexity=mygrid[i,2],
-#         size=1.5, num_threads=4L)
+#         size=1.5, num_threads=7L)
 # }
 # Pictures[]
 ```
@@ -500,9 +497,6 @@ library(factoextra)
 boycott <- subset(DB.csv, q28_YN == 1)
 #缺失值轉0
 
-#boycott[,c('q30_1','q32_1','q35_1')] <- lapply(boycott[, c('q30_1','q32_1','q35_1')], as.numeric)
-y <-boycott[,c('q30_1','q32_1','q35_1')]
-
 
 boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
 boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
@@ -511,10 +505,11 @@ boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
 
 
 boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+
+
 y <-boycott[,c('q30_1','q32_1','q35_1')]
 
-
-allx <-boycott[,c("q2_rr","q4","q5_1","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q27_1","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31_1",'q33_1','q34_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q38","q39_1","q40","q41","q42_1")]
+allx <-boycott[,c("q2_rr","q4","q5_1","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q27_1","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31_1",'q33_1',"q34_1",'q36_1',"q29_1_2_inter","q29_1_3_inter","q38","q39_1","q40","q41","q42_1")]
 
 allcca <-cancor(allx,y)
 #典型相關係數
@@ -528,6 +523,25 @@ ally_lodings[,c(1,2)]
 #第一典型變數與q35_1高度相關,q30_1中度相關
 #越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
 
+data <-allx_lodings[,c(1)]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Negative", "Positive")) +
+  labs(x = "Question", y = "Absolute Loadings", fill = "Sign") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Bar Plot of Absolute Loadings(典型負荷量)")
+
+
 #自我相關係數
 round((colSums(allx_lodings^2)[1:2]/4),4)
 round((colSums(ally_lodings^2)[1:2]/4),4)
@@ -539,7 +553,9 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
-把相關性\<0.2的刪除 \## Canonical analysis and PCA-對部分變數做
+把相關性\<0.2的刪除
+
+## Canonical analysis and PCA-對部分變數做
 
 ```{r}
 #| error: true
@@ -561,6 +577,24 @@ y_lodings[,c(1,2)]
 #第一典型變數與q35_1高度相關,q30_1中度相關
 #越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
 
+data <-x_lodings[,c(1)]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Negative", "Positive")) +
+  labs(x = "Question", y = "Absolute Loadings", fill = "Sign") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Bar Plot of Absolute Loadings(典型負荷量)")
+
 #自我相關係數
 round((colSums(x_lodings^2)[1:2]/4),4)
 round((colSums(y_lodings^2)[1:2]/4),4)
@@ -575,6 +609,8 @@ round((colSums(y_lodings^2)[1:2]/4)*num,4)
 # Logistic regression model
 
 可以知道有使用youtube和twitch的人、越不能接受別人因為一些因素而罵他的人做出抵制行為的機率越小，越常做出網路攻擊行為和看到別人的攻擊行為、越想抵制名人的話就越有可能做出抵制行為。
+
+q10跟q24注意一下可能有關連
 
 ```{r}
 glm_log <- glm(
@@ -595,6 +631,8 @@ stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
 stepmodel$coefficients
 summary(glm_log)$coefficients
 ```
+
+這個模型的節具象
 
 # Decision tree
 
@@ -651,6 +689,15 @@ grid<-10^seq(10, -2,length = 100)
 glmnet_2 <- glmnet(x,y,alpha = 1, lambda = grid)
 lasso.coef <- predict(glmnet_2, type = 'coefficients', s = bestlam)
 lasso.coef
+lasso.glm <- glm(
+  factor(q28_YN)~factor(q2_rr)+
+    factor(q4)+
+    q5_1+
+    q6+
+    factor(q11)+
+    q20+
+    q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
+summary(lasso.glm)
 ```
 
 # XGboost
