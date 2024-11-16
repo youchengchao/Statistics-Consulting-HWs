@@ -558,7 +558,6 @@ tree_model <- rpart(
   factor(q28_YN)~
     factor(q1)+
     factor(q2_rr)+
-    factor(q3)+
     factor(q4)+
     q5_1+
     q6+
@@ -566,9 +565,7 @@ tree_model <- rpart(
     q10+
     factor(q11)+
     q1719_label+
-    q20+
-    q22+ q23+ q24+ q25+ q26+
-    factor(q27_1),data = DB.csv, method = "class",weights = weight)
+    q20+ q22+ q23+ q24+ q25+ q26+ q27_1,data = DB.csv, method = "class",weights = weight)
 
 rpart.plot(tree_model, 
            type = 3,          
