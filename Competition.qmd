@@ -623,14 +623,13 @@ Logistic model的變數選取方法參照[Variable selection – A review and re
 glm_log <- glm(
   factor(q28_YN)~
     factor(q1)+
-    factor(q2_rr)+
-    factor(q4)+
+    q2_rr+
+    q4+
     q5_1+
     q6+
     q7+
     q10+
-    factor(q11)+
-    q1719_label+
+    q11+
     q20+
     q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
 
@@ -650,17 +649,16 @@ library(rpart.plot)
 tree_model <- rpart(
   factor(q28_YN)~
     factor(q1)+
-    factor(q2_rr)+
-    factor(q4)+
+    q2_rr+
+    q4+
     q5_1+
     q6+
     q7+
     q10+
-    factor(q11)+
-    q1719_label+
+    q11+
     q20+
     q22+ q23+ q24+ q25+ q26+
-    factor(q27_1),data = DB.csv, method = "class",weights = weight)
+    q27_1,data = DB.csv, method = "class",weights = weight)
 
 rpart.plot(tree_model, 
            type = 3,          
@@ -679,14 +677,13 @@ rpart.plot(tree_model,
 library(glmnet)
 x <- model.matrix(factor(q28_YN)~
     factor(q1)+
-    factor(q2_rr)+
-    factor(q4)+
+    q2_rr+
+    q4+
     q5_1+
     q6+
     q7+
     q10+
-    factor(q11)+
-    q1719_label+
+    q11+
     q20+
     q22+ q23+ q24+ q25+ q26+ q27_1, data = DB.csv)[, -1]
 y <- DB.csv$q28_YN
@@ -697,11 +694,11 @@ glmnet_2 <- glmnet(x,y,alpha = 1, lambda = grid)
 lasso.coef <- predict(glmnet_2, type = 'coefficients', s = bestlam)
 lasso.coef
 lasso.glm <- glm(
-  factor(q28_YN)~factor(q2_rr)+
-    factor(q4)+
+  factor(q28_YN)~q2_rr+
+    q4+
     q5_1+
     q6+
-    factor(q11)+
+    q11+
     q20+
     q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
 summary(lasso.glm)
@@ -722,6 +719,24 @@ importance_matrix
 xgb.plot.importance(importance_matrix)
 
 xgb.plot.tree(model = xgb_model,trees = 1:5,show_node_id = T)
+
+library(SHAPforxgboost)
+
+# 計算 SHAP 值
+shap_values <- shap.values(xgb_model = xgb_model, X_train = x)
+shap_values
+# SHAP 值和 mean SHAP 值
+shap_mean <- shap_values$mean_shap_score
+shap_values_df <- shap_values$shap_score
+shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
+ggplot(shap_long, aes(x = value, y = variable, color = value)) +
+  geom_jitter(width = 0.2, alpha = 0.5) +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "SHAP Summary Plot",
+       x = "SHAP Value",
+       y = "Feature") +
+  theme_minimal()
+shap.plot.summary(shap_long)
 
 ```
 
