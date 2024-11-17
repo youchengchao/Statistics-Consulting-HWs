@@ -60,7 +60,6 @@ report的重要頁碼:
 | Variables   | Explanation                               | remark                                                          |
 |------------------|----------------------------|--------------------------|
 | q1          | 性別                                      | 1:男性, 2:女性                                                  |
-| q2          | 年齡                                      |                                                                 |
 | q2_rr       | 年齡分層                                  | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
 | q4          | 教育程度                                  | 1:高中及以下, 2:專科,\newline 3:大學, 4:研究所                  |
 | q5_1        | 週平均上網天數                            |                                                                 |
@@ -134,15 +133,13 @@ DB.csv[,match("q12_1", colnames(DB.csv)):match("q15_03_1", colnames(DB.csv))] <-
 
 ```{r}
 #第二題(出生年)改成年齡的區段
-DB.csv$q2 <- DB.csv$qrq2
+DB.csv$q2 <- NULL
 DB.csv$qrq2 <- NULL
 DB.csv$q2_rr <- DB.csv$rrq2
 DB.csv$rrq2 <- NULL
-
 #把第三題(出生地)的其他類別歸為一類
 DB.csv$q3_other <- NULL
 DB.csv$q3 <- NULL
-
 #第四題沒有人選其他
 DB.csv$q4_88_text <- NULL
 
@@ -348,15 +345,11 @@ DB.csv$q28_YN[!(DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3)] <- 0
 
 #重新調整欄位index
 #colnames(DB.csv)
-DB.csv <- DB.csv[,c('q1','q2','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719_label','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
-for(i in c(1:4,6:41)){
+DB.csv <- DB.csv[,c('q1','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719_label','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
+for(i in c(1:3,5:39)){
   DB.csv[,i] <- as.integer(DB.csv[,i])
 }
-
-# V <- c("q1","q2_rr","q4",'q17_01','q17_02','q19_01','q19_02','q1719_label',
-#        "q28_YN",'q28_1','q28_2','q28_3','q29_1','q29_2','q29_3')
-# for(name in V) DB.csv[,name] <- as.factor(DB.csv[,name])
-# str(DB.csv)
+colnames(DB.csv) <- c('q1','q2_rr','q4','q5','q6','q7','q10','q11','q17_1','q17_2','q19_1','q19_2','q1719_label','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
 ```
 
 ## 敘述統計
@@ -364,10 +357,6 @@ for(i in c(1:4,6:41)){
 ```{r}
 #| output: asis
 latex(describe(DB.csv,title=""),file="")
-```
-
-```{r}
-#DataExplorer::plot_correlation(DB.csv[,-41], cor_args = list(method="spearman"))
 ```
 
 ```{r}
@@ -429,66 +418,12 @@ Barplot.p <- function(din){
 
 ## 各變數依有無抵制行為分類畫比例圖
 
-```{r, fig.align='center', fig.width=10, fig.height=6, out.width='100%'}
+```{r, fig.align='center', fig.width=12, fig.height=7, out.width='100%'}
 var.label <- c("q1","q2_rr","q4","q11",
-               "q17_01","q17_02","q19_01","q19_02","q1719_label",
+               "q17_1","q17_2","q19_1","q19_2","q1719_label",
                "q29_1","q29_2","q29_3")
 showtext_auto()
 Barplot.p(din = myCount_q28(DB.csv, var.label))
-```
-
-```{r}
-# t-SNE visualization
-# library(Rtsne)
-# library(ggpubr)
-# library(magrittr)
-# tSNE.2d <- function(X, label_vector
-#                     seed=123,
-#                     theta = 0.5,
-#                     perplexity = 30,
-#                     size = 1.5, num_threads = 1L ){
-#   label <- apply(X[,label_vector],1,paste0, collapse = "")
-#   X <- X[,-which(colnames(X) %in% label_vector)]
-#   set.seed(seed)
-#   tsne_result <-  X%>%
-#     Rtsne(dims=2,theta=theta,perplexity=perplexity,num_threads=num_threads)%>%
-#     {.$Y}%>%
-#     {colnames(.) <- c("V1", "V2"); .} %>%
-#     as_tibble(.name_repair = "unique")%>%
-#     mutate(cluster=label)
-#   pic <- ggscatter(data = tsne_result, x = "V1", y = "V2",
-#                    color = "cluster",
-#                    title = "t-SNE Visualization",
-#                    xlab = "Dimension 1", ylab = "Dimension 2",
-#                    size = size, 
-#                    ellipse = TRUE,
-#                    ellipse.type = "convex",
-#                    repel = TRUE) +
-#             scale_color_discrete()+
-#             geom_text(data = tsne_result %>% 
-#                         group_by(cluster) %>%
-#                         summarize(V1 = mean(V1), V2 = mean(V2), .groups = 'drop'),
-#                       aes(x = V1, y = V2, label = cluster),
-#                       vjust = -1,
-#                       size = 8,
-#                       color = "black")+
-#             theme(legend.position = "right")
-#   return(pic)
-# }
-# 參數微調，結果都不太好
-# mygrid <- expand.grid(
-#   theta = seq(0.01,0.7,0.02),
-#   perplexity=c(5,25,50,100,300)
-# )
-# Pictures <- list()
-# for(i in 1:dim(mygrid)[1]){
-#   Pictures[[i]] <- tSNE.2d(X = DB.csv,
-#         label_vector = c("q29_1", "q29_2", "q29_3"),
-#         seed = 2012,
-#         theta = mygrid[i,1], perplexity=mygrid[i,2],
-#         size=1.5, num_threads=7L)
-# }
-# Pictures[]
 ```
 
 # 抵制程度與其他因素之關聯分析
@@ -496,7 +431,6 @@ Barplot.p(din = myCount_q28(DB.csv, var.label))
 ## Canonical analysis and PCA-對全部變數做
 
 ```{r}
-#| error: true
 library(FactoMineR)
 library(factoextra)
 boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
@@ -510,9 +444,9 @@ boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
 boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
 
 
-y <-boycott[,c('q30_1','q32_1','q35_1')]
+y <-boycott[,c('q30','q32','q35')]
 
-allx <-boycott[,c("q2_rr","q4","q5_1","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q27_1","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31_1",'q33_1',"q34_1",'q36_1',"q29_1_2_inter","q29_1_3_inter","q38","q39_1","q40","q41","q42_1")]
+allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2_inter","q29_1_3_inter","q38","q39","q40","q41","q42")]
 
 allcca <-cancor(allx,y)
 #典型相關係數
@@ -533,17 +467,15 @@ df <- data.frame(
   Positive = ifelse(data > 0, 1, 0)
 )
 df <- df[order(abs(df$Value), decreasing = TRUE), ]
-ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
             vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
-                    labels = c("Negative", "Positive")) +
-  labs(x = "Question", y = "Absolute Loadings", fill = "Sign") +
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
+  labs(x = "題號", y = "典型負荷量絕對值") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Bar Plot of Absolute Loadings(典型負荷量)")
-
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none")
 
 #自我相關係數
 round((colSums(allx_lodings^2)[1:2]/4),4)
@@ -560,11 +492,9 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 
 ## Canonical analysis and PCA-對部分變數做
 
-```{r}
-#| error: true
-
-y <-boycott[,c('q30_1','q32_1','q35_1')]
-x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719_label","q22","q23","q24","q26","q27_1","q29_1","q29_2","q29_3","q31_1",'q33_1','q36_1',"q29_1_2_inter","q29_1_3_inter","q40","q42_1")]
+```{r, fig.align='center', fig.width=6, fig.height=4, out.width="100%"}
+y <-boycott[,c('q30','q32','q35')]
+x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719_label","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2_inter","q29_1_3_inter","q40","q42")]
 
 cca <-cancor(x,y)
 #典型相關係數
@@ -585,16 +515,15 @@ df <- data.frame(
   Positive = ifelse(data > 0, 1, 0)
 )
 df <- df[order(abs(df$Value), decreasing = TRUE), ]
-ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
             vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
-                    labels = c("Negative", "Positive")) +
-  labs(x = "Question", y = "Absolute Loadings", fill = "Sign") +
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Bar Plot of Absolute Loadings(典型負荷量)")
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #自我相關係數
 round((colSums(x_lodings^2)[1:2]/4),4)
@@ -605,6 +534,7 @@ num<-round(cca$cor^2,4)[1:2]
 round((colSums(x_lodings^2)[1:2]/4)*num,4)
 round((colSums(y_lodings^2)[1:2]/4)*num,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+gridExtra::grid.arrange(p1,p2,ncol=1)
 ```
 
 # Logistic regression model
@@ -622,16 +552,10 @@ Logistic model的變數選取方法參照[Variable selection – A review and re
 ```{r}
 glm_log <- glm(
   factor(q28_YN)~
-    factor(q1)+
-    q2_rr+
-    q4+
-    q5_1+
-    q6+
-    q7+
-    q10+
-    q11+
-    q20+
-    q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
+    factor(q1)+ q2_rr+ q4+  q5+
+    q6+  q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27,
+  family = binomial, data = DB.csv, weights = weight)
 
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
 stepmodel$coefficients
@@ -651,14 +575,14 @@ tree_model <- rpart(
     factor(q1)+
     q2_rr+
     q4+
-    q5_1+
+    q5+
     q6+
     q7+
     q10+
     q11+
     q20+
     q22+ q23+ q24+ q25+ q26+
-    q27_1,data = DB.csv, method = "class",weights = weight)
+    q27,data = DB.csv, method = "class",weights = weight)
 
 rpart.plot(tree_model, 
            type = 3,          
@@ -679,13 +603,13 @@ x <- model.matrix(factor(q28_YN)~
     factor(q1)+
     q2_rr+
     q4+
-    q5_1+
+    q5+
     q6+
     q7+
     q10+
     q11+
     q20+
-    q22+ q23+ q24+ q25+ q26+ q27_1, data = DB.csv)[, -1]
+    q22+ q23+ q24+ q25+ q26+ q27, data = DB.csv)[, -1]
 y <- DB.csv$q28_YN
 glmnet_model <- cv.glmnet(x, y, family = "binomial", alpha = 1)
 bestlam <- glmnet_model$lambda.min
@@ -696,29 +620,32 @@ lasso.coef
 lasso.glm <- glm(
   factor(q28_YN)~q2_rr+
     q4+
-    q5_1+
+    q5+
     q6+
     q11+
     q20+
-    q22+ q23+ q24+ q25+ q26+ q27_1, family = binomial, data = DB.csv, weights = weight)
+    q22+ q23+ q24+ q25+ q26+ q27, family = binomial, data = DB.csv, weights = weight)
 summary(lasso.glm)
 ```
 
 # XGboost
 
-```{r}
+```{r, fig.align='center', fig.width=5, fig.height=4}
 library(xgboost)
 library(DiagrammeR)
+set.seed(123)
 y <-as.factor(DB.csv$q28_YN) 
 xgb_data <- xgb.DMatrix(data = x,
                         label = as.numeric(y) - 1,
                         weight = DB.csv$weight)
-xgb_model <- xgboost(data = xgb_data, objective = "binary:logistic", nrounds = 100,verbose = 0)
+xgb_model <- xgboost(data = xgb_data,
+                     objective = "binary:logistic",
+                     nrounds = 100,
+                     verbose = 0,
+                     )
 importance_matrix <- xgb.importance(model = xgb_model)
 importance_matrix
 xgb.plot.importance(importance_matrix)
-
-xgb.plot.tree(model = xgb_model,trees = 1:5,show_node_id = T)
 
 library(SHAPforxgboost)
 
@@ -736,26 +663,84 @@ ggplot(shap_long, aes(x = value, y = variable, color = value)) +
        x = "SHAP Value",
        y = "Feature") +
   theme_minimal()
-shap.plot.summary(shap_long)
-
+shap.plot.summary(shap_long, )
 ```
 
 
 ```{r}
-library(caTools)
-selected <- caTools::sample.split(DB.csv$q28_YN, SplitRatio = 0.7)
-trainDB <- DB.csv[selected,]
-testDB <- DB.csv[!selected,]
-                
-library(Matrix)
-library(MLmetrics)
-library(lightgbm)
-set.seed(257)                                                                                                  
+#| error: true
+#| eval: false
+# t-SNE visualization
+library(Rtsne)
+library(ggpubr)
+library(magrittr)
+tSNE.2d <- function(X, label_vector=NULL,
+                    seed=123,
+                    theta = 0.5,
+                    perplexity = 30,
+                    size = 1.5, num_threads = 5L ){
+  set.seed(seed)
+  tsne_result <- X %>%
+    Rtsne(dims=2,theta=theta,perplexity=perplexity,num_threads=num_threads)%>%
+    {.$Y}%>%
+    {colnames(.) <- c("V1", "V2"); .} %>%
+    as_tibble()
+  if(!is.null(label_vector)){
+    tsne_result <- tsne_result %>%
+    mutate(cluster=label_vector)
+  }
+  pic <- ggscatter(data = tsne_result, x = "V1", y = "V2",
+                   color = ifelse(!is.null(label_vector),"cluster",'black'),
+                   title = "t-SNE Visualization",
+                   xlab = "Dimension 1", ylab = "Dimension 2",
+                   size = size,
+                   ellipse = TRUE,
+                   ellipse.type = "convex",
+                   repel = TRUE) +
+            scale_color_discrete()+
+            theme(legend.position = "right")
+  return(pic)
+}
 
+tsne.YNdata <- model.matrix(~q2_rr+q4+q5+q6+q7+
+                   q10+q11+q20+q22+q23+
+                   q24+q25+q26+q27-1,
+                  data = DB.csv)
 
+tsne.leveldata <- model.matrix(~q2_rr+q4+q5+q6+q7+
+                   q10+q11+q20+q22+q23+
+                   q24+q25+q26+q27
+                   +q30+q31+q32+q33+q34+q35+q36-1,
+                  data = DB.csv[DB.csv$q28_YN==1,])
+tSNE.2d(tsne.YNdata, as.factor(DB.csv$q28_YN))
 
+# 參數微調，結果都不太好
+mygrid <- expand.grid(
+  theta = seq(0.01,0.7,0.02),
+  perplexity=c(5,25,50,100,300)
+)
+Pictures.YN <- list()
+for(i in 1:dim(mygrid)[1]){
+  Pictures.YN[[i]] <- tSNE.2d(X = tsne.YNdata,
+        label_vector = as.factor(DB.csv$q28_YN),
+        seed = 2012,
+        theta = mygrid[i,1], perplexity=mygrid[i,2],
+        size=1.5, num_threads=7L)
+}
+Pictures.YN[]
+```
 
-
+```{r}
+#| error: true
+#| eval: false
+Pictures.level <- list()
+for(i in 1:dim(mygrid)[1]){
+  Pictures.level[[i]] <- tSNE.2d(X = tsne.leveldata,
+        seed = 2012,
+        theta = mygrid[i,1], perplexity=mygrid[i,2],
+        size=1.5, num_threads=7L)
+}
+Pictures.level[]
 ```
 
 
