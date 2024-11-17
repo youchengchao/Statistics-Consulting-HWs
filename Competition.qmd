@@ -552,9 +552,9 @@ Logistic model的變數選取方法參照[Variable selection – A review and re
 ```{r}
 glm_log <- glm(
   factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+  q5+
-    q6+  q7+ q10+ q11+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27,
+    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42,
   family = binomial, data = DB.csv, weights = weight)
 
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
@@ -566,23 +566,14 @@ summary(glm_log)$coefficients
 
 # Decision tree
 
-```{r}
+```{r, fig.align='center', fig.width=4, fig.height=2}
 library(rpart)
 library(rpart.plot)
-
 tree_model <- rpart(
   factor(q28_YN)~
-    factor(q1)+
-    q2_rr+
-    q4+
-    q5+
-    q6+
-    q7+
-    q10+
-    q11+
-    q20+
-    q22+ q23+ q24+ q25+ q26+
-    q27,data = DB.csv, method = "class",weights = weight)
+    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
 
 rpart.plot(tree_model, 
            type = 3,          
@@ -592,24 +583,18 @@ rpart.plot(tree_model,
            fallen.leaves = TRUE, 
            box.palette = "RdYlGn",  
            shadow.col = "gray",    
-           cex = 0.5)
+           cex = 0.7)
 ```
 
 # glmnet
 
 ```{r}
 library(glmnet)
-x <- model.matrix(factor(q28_YN)~
-    factor(q1)+
-    q2_rr+
-    q4+
-    q5+
-    q6+
-    q7+
-    q10+
-    q11+
-    q20+
-    q22+ q23+ q24+ q25+ q26+ q27, data = DB.csv)[, -1]
+x <- model.matrix(
+  factor(q28_YN)~
+    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
 y <- DB.csv$q28_YN
 glmnet_model <- cv.glmnet(x, y, family = "binomial", alpha = 1)
 bestlam <- glmnet_model$lambda.min
@@ -630,7 +615,7 @@ summary(lasso.glm)
 
 # XGboost
 
-```{r, fig.align='center', fig.width=5, fig.height=4}
+```{r, fig.align='center', fig.width=4, fig.height=2}
 library(xgboost)
 library(DiagrammeR)
 set.seed(123)
@@ -643,10 +628,8 @@ xgb_model <- xgboost(data = xgb_data,
                      nrounds = 100,
                      verbose = 0,
                      )
-importance_matrix <- xgb.importance(model = xgb_model)
-importance_matrix
-xgb.plot.importance(importance_matrix)
-
+# importance_matrix <- xgb.importance(model = xgb_model)
+# importance_matrix
 library(SHAPforxgboost)
 
 # 計算 SHAP 值
@@ -656,13 +639,13 @@ shap_values
 shap_mean <- shap_values$mean_shap_score
 shap_values_df <- shap_values$shap_score
 shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
-ggplot(shap_long, aes(x = value, y = variable, color = value)) +
-  geom_jitter(width = 0.2, alpha = 0.5) +
-  scale_color_gradient(low = "blue", high = "red") +
-  labs(title = "SHAP Summary Plot",
-       x = "SHAP Value",
-       y = "Feature") +
-  theme_minimal()
+# ggplot(shap_long, aes(x = value, y = variable, color = value)) +
+#   geom_jitter(width = 0.2, alpha = 0.5) +
+#   scale_color_gradient(low = "blue", high = "red") +
+#   labs(title = "SHAP Summary Plot",
+#        x = "SHAP Value",
+#        y = "Feature") +
+#   theme_minimal()
 shap.plot.summary(shap_long, )
 ```
 
