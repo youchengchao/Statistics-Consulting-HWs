@@ -1,0 +1,237 @@
+---
+title: "HWDiamond Price"
+date: today
+author: 高嘉妤、柯堯珹、吳承恩、趙友誠
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+---
+
+```{r}
+#| output: FALSE
+#| warning: FALSE
+library(readr)
+library(psych)
+library(Hmisc)
+library(DataExplorer)
+library(ggplot2)
+library(MASS)
+library(car)
+library(stargazer)
+Diamonds_Prices2022 <- read_csv("Diamonds Prices2022.csv")
+data <- Diamonds_Prices2022
+```
+
+# 0.資料簡介
+
+Dimension of the Data : ***53943 samples x 11 columns***
+
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| Variables | Explanation | remark                                                                                          |
++===========+=============+=================================================================================================+
+| carat     | 克拉(重量)  | 連續變數(公克)                                                                                  |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| cut       | 切工        | 類別變數, Fair,Good,Ideal,Premium,Very Good                                                     |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| color     | 顏色        | 類別變數,                                                                                       |
+|           |             |                                                                                                 |
+|           |             | ```                                                                                             |
+|           |             |  D,E,F,G,H,I,J                                                                                  |
+|           |             |  無色(D~F),近乎無色(G~J)                                                                        |
+|           |             | ```                                                                                             |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| clarity   | 淨度        | 類別變數,                                                                                       |
+|           |             |                                                                                                 |
+|           |             | IF:內部無暇,VVS1:極輕微瑕,VS1:輕微內含物1,VS2:輕微內含物2,SI1:微內含物1,SI2:微內含物2,I1:內含物 |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| depth     | 深度        | 連續變數(mm)                                                                                    |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| table     | 檯面尺寸    | 連續變數                                                                                        |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| price     | 價格        | 連續變數                                                                                        |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| x         | 鑽石的長    | 連續變數(mm)                                                                                    |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| y         | 鑽石的寬    | 連續變數(mm)                                                                                    |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+| z         | 鑽石的高    | 連續變數(mm)                                                                                    |
++-----------+-------------+-------------------------------------------------------------------------------------------------+
+
+# 1.Data Preprocessing
+
+```{r}
+describe(Diamonds_Prices2022)
+DataExplorer::plot_missing(Diamonds_Prices2022)
+```
+
+此資料集中未出現缺失值
+
+# 2.Data visualization for exploratory data analysis
+
+```{r}
+#克拉對價格(加切工)
+ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Carat vs Price by Cut",
+       x = "Carat",
+       y = "Price",
+       color = "Cut") +
+  scale_color_manual(values = c( "Fair" = "red", "Good" = "blue", "Ideal" = "green", "Premium" = "purple", "Very Good" = "orange"))+
+  theme_minimal()
+```
+
+從克拉對價格的圖中可發現大致上越重的鑽石價格越高
+
+```{r}
+#顏色對價格圖
+
+ggplot(data, aes(x = color, y = price, fill = factor(color))) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "Price Distribution by Color",
+         x = "Color",
+         y = "Price",
+         fill = "color") +
+    theme_minimal()
+```
+
+從顏色對價格的圖中可發現當分類越靠近接近無色時價格越高
+
+```{r}
+#淨度對價格
+
+ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Price Distribution by clarity",
+       x = "clarity",
+       y = "Price",
+       fill = "clarity") +
+  theme_minimal()
+```
+
+從淨度對價格的圖可發現單一淨度指標對價格並沒有直接關連,高淨度的鑽石未必會有高價格
+
+```{r}
+#深度對價格
+ggplot(data, aes(x = depth, y = price, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Depth vs Price by Cut",
+       x = "Depth",
+       y = "Price",
+       color = "Cut") +
+  theme_minimal()
+```
+
+從深度對價格的圖中可發現深度和價格沒有相關,且深度大多集中於60附近,推測是因為深度比例在此區間能切割出最明亮的鑽石
+
+```{r}
+#檯面尺寸對價格
+ggplot(data, aes(x = table, y = price, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "table vs Price by Cut",
+       x = "table",
+       y = "Price",
+       color = "Cut") +
+  theme_minimal()
+```
+
+從檯面尺寸對價格圖中可發現檯面尺寸對價格沒有相關,且檯面尺寸約集中在56\~62之間,推測也是在這個區間中能切割出最好的鑽石
+
+```{r}
+#體積對重量(體積=x*y*z)
+data$volume <- data$x * data$y * data$z
+ggplot(data, aes(x = volume, y = carat, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "volume vs carat by Cut",
+       x = "volume",
+       y = "carat",
+       color = "Cut") +
+  theme_minimal()
+```
+
+# 3.Construct a predictive model for price
+
+```{r}
+# 定義類別順序
+levelcut <- c("Fair", "Good", "Ideal", "Premium", "Very Good")
+levelcolor <- c("D","E","F","G","H","I","J")
+levelclarity <- c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF")
+
+# 使用 match 進行編碼
+data$cut <- match(data$cut,levelcut)
+data$color <- match(data$color,levelcolor)
+data$clarity <- match(data$clarity,levelclarity)
+```
+
+## CCA
+
+```{r}
+# 欲分析幾何特性vs.做工及價格之間的關係
+# 選擇兩組變數
+X <- data[, c("carat", "color", "clarity", "volume")]
+Y <- data[, c("price", "cut", "depth", "table")]
+
+cca <- cancor(X,Y)
+print(cca)
+cca$cor
+cca$xcoef;cca$ycoef
+
+
+```
+
+欲分析幾何特性vs.做工及價格之間的關係
+
+第一典型相關變數:最大典型相關係數為0.9513,第一典型變數主要由carat和table貢獻組成
+
+第二典型相關變數:最大典型相關係數為0.2112(相關性低)
+
+```{r}
+X_loadinds <- cor(X,as.matrix(X) %*% cca$xcoef)
+Y_loadinds <- cor(Y,as.matrix(Y) %*% cca$ycoef)
+X_loadinds;Y_loadinds
+```
+
+第一典型變數主要受carat(-),volume(-)和price(-)影響
+
+第二典型變數主要受clarity(+),depth(-)和table(-)影響
+
+## Price model
+
+```{r}
+model <- lm(price ~ carat + cut + color + clarity + depth + table  + x + y + z, data = data)
+
+# 使用 stepAIC 進行變數選擇
+step_model <- stepAIC(model, direction = "both")
+summary(step_model)
+vif(step_model)
+qqnorm(resid(step_model))
+qqline(resid(step_model), col = "red")
+
+
+
+model2 <- lm(price ~  carat +cut + color + clarity + depth + table   , data = data)
+summary(model2)
+vif(model2)
+mean(resid(model2))  
+qqnorm(resid(model2))
+qqline(resid(model2), col = "red")
+
+model2 <- lm(price ~  carat +cut + color + clarity + depth + table   , data = data)
+summary(model2)
+vif(model2)
+```
+
+由於step_model選取的模型中,經由VIF檢查有兩個變數(carat和x)出現多重共線性,因此剔除x改成model2
+
+而model2的R-squared = 0.9041
