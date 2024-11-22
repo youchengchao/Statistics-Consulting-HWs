@@ -24,6 +24,8 @@ execute:
 
 利用 Bradley-Terry model 分析各個球隊的戰績。
 
+# 使用beautifulsoup4爬資料
+
 ```{python}
 #| eval: false
 #| error: true
@@ -37,39 +39,51 @@ url = "https://www.cpbl.com.tw/standings/season"
 response = requests.get(url,headers = {"User-Agent":"Mozilla/5.0"})
 response.encoding = 'utf-8'
 
-soup = BeautifulSoup(response.text, 'html.parser')
+soup = BeautifulSoup(response.text, 'html.parser') # parse html
 
+# Because the format of table "球隊對戰戰績" differs from all the others, we handle this seperately.
+
+# find table "球隊對戰戰績" by locating its upper layer first
 caption_div = soup.find('div',{'class': 'record_table_caption'}, string="球隊對戰戰績")
+
+# then the table itself
 table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
+
+# retrieve column names
 headers = []
+
+# table.find_all to extract all column names( th )
 for th in table.find_all('th'):
-    # 處理排名和球隊名稱
-    if th.find('div', class_='rank'):  # 標題中有 "排名"
+    # the structure here differs from the rest of the element( 2 levels )
+    if th.find('div', class_='rank'):
         headers.append('排名')
         headers.append('球隊')
+    # deal with the second level
     else:
         header = th.get_text(strip=True)
         headers.append(header)
   
-    # 解析表格的每一行
+# table.find_all to extract all cell data( tr )
 rows = []
-for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
+for tr in table.find_all('tr')[1:]:  # skip the first row( column name )
     row = []
-        
-    # 處理排名和球隊名稱
+    # the structure here is 2-level, too
     sticky = tr.find('td', class_='sticky')
     if sticky:
         rank = sticky.find('div', class_='rank').get_text(strip=True)
         team_name = sticky.find('div', class_='team-w-trophy').get_text(strip=True)
-        row.append(rank)  # 添加排名
-        row.append(team_name)  # 添加球隊名稱
-    # 其他數據
-    for td in tr.find_all('td')[1:]:  # 跳過已經處理過的排名和球隊名稱
+        row.append(rank)
+        row.append(team_name)
+    # handle the rest of the table
+    for td in tr.find_all('td')[1:]:  # skip the first row( column name )
         cell = td.get_text(strip=True)
         row.append(cell)
     rows.append(row)
 df = pd.DataFrame(rows, columns=headers)
 df.to_csv("".join(["球隊對戰戰績",'.csv']), index=False, encoding='utf-8-sig')
+# "".join(["球隊對戰戰績",'.csv']) can be replaced by "球隊對戰戰績"+'.csv'
+
+# the rest of the three tables share the same structure
 
 target_list = ['團隊投球成績','團隊打擊成績','團隊守備成績']
 target = '團隊投球成績'
@@ -78,32 +92,62 @@ for target in target_list:
     table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
     headers = []
     for th in table.find_all('th'):
-        # 處理排名和球隊名稱
         header = th.get_text(strip=True)
         headers.append(header)
   
-    # 解析表格的每一行
     rows = []
-    for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
+    for tr in table.find_all('tr')[1:]:
         row = []
-        
-        # 處理排名和球隊名稱
         sticky = tr.find('td', class_='sticky')
+        # slightly different here, the teamname is stored in a "href" hyperlink
         if sticky:
             team_name = sticky.find('a').get_text(strip=True)
-            row.append(team_name)  # 添加球隊名稱
-        
-        # 其他數據
-        for td in tr.find_all('td')[1:]:  # 跳過已經處理過的排名和球隊名稱
+            row.append(team_name)
+        for td in tr.find_all('td')[1:]:
             cell = td.get_text(strip=True)
             row.append(cell)
-        
         rows.append(row)
     df = pd.DataFrame(rows, columns=headers)
     df.to_csv("".join([target,'.csv']), index=False, encoding='utf-8-sig')
+```
 
+# 使用Bradley-Terry model分析
 
+```{r}
+winlose <- data.table::fread("球隊對戰戰績.csv")
+pitch <- data.table::fread("團隊投球成績.csv")
+combat <- data.table::fread("團隊打擊成績.csv")
+defense <- data.table::fread("團隊守備成績.csv")
+```
+
+## 資料前處理
+
+### 處理-球隊對戰戰績
+
+```{r}
 
 ```
+
+### 處理-團隊投球成績
+
+```{r}
+
+```
+
+
+### 處理-團隊打擊成績
+
+```{r}
+
+```
+
+
+### 處理-團隊守備成績
+
+```{r}
+
+```
+
+
 
 
