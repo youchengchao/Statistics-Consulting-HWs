@@ -18,6 +18,7 @@ format:
 toc: true
 documentclass: article
 ---
+Kaggle URL: https://www.kaggle.com/datasets/enashed/diamond-prices/discussion/547512
 
 ```{r}
 #| output: FALSE
@@ -30,8 +31,7 @@ library(ggplot2)
 library(MASS)
 library(car)
 library(stargazer)
-Diamonds_Prices2022 <- read_csv("Diamonds Prices2022.csv")
-data <- Diamonds_Prices2022
+data <- data.table::fread("Diamonds Prices2022.csv")
 ```
 
 # 0.資料簡介
@@ -72,11 +72,19 @@ Dimension of the Data : ***53943 samples x 11 columns***
 # 1.Data Preprocessing
 
 ```{r}
-describe(Diamonds_Prices2022)
-DataExplorer::plot_missing(Diamonds_Prices2022)
+#| output: asis
+latex(describe(data, title="Diamond Price Dataset"), title="", file="")
+data$x[data$x==0] <- NA
+data$y[data$y==0] <- NA
+data$z[data$z==0] <- NA
+DataExplorer::plot_missing(data)
+data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
+DataExplorer::plot_missing(data)
 ```
 
-此資料集中未出現缺失值
+此資料集中有20筆資料的長或寬或高為0，這是不合理的量測數值，因此將其作為遺失值處理。
+
+又因資料僅20筆，故刪除。
 
 # 2.Data visualization for exploratory data analysis
 
@@ -96,7 +104,6 @@ ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
 
 ```{r}
 #顏色對價格圖
-
 ggplot(data, aes(x = color, y = price, fill = factor(color))) +
     geom_boxplot(alpha = 0.7) +
     labs(title = "Price Distribution by Color",
@@ -110,7 +117,6 @@ ggplot(data, aes(x = color, y = price, fill = factor(color))) +
 
 ```{r}
 #淨度對價格
-
 ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
   geom_boxplot(alpha = 0.7) +
   labs(title = "Price Distribution by clarity",
@@ -186,8 +192,6 @@ cca <- cancor(X,Y)
 print(cca)
 cca$cor
 cca$xcoef;cca$ycoef
-
-
 ```
 
 欲分析幾何特性vs.做工及價格之間的關係
@@ -212,13 +216,11 @@ X_loadinds;Y_loadinds
 model <- lm(price ~ carat + cut + color + clarity + depth + table  + x + y + z, data = data)
 
 # 使用 stepAIC 進行變數選擇
-step_model <- stepAIC(model, direction = "both")
+step_model <- stepAIC(model, direction = "both",trace = 0)
 summary(step_model)
 vif(step_model)
 qqnorm(resid(step_model))
 qqline(resid(step_model), col = "red")
-
-
 
 model2 <- lm(price ~  carat +cut + color + clarity + depth + table   , data = data)
 summary(model2)
@@ -226,10 +228,6 @@ vif(model2)
 mean(resid(model2))  
 qqnorm(resid(model2))
 qqline(resid(model2), col = "red")
-
-model2 <- lm(price ~  carat +cut + color + clarity + depth + table   , data = data)
-summary(model2)
-vif(model2)
 ```
 
 由於step_model選取的模型中,經由VIF檢查有兩個變數(carat和x)出現多重共線性,因此剔除x改成model2
