@@ -107,9 +107,3 @@ for target in target_list:
 ```
 
 
-
-```{r}
-data <- data.table::fread("cpbl_standings.csv")
-```
-
-
