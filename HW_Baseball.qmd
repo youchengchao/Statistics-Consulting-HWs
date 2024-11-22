@@ -37,13 +37,10 @@ url = "https://www.cpbl.com.tw/standings/season"
 response = requests.get(url,headers = {"User-Agent":"Mozilla/5.0"})
 response.encoding = 'utf-8'
 
-#analyze html
 soup = BeautifulSoup(response.text, 'html.parser')
-#find table
-caption_div = soup.find('div', {'class': 'record_table_caption'}, string="球隊對戰戰績")
-table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
 
-#get column name
+caption_div = soup.find('div',{'class': 'record_table_caption'}, string="球隊對戰戰績")
+table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
 headers = []
 for th in table.find_all('th'):
     # 處理排名和球隊名稱
@@ -53,12 +50,12 @@ for th in table.find_all('th'):
     else:
         header = th.get_text(strip=True)
         headers.append(header)
-
-# 解析表格的每一行
+  
+    # 解析表格的每一行
 rows = []
 for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
     row = []
-    
+        
     # 處理排名和球隊名稱
     sticky = tr.find('td', class_='sticky')
     if sticky:
@@ -66,16 +63,47 @@ for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
         team_name = sticky.find('div', class_='team-w-trophy').get_text(strip=True)
         row.append(rank)  # 添加排名
         row.append(team_name)  # 添加球隊名稱
-    
     # 其他數據
     for td in tr.find_all('td')[1:]:  # 跳過已經處理過的排名和球隊名稱
         cell = td.get_text(strip=True)
         row.append(cell)
-    
     rows.append(row)
-  
 df = pd.DataFrame(rows, columns=headers)
-df.to_csv('cpbl_standings.csv', index=False, encoding='utf-8-sig')
+df.to_csv("".join(["球隊對戰戰績",'.csv']), index=False, encoding='utf-8-sig')
+
+target_list = ['團隊投球成績','團隊打擊成績','團隊守備成績']
+target = '團隊投球成績'
+for target in target_list:
+    caption_div = soup.find('div',{'class': 'record_table_caption'}, string=target)
+    table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
+    headers = []
+    for th in table.find_all('th'):
+        # 處理排名和球隊名稱
+        header = th.get_text(strip=True)
+        headers.append(header)
+  
+    # 解析表格的每一行
+    rows = []
+    for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
+        row = []
+        
+        # 處理排名和球隊名稱
+        sticky = tr.find('td', class_='sticky')
+        if sticky:
+            team_name = sticky.find('a').get_text(strip=True)
+            row.append(team_name)  # 添加球隊名稱
+        
+        # 其他數據
+        for td in tr.find_all('td')[1:]:  # 跳過已經處理過的排名和球隊名稱
+            cell = td.get_text(strip=True)
+            row.append(cell)
+        
+        rows.append(row)
+    df = pd.DataFrame(rows, columns=headers)
+    df.to_csv("".join([target,'.csv']), index=False, encoding='utf-8-sig')
+
+
+
 ```
 
 
