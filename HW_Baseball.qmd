@@ -1,0 +1,87 @@
+---
+title: "棒球勝率分析"
+author: 高嘉妤、柯堯珹、趙友誠、吳承恩
+format:
+ pdf:
+    fig-pos: 'h'
+    engine: xelatex
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \usepackage{xeCJK}
+         \usepackage{float}
+         \geometry{verbose,tmargin=1.5cm,bmargin=1.5cm,lmargin=1.5cm,rmargin=1.5cm}
+         \setmainfont{Times New Roman}
+         \setCJKmainfont{標楷體}
+toc: true
+documentclass: article
+execute: 
+  cache: true
+  warning: false
+---
+請利用連結 https://www.cpbl.com.tw/standings/season 中的資料，
+
+利用 Bradley-Terry model 分析各個球隊的戰績。
+
+```{python}
+#| eval: false
+#| error: true
+# conda install anaconda::beautifulsoup4
+# conda install anaconda::requests
+# conda install anaconda::pandas
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+url = "https://www.cpbl.com.tw/standings/season"
+response = requests.get(url,headers = {"User-Agent":"Mozilla/5.0"})
+response.encoding = 'utf-8'
+
+#analyze html
+soup = BeautifulSoup(response.text, 'html.parser')
+#find table
+caption_div = soup.find('div', {'class': 'record_table_caption'}, string="球隊對戰戰績")
+table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
+
+#get column name
+headers = []
+for th in table.find_all('th'):
+    # 處理排名和球隊名稱
+    if th.find('div', class_='rank'):  # 標題中有 "排名"
+        headers.append('排名')
+        headers.append('球隊')
+    else:
+        header = th.get_text(strip=True)
+        headers.append(header)
+
+# 解析表格的每一行
+rows = []
+for tr in table.find_all('tr')[1:]:  # 跳過第一行（標題行）
+    row = []
+    
+    # 處理排名和球隊名稱
+    sticky = tr.find('td', class_='sticky')
+    if sticky:
+        rank = sticky.find('div', class_='rank').get_text(strip=True)
+        team_name = sticky.find('div', class_='team-w-trophy').get_text(strip=True)
+        row.append(rank)  # 添加排名
+        row.append(team_name)  # 添加球隊名稱
+    
+    # 其他數據
+    for td in tr.find_all('td')[1:]:  # 跳過已經處理過的排名和球隊名稱
+        cell = td.get_text(strip=True)
+        row.append(cell)
+    
+    rows.append(row)
+  
+df = pd.DataFrame(rows, columns=headers)
+df.to_csv('cpbl_standings.csv', index=False, encoding='utf-8-sig')
+```
+
+
+
+```{r}
+data <- data.table::fread("cpbl_standings.csv")
+```
+
+
