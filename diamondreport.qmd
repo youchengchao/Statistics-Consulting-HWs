@@ -31,12 +31,12 @@ library(ggplot2)
 library(MASS)
 library(car)
 library(stargazer)
-data <- data.table::fread("Diamonds Prices2022.csv")
+data <- data.table::fread("Diamonds Prices2022.csv")[,-1]
 ```
 
 # 0.資料簡介
 
-Dimension of the Data : ***53943 samples x 11 columns***
+Dimension of the Data : ***53943 samples x 10 columns***
 
 +-----------+-------------+-------------------------------------------------------------------------------------------------+
 | Variables | Explanation | remark                                                                                          |
@@ -74,103 +74,35 @@ Dimension of the Data : ***53943 samples x 11 columns***
 ```{r}
 #| output: asis
 latex(describe(data, title="Diamond Price Dataset"), title="", file="")
-#定義體積 = x * y * z
-data$volume <- data$x * data$y * data$z
+```
+
+由describe可以發現x,y,z(長、寬、高)當中出現0，這是不合理的量測數值，因此將其作為遺失值處理。
+
+經檢查，此資料有20筆資料的長或寬或高為0，與五萬多的樣本數相比算小，因此刪除。
+
+此外還發現反應變數"價格"有離群值，在後續使用模型建立預測模式時需多加考量。
+
+```{r}
 data$x[data$x==0] <- NA
 data$y[data$y==0] <- NA
 data$z[data$z==0] <- NA
-DataExplorer::plot_missing(data)
+DataExplorer::plot_missing(
+  data,
+  title = "Fig.1 missing proportion before removing NA")
 data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
-DataExplorer::plot_missing(data)
 ```
 
-此資料集中有20筆資料的長或寬或高為0，這是不合理的量測數值，因此將其作為遺失值處理。
+我們認為僅僅觀察單一的長、寬、高並不具有任何意義，因此建立新變數 密度 = $x\times y\times z$。
 
-又因資料僅20筆，故刪除。
-
-# 2.Data visualization for exploratory data analysis
+此外，一些類別型變數以ordinal的方式處理，賦予其從1開始的整數。( 這裡幫我補說明 )
 
 ```{r}
-#克拉對價格(加切工)
-ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
-  geom_point(alpha = 0.6) +
-  labs(title = "Carat vs Price by Cut",
-       x = "Carat",
-       y = "Price",
-       color = "Cut") +
-  scale_color_manual(values = c( "Fair" = "red", "Good" = "blue", "Ideal" = "green", "Premium" = "purple", "Very Good" = "orange"))+
-  theme_minimal()
-```
-
-從克拉對價格的圖中可發現大致上越重的鑽石價格越高
-
-```{r}
-#顏色對價格圖
-ggplot(data, aes(x = color, y = price, fill = factor(color))) +
-    geom_boxplot(alpha = 0.7) +
-    labs(title = "Price Distribution by Color",
-         x = "Color",
-         y = "Price",
-         fill = "color") +
-    theme_minimal()
-```
-
-從顏色對價格的圖中可發現當分類越靠近接近無色時價格越高
-
-```{r}
-#淨度對價格
-ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
-  geom_boxplot(alpha = 0.7) +
-  labs(title = "Price Distribution by clarity",
-       x = "clarity",
-       y = "Price",
-       fill = "clarity") +
-  theme_minimal()
-```
-
-從淨度對價格的圖可發現單一淨度指標對價格並沒有直接關連,高淨度的鑽石未必會有高價格
-
-```{r}
-#深度對價格
-ggplot(data, aes(x = depth, y = price, color =factor(cut))) +
-  geom_point(alpha = 0.5) +
-  labs(title = "Depth vs Price by Cut",
-       x = "Depth",
-       y = "Price",
-       color = "Cut") +
-  theme_minimal()
-```
-
-從深度對價格的圖中可發現深度和價格沒有相關,且深度大多集中於60附近,推測是因為深度比例在此區間能切割出最明亮的鑽石
-
-```{r}
-#檯面尺寸對價格
-ggplot(data, aes(x = table, y = price, color =factor(cut))) +
-  geom_point(alpha = 0.5) +
-  labs(title = "table vs Price by Cut",
-       x = "table",
-       y = "Price",
-       color = "Cut") +
-  theme_minimal()
-```
-
-從檯面尺寸對價格圖中可發現檯面尺寸對價格沒有相關,且檯面尺寸約集中在56\~62之間,推測也是在這個區間中能切割出最好的鑽石
-
-```{r}
-#體積對重量(體積=x*y*z)
+#定義體積 = x * y * z
 data$volume <- data$x * data$y * data$z
-ggplot(data, aes(x = volume, y = carat, color =factor(cut))) +
-  geom_point(alpha = 0.5) +
-  labs(title = "volume vs carat by Cut",
-       x = "volume",
-       y = "carat",
-       color = "Cut") +
-  theme_minimal()
-```
+data$x <- NULL
+data$y <- NULL
+data$z <- NULL
 
-# 3.Construct a predictive model for price
-
-```{r}
 # 定義類別順序
 levelcut <- c("Fair", "Good", "Ideal", "Premium", "Very Good")
 levelcolor <- c("D","E","F","G","H","I","J")
@@ -182,7 +114,94 @@ data$color <- match(data$color,levelcolor)
 data$clarity <- match(data$clarity,levelclarity)
 ```
 
-## CCA
+# 2.Data visualization for exploratory data analysis
+
+從圖2的Spearman相關係數可以發現，鑽石的克拉數與體積幾乎與價格是正比，在後續分析的時候可以稍微注意，此外並無其他變數有特別的相關性。
+
+```{r}
+corrplot::corrplot(cor(data, method = 'spearman'),
+                   method = 'number',
+                   title = "Fig.2 Spearman Correlation")
+```
+
+```{r}
+#克拉對價格(加切工)
+ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Fig.3 Carat vs Price by Cut",
+       x = "Carat",
+       y = "Price",
+       color = "Cut") +
+  scale_color_manual(values = c( "Fair" = "red", "Good" = "blue", "Ideal" = "green", "Premium" = "purple", "Very Good" = "orange"))+
+  theme_minimal()
+```
+
+從圖3可發現大致上越重的鑽石價格越高。
+
+```{r}
+#顏色對價格圖
+ggplot(data, aes(x = color, y = price, fill = factor(color))) +
+    geom_boxplot(alpha = 0.7) +
+    labs(title = "Fig.4 Price Distribution by Color",
+         x = "Color",
+         y = "Price",
+         fill = "color") +
+    theme_minimal()
+```
+
+從圖4可發現當分類越靠近接近無色時價格越高。
+
+```{r}
+#淨度對價格
+ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Fig.5 Price Distribution by clarity",
+       x = "clarity",
+       y = "Price",
+       fill = "clarity") +
+  theme_minimal()
+```
+
+從圖5可發現單一淨度指標對價格並沒有直接關連,高淨度的鑽石未必會有高價格。
+
+```{r}
+#深度對價格
+ggplot(data, aes(x = depth, y = price, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Fig.6 Depth vs Price by Cut",
+       x = "Depth",
+       y = "Price",
+       color = "Cut") +
+  theme_minimal()
+```
+
+從圖6可發現深度和價格沒有相關,且深度大多集中於60附近,推測是因為深度比例在此區間能切割出最明亮的鑽石。
+
+```{r}
+#檯面尺寸對價格
+ggplot(data, aes(x = table, y = price, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Fig.7 table vs Price by Cut",
+       x = "table",
+       y = "Price",
+       color = "Cut") +
+  theme_minimal()
+```
+
+從圖7可發現檯面尺寸對價格沒有相關,且檯面尺寸約集中在56\~62之間,推測也是在這個區間中能切割出最好的鑽石
+
+```{r}
+#體積對重量
+ggplot(data, aes(x = volume, y = carat, color =factor(cut))) +
+  geom_point(alpha = 0.5) +
+  labs(title = "Fig.8 volume vs carat by Cut",
+       x = "volume",
+       y = "carat",
+       color = "Cut") +
+  theme_minimal()
+```
+
+## 典型相關分析(CCA)
 
 ```{r}
 # 欲分析幾何特性vs.做工及價格之間的關係
@@ -212,26 +231,29 @@ X_loadinds;Y_loadinds
 
 第二典型變數主要受clarity(+),depth(-)和table(-)影響
 
-## Price model
+# 3.Construct a predictive model for price
+
+## Linear regression model
+
+我們採用線性回歸模型搭配AIC的逐步回歸進行變數選取，
 
 ```{r}
-model <- lm(price ~ carat + cut + color + clarity + depth + table  + x + y + z, data = data)
+model.1 <- lm(price ~ ., data = data)
 
 # 使用 stepAIC 進行變數選擇
-step_model <- stepAIC(model, direction = "both",trace = 0)
+step_model <- stepAIC(model.1,
+                      direction = "both",
+                      trace = 0)
+summary(step_model)
+vif(step_model)
+model.2 <- lm(price ~.-carat  , data = data)
+step_model <- stepAIC(model.2,
+                      direction = "both",
+                      trace = 0)
 summary(step_model)
 vif(step_model)
 qqnorm(resid(step_model))
 qqline(resid(step_model), col = "red")
-
-model2 <- lm(price ~  carat +cut + color + clarity + depth + table   , data = data)
-summary(model2)
-vif(model2)
-mean(resid(model2))  
-qqnorm(resid(model2))
-qqline(resid(model2), col = "red")
 ```
 
-由於step_model選取的模型中,經由VIF檢查有兩個變數(carat和x)出現多重共線性,因此剔除x改成model2
-
-而model2的R-squared = 0.9041
+而model.2的R-squared = 0.9041
