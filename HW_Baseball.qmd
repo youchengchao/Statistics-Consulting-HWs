@@ -118,6 +118,35 @@ winlose <- data.table::fread("球隊對戰戰績.csv")
 pitch <- data.table::fread("團隊投球成績.csv")
 combat <- data.table::fread("團隊打擊成績.csv")
 defense <- data.table::fread("團隊守備成績.csv")
+
+library(dplyr)
+library(tidyr)
+library(BradleyTerry2)
+teams <- winlose$球隊
+match <- winlose[,8:13]
+
+long_format <- match %>%
+  mutate(球隊 = teams) %>%
+  pivot_longer(cols = -球隊, names_to = "對戰球隊", values_to = "戰績") %>%
+  drop_na()
+
+results <- long_format %>%
+  separate(戰績, into = c("勝", "和", "敗"), sep = "-", convert = TRUE)
+
+win_matrix <- results %>%
+  mutate(勝隊 = 球隊, 敗隊 = 對戰球隊, 勝數 = 勝) %>%
+  select(勝隊, 敗隊, 勝數) %>%
+  pivot_wider(names_from = 敗隊, values_from = 勝數, values_fill = 0)
+
+win_matrix <- as.data.frame(win_matrix)
+rownames(win_matrix)<- win_matrix$勝隊
+win_matrix <- win_matrix[,-which(names(win_matrix)=='勝隊')]
+Head2head <- countsToBinomial(win_matrix)
+
+names(Head2head)[3:4] <- c('Win','Lose')
+model<-BTm(cbind(Win, Lose), player1, player2,formula = ~player,id ='player',refcat = '中信兄弟', data = Head2head)
+
+summary(model)
 ```
 
 ## 資料前處理
