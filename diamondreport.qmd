@@ -18,6 +18,7 @@ format:
 toc: true
 documentclass: article
 ---
+
 Kaggle URL: https://www.kaggle.com/datasets/enashed/diamond-prices/discussion/547512
 
 ```{r}
@@ -90,13 +91,17 @@ DataExplorer::plot_missing(
   data,
   title = "Fig.1 missing proportion before removing NA")
 data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
+
 ```
 
 我們認為僅僅觀察單一的長、寬、高並不具有任何意義，因此建立新變數 體積 = $x\times y\times z$。
 
 此外，一些類別型變數以ordinal的方式處理，賦予其從1開始的整數。
+
 Cut(切工)從Fair到Very Good分成1-5級
+
 Color(鑽石顏色)按照D-J排序為1-7
+
 Clarity(鑽石純淨程度)按照I1-IF排序成1-8
 
 ```{r}
@@ -105,7 +110,8 @@ data$volume <- data$x * data$y * data$z
 data$x <- NULL
 data$y <- NULL
 data$z <- NULL
-
+#發現體積中有離群值,故將其刪除
+data <- data[data$volume < 800]
 # 定義類別順序
 levelcut <- c("Fair", "Good", "Ideal", "Premium", "Very Good")
 levelcolor <- c("D","E","F","G","H","I","J")
@@ -129,6 +135,9 @@ corrplot::corrplot(cor(data, method = 'spearman'),
 
 ```{r}
 #克拉對價格(加切工)
+data$cut <- factor(data$cut, 
+                       levels = c("1", "2", "3", "4", "5"), 
+                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good"))
 ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
   geom_point(alpha = 0.6) +
   labs(title = "Fig.3 Carat vs Price by Cut",
@@ -143,6 +152,9 @@ ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
 
 ```{r}
 #顏色對價格圖
+data$color <- factor(data$color, 
+                       levels = c("1", "2", "3", "4", "5", "6", "7"), 
+                       labels = c("D", "E", "F", "G", "H", "I", "J"))
 ggplot(data, aes(x = color, y = price, fill = factor(color))) +
     geom_boxplot(alpha = 0.7) +
     labs(title = "Fig.4 Price Distribution by Color",
@@ -156,6 +168,9 @@ ggplot(data, aes(x = color, y = price, fill = factor(color))) +
 
 ```{r}
 #淨度對價格
+data$clarity <- factor(data$clarity, 
+                       levels = c("1", "2", "3", "4", "5", "6", "7", "8"), 
+                       labels = c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF"))
 ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
   geom_boxplot(alpha = 0.7) +
   labs(title = "Fig.5 Price Distribution by clarity",
@@ -195,19 +210,51 @@ ggplot(data, aes(x = table, y = price, color =factor(cut))) +
 
 ```{r}
 #體積對重量
-ggplot(data, aes(x = volume, y = carat, color =factor(cut))) +
+ggplot(data,aes(x = volume,y = carat,color = factor(cut)))+
+  geom_point(alpha = 0.5)+
+  labs(title ="Fig.8 volume vs carat by Cut",
+      x ="volume",
+      y ="carat",color ="Cut") +
+  theme_minimal()
+
+
+```
+
+由圖８可發現體積和重量（克拉）有近乎正比關係
+
+```{r}
+ggplot(data, aes(x = volume, y = price, color =factor(cut))) +
   geom_point(alpha = 0.5) +
-  labs(title = "Fig.8 volume vs carat by Cut",
+  labs(title = "Fig.9 volume vs carat by Cut",
        x = "volume",
-       y = "carat",
+       y = "price",
        color = "Cut") +
   theme_minimal()
 ```
+
+由圖9可發現與圖3非常類似，可知道從重量和從體積對上價格能得到相同結果
 
 ## 典型相關分析(CCA)
 
 ```{r}
 # 欲分析幾何特性vs.做工及價格之間的關係
+# 定義類別順序
+data <- data.table::fread("Diamonds Prices2022.csv")[,-1]
+data$x[data$x==0] <- NA
+data$y[data$y==0] <- NA
+data$z[data$z==0] <- NA
+data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
+data$volume <- data$x * data$y * data$z
+data <- data[data$volume < 800]
+levelcut <- c("Fair", "Good", "Ideal", "Premium", "Very Good")
+levelcolor <- c("D","E","F","G","H","I","J")
+levelclarity <- c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF")
+
+# 使用 match 進行編碼
+data$cut <- match(data$cut,levelcut)
+data$color <- match(data$color,levelcolor)
+data$clarity <- match(data$clarity,levelclarity)
+
 # 選擇兩組變數
 X <- data[, c("carat", "color", "clarity", "volume")]
 Y <- data[, c("price", "cut", "depth", "table")]
@@ -260,3 +307,37 @@ qqline(resid(step_model), col = "red")
 ```
 
 而model.2的R-squared = 0.9041
+
+接著我們把資料集切割成訓練集70%和測試集30%來對此模型評估預測表現
+
+```{r}
+
+set.seed(123)
+train_ratio <- 0.7
+n <- nrow(data)
+train_indices <- sample(1:n, size = floor(train_ratio * n))
+train_data <- data[train_indices, ]
+test_data <- data[-train_indices, ]
+
+model <- lm(price ~ cut + color + clarity + table + volume, data = train_data)
+summary(model)
+
+predictions <- predict(model, data = test_data)
+
+
+
+
+```
+
+```{r}
+# 計算 MSE 和 RMSE
+mse <- mean((test_data$price - predictions)^2)
+rmse <- sqrt(mse)
+
+# 輸出結果
+cat("Mean Squared Error (MSE):", mse, "\n")
+cat("Root Mean Squared Error (RMSE):", rmse, "\n")
+```
+
+經過測試後，這個模型R-square = 0.9053，RMSE = 5348.818
+(結論)
