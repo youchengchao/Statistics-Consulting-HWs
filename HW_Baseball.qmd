@@ -130,6 +130,9 @@ fit_ties <- vglm(Brat(as.matrix(win_matrix), as.matrix(tie_matrix)) ~1, bratt(re
 
 summary(fit)
 summary(fit_ties)
+
+fitted(fit_ties)
+predict(fit_ties)
 ```
 
 
