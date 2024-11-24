@@ -92,9 +92,12 @@ DataExplorer::plot_missing(
 data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
 ```
 
-我們認為僅僅觀察單一的長、寬、高並不具有任何意義，因此建立新變數 密度 = $x\times y\times z$。
+我們認為僅僅觀察單一的長、寬、高並不具有任何意義，因此建立新變數 體積 = $x\times y\times z$。
 
-此外，一些類別型變數以ordinal的方式處理，賦予其從1開始的整數。( 這裡幫我補說明 )
+此外，一些類別型變數以ordinal的方式處理，賦予其從1開始的整數。
+Cut(切工)從Fair到Very Good分成1-5級
+Color(鑽石顏色)按照D-J排序為1-7
+Clarity(鑽石純淨程度)按照I1-IF排序成1-8
 
 ```{r}
 #定義體積 = x * y * z
