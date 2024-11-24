@@ -296,17 +296,22 @@ step_model <- stepAIC(model.1,
                       trace = 0)
 summary(step_model)
 vif(step_model)
+
+```
+
+檢查VIF可發現 carat 和 volume 值很大，故試將carat刪除建立model.2
+
+```{r}
 model.2 <- lm(price ~.-carat  , data = data)
 step_model <- stepAIC(model.2,
                       direction = "both",
                       trace = 0)
 summary(step_model)
 vif(step_model)
-qqnorm(resid(step_model))
-qqline(resid(step_model), col = "red")
+
 ```
 
-而model.2的R-squared = 0.9041
+而model.2的R-squared = 0.9041，VIF檢查後各變數也無異常
 
 接著我們把資料集切割成訓練集70%和測試集30%來對此模型評估預測表現
 
@@ -340,4 +345,3 @@ cat("Root Mean Squared Error (RMSE):", rmse, "\n")
 ```
 
 經過測試後，這個模型R-square = 0.9053，RMSE = 5348.818
-(結論)
