@@ -24,7 +24,7 @@ execute:
 
 利用 Bradley-Terry model 分析各個球隊的戰績。
 
-# 使用beautifulsoup4爬資料
+# python beautifulsoup4 程式碼
 
 ```{python}
 #| eval: false
@@ -51,9 +51,7 @@ table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
 
 # retrieve column names
 headers = []
-
-# table.find_all to extract all column names( th )
-for th in table.find_all('th'):
+for th in table.find_all('th'):   #extract all column names( th )
     # the structure here differs from the rest of the element( 2 levels )
     if th.find('div', class_='rank'):
         headers.append('排名')
@@ -81,51 +79,21 @@ for tr in table.find_all('tr')[1:]:  # skip the first row( column name )
     rows.append(row)
 df = pd.DataFrame(rows, columns=headers)
 df.to_csv("".join(["球隊對戰戰績",'.csv']), index=False, encoding='utf-8-sig')
-# "".join(["球隊對戰戰績",'.csv']) can be replaced by "球隊對戰戰績"+'.csv'
-
-# the rest of the three tables share the same structure
-
-target_list = ['團隊投球成績','團隊打擊成績','團隊守備成績']
-target = '團隊投球成績'
-for target in target_list:
-    caption_div = soup.find('div',{'class': 'record_table_caption'}, string=target)
-    table = caption_div.find_next('div', {'class': 'RecordTable'}).find('table')
-    headers = []
-    for th in table.find_all('th'):
-        header = th.get_text(strip=True)
-        headers.append(header)
-  
-    rows = []
-    for tr in table.find_all('tr')[1:]:
-        row = []
-        sticky = tr.find('td', class_='sticky')
-        # slightly different here, the teamname is stored in a "href" hyperlink
-        if sticky:
-            team_name = sticky.find('a').get_text(strip=True)
-            row.append(team_name)
-        for td in tr.find_all('td')[1:]:
-            cell = td.get_text(strip=True)
-            row.append(cell)
-        rows.append(row)
-    df = pd.DataFrame(rows, columns=headers)
-    df.to_csv("".join([target,'.csv']), index=False, encoding='utf-8-sig')
 ```
 
 # 使用Bradley-Terry model分析
 
+## 資料前處理
+
 ```{r}
 winlose <- data.table::fread("球隊對戰戰績.csv")
-pitch <- data.table::fread("團隊投球成績.csv")
-combat <- data.table::fread("團隊打擊成績.csv")
-defense <- data.table::fread("團隊守備成績.csv")
-
 library(dplyr)
 library(tidyr)
 library(BradleyTerry2)
 teams <- winlose$球隊
-match <- winlose[,8:13]
+matches <- winlose[,8:13]
 
-long_format <- match %>%
+long_format <- matches %>%
   mutate(球隊 = teams) %>%
   pivot_longer(cols = -球隊, names_to = "對戰球隊", values_to = "戰績") %>%
   drop_na()
@@ -139,43 +107,35 @@ win_matrix <- results %>%
   pivot_wider(names_from = 敗隊, values_from = 勝數, values_fill = 0)
 
 win_matrix <- as.data.frame(win_matrix)
-rownames(win_matrix)<- win_matrix$勝隊
+rownames(win_matrix) <- win_matrix$勝隊
 win_matrix <- win_matrix[,-which(names(win_matrix)=='勝隊')]
 Head2head <- countsToBinomial(win_matrix)
-
 names(Head2head)[3:4] <- c('Win','Lose')
-model<-BTm(cbind(Win, Lose), player1, player2,formula = ~player,id ='player',refcat = '中信兄弟', data = Head2head)
 
-summary(model)
+tie_matrix <- results %>%
+  mutate(隊伍1 = 球隊, 隊伍2 = 對戰球隊, 和數 = 和) %>%
+  select(隊伍1, 隊伍2, 和數) %>%
+  pivot_wider(names_from = 隊伍2, values_from = 和數, values_fill = 0)
+tie_matrix <- as.data.frame(tie_matrix)
+rownames(tie_matrix) <- tie_matrix$隊伍1
+tie_matrix <- tie_matrix[,-which(names(tie_matrix) == '隊伍1')]
 ```
 
-## 資料前處理
-
-### 處理-球隊對戰戰績
+## Bradley-Terry model
 
 ```{r}
+library(VGAM)
+fit <- vglm(Brat(as.matrix(win_matrix)) ~1, brat(refgp = 1), trace = FALSE, crit = "coef")
+fit_ties <- vglm(Brat(as.matrix(win_matrix), as.matrix(tie_matrix)) ~1, bratt(refgp = 1), trace = FALSE,crit = "coef")
 
-```
-
-### 處理-團隊投球成績
-
-```{r}
-
-```
-
-
-### 處理-團隊打擊成績
-
-```{r}
-
+summary(fit)
+summary(fit_ties)
 ```
 
 
-### 處理-團隊守備成績
 
-```{r}
 
-```
+
 
 
 
