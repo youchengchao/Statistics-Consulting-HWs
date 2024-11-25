@@ -147,7 +147,8 @@ ggplot(data, aes(x = carat,
        x = "Carat",
        y = "Price",
        color = "Cut") +
-  scale_color_manual(values = c( "Fair" = "red", "Good" = "blue", "Ideal" = "green", "Premium" = "purple", "Very Good" = "orange"))+
+  scale_color_manual(values = c( "Fair" = "red", "Good" = "blue", "Ideal" = "green", 
+                                 "Premium" = "purple", "Very Good" = "orange"))+
   theme_minimal()
 ```
 
@@ -329,12 +330,17 @@ oldformula <- model.2$formula
 newformula <- update(oldformula, .~.-depth)
 model.2 <- lm( newformula, data = train_data)
 summary(model.2)
+
+
 ```
 
 檢查VIF可發現 carat 和 volume 值很大，故試將carat刪除建立model.2
 
 移除carat之後發現，depth在顯著水準0.05之下變得不顯著，因此移除此變數，再配適一個模型。
 
+接著把剩下的變數加上交互作用項再建立model.3，可以看到r^2增加了2%
+推論增加交互作用項會提升模型準確率
+因此再用逐步回歸法
 而model.2的R-squared = 0.9053，VIF檢查後各變數也無異常。
 
 因此以model.2作為預測模型。
@@ -342,6 +348,7 @@ summary(model.2)
 以下將測試集資料輸入預測模型並評估表現:
 
 ```{r}
+
 predictions <- predict(model.2, newdata = test_data)
 # 計算 MSE 和 RMSE
 rmse <- sqrt(mean((test_data$price - predictions)^2))
@@ -356,3 +363,25 @@ cat("Root Mean Squared Error (RMSE):", rmse, "\n")
 
 以線性回歸模型來說，已經是不錯的表現了。
 
+```{r}
+model.3 <- lm(price ~(cut+color+clarity+table+volume)^2  , data = train_data)
+summary(model.3)
+model.4 <- stepAIC(
+  model.3,
+  direction = "both",
+  trace = 0)
+summary(model.4)
+predictions <- predict(model.4, newdata = test_data)
+# 計算 MSE 和 RMSE
+rmse <- sqrt(mean((test_data$price - predictions)^2))
+test_r2 <- 1 - sum((predictions - test_data$price)^2) / 
+                sum((test_data$price - mean(test_data$price))^2)
+# 輸出結果
+cat("Testing R^2:", test_r2, "\n")
+cat("Root Mean Squared Error (RMSE):", rmse, "\n")
+```
+接著試試看加入交互作用項(model.3)並用逐步回歸法選出AIC最低的模型(model.4)
+
+可看到此模型的R-square進步到92.6%，rmse下降到1085.26
+
+可知交互作用存在於此模型，因此我們選擇繼續使用機器學習模型來適配
