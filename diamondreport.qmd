@@ -17,13 +17,15 @@ format:
          \setCJKmainfont{標楷體}
 toc: true
 documentclass: article
+execute: 
+  warning: false
+  cache: true
 ---
 
 Kaggle URL: https://www.kaggle.com/datasets/enashed/diamond-prices/discussion/547512
 
 ```{r}
 #| output: FALSE
-#| warning: FALSE
 library(readr)
 library(psych)
 library(Hmisc)
@@ -91,7 +93,6 @@ DataExplorer::plot_missing(
   data,
   title = "Fig.1 missing proportion before removing NA")
 data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
-
 ```
 
 我們認為僅僅觀察單一的長、寬、高並不具有任何意義，因此建立新變數 體積 = $x\times y\times z$。
@@ -127,18 +128,20 @@ data$clarity <- match(data$clarity,levelclarity)
 
 從圖2的Spearman相關係數可以發現，鑽石的克拉數與體積幾乎與價格是正比，在後續分析的時候可以稍微注意，此外並無其他變數有特別的相關性。
 
-```{r}
+```{r, fig.height=4, out.width="60%"}
 corrplot::corrplot(cor(data, method = 'spearman'),
                    method = 'number',
-                   title = "Fig.2 Spearman Correlation")
+                   mar = c(1, 0, 0, 0))
+mtext("Fig.2 Spearman Correlation", side = 1, line = 4, cex = 1)
 ```
 
 ```{r}
 #克拉對價格(加切工)
-data$cut <- factor(data$cut, 
-                       levels = c("1", "2", "3", "4", "5"), 
-                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good"))
-ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
+ggplot(data, aes(x = carat,
+                 y = price,
+                 color = factor(cut,
+                                levels = c("1", "2", "3", "4", "5"),
+                                labels = c("Fair", "Good", "Ideal", "Premium", "Very Good")))) +
   geom_point(alpha = 0.6) +
   labs(title = "Fig.3 Carat vs Price by Cut",
        x = "Carat",
@@ -152,10 +155,13 @@ ggplot(data, aes(x = carat, y = price, color = factor(cut))) +
 
 ```{r}
 #顏色對價格圖
-data$color <- factor(data$color, 
+ggplot(data, aes(x = factor(color, 
                        levels = c("1", "2", "3", "4", "5", "6", "7"), 
-                       labels = c("D", "E", "F", "G", "H", "I", "J"))
-ggplot(data, aes(x = color, y = price, fill = factor(color))) +
+                       labels = c("D", "E", "F", "G", "H", "I", "J")),
+                 y = price,
+                 fill = factor(color, 
+                       levels = c("1", "2", "3", "4", "5", "6", "7"), 
+                       labels = c("D", "E", "F", "G", "H", "I", "J")))) +
     geom_boxplot(alpha = 0.7) +
     labs(title = "Fig.4 Price Distribution by Color",
          x = "Color",
@@ -168,10 +174,13 @@ ggplot(data, aes(x = color, y = price, fill = factor(color))) +
 
 ```{r}
 #淨度對價格
-data$clarity <- factor(data$clarity, 
+ggplot(data, aes(x = factor(data$clarity, 
                        levels = c("1", "2", "3", "4", "5", "6", "7", "8"), 
-                       labels = c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF"))
-ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
+                       labels = c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF")),
+                 y = price,
+                 fill = factor(data$clarity, 
+                       levels = c("1", "2", "3", "4", "5", "6", "7", "8"), 
+                       labels = c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF")))) +
   geom_boxplot(alpha = 0.7) +
   labs(title = "Fig.5 Price Distribution by clarity",
        x = "clarity",
@@ -184,7 +193,11 @@ ggplot(data, aes(x = clarity, y = price, fill = factor(clarity))) +
 
 ```{r}
 #深度對價格
-ggplot(data, aes(x = depth, y = price, color =factor(cut))) +
+ggplot(data, aes(x = depth,
+                 y = price,
+                 color = factor(data$cut, 
+                       levels = c("1", "2", "3", "4", "5"), 
+                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good")))) +
   geom_point(alpha = 0.5) +
   labs(title = "Fig.6 Depth vs Price by Cut",
        x = "Depth",
@@ -197,7 +210,11 @@ ggplot(data, aes(x = depth, y = price, color =factor(cut))) +
 
 ```{r}
 #檯面尺寸對價格
-ggplot(data, aes(x = table, y = price, color =factor(cut))) +
+ggplot(data, aes(x = table,
+                 y = price,
+                 color =factor(data$cut, 
+                       levels = c("1", "2", "3", "4", "5"), 
+                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good")))) +
   geom_point(alpha = 0.5) +
   labs(title = "Fig.7 table vs Price by Cut",
        x = "table",
@@ -210,20 +227,26 @@ ggplot(data, aes(x = table, y = price, color =factor(cut))) +
 
 ```{r}
 #體積對重量
-ggplot(data,aes(x = volume,y = carat,color = factor(cut)))+
+ggplot(data,aes(x = volume,
+                y = carat,
+                color = factor(data$cut, 
+                       levels = c("1", "2", "3", "4", "5"), 
+                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good"))))+
   geom_point(alpha = 0.5)+
   labs(title ="Fig.8 volume vs carat by Cut",
       x ="volume",
       y ="carat",color ="Cut") +
   theme_minimal()
-
-
 ```
 
 由圖８可發現體積和重量（克拉）有近乎正比關係
 
 ```{r}
-ggplot(data, aes(x = volume, y = price, color =factor(cut))) +
+ggplot(data, aes(x = volume,
+                 y = price,
+                 color =factor(data$cut, 
+                       levels = c("1", "2", "3", "4", "5"), 
+                       labels = c("Fair", "Good", "Ideal", "Premium", "Very Good")))) +
   geom_point(alpha = 0.5) +
   labs(title = "Fig.9 volume vs carat by Cut",
        x = "volume",
@@ -236,40 +259,23 @@ ggplot(data, aes(x = volume, y = price, color =factor(cut))) +
 
 ## 典型相關分析(CCA)
 
+分析 : 幾何特性vs.做工及價格之間的關係
+
 ```{r}
-# 欲分析幾何特性vs.做工及價格之間的關係
-# 定義類別順序
-data <- data.table::fread("Diamonds Prices2022.csv")[,-1]
-data$x[data$x==0] <- NA
-data$y[data$y==0] <- NA
-data$z[data$z==0] <- NA
-data <- data[!(is.na(data$x) | is.na(data$y) | is.na(data$z)),]
-data$volume <- data$x * data$y * data$z
-data <- data[data$volume < 800]
-levelcut <- c("Fair", "Good", "Ideal", "Premium", "Very Good")
-levelcolor <- c("D","E","F","G","H","I","J")
-levelclarity <- c("I1","SI2","SI1","VS2","VS1","VVS2","VVS1","IF")
-
-# 使用 match 進行編碼
-data$cut <- match(data$cut,levelcut)
-data$color <- match(data$color,levelcolor)
-data$clarity <- match(data$clarity,levelclarity)
-
 # 選擇兩組變數
 X <- data[, c("carat", "color", "clarity", "volume")]
 Y <- data[, c("price", "cut", "depth", "table")]
-
 cca <- cancor(X,Y)
 print(cca)
 cca$cor
 cca$xcoef;cca$ycoef
 ```
 
-欲分析幾何特性vs.做工及價格之間的關係
+發現 : 
 
-第一典型相關變數:最大典型相關係數為0.9513,第一典型變數主要由carat和table貢獻組成
+    第一典型相關變數:最大典型相關係數為0.9513,第一典型變數主要由carat和table貢獻組成
 
-第二典型相關變數:最大典型相關係數為0.2112(相關性低)
+    第二典型相關變數:最大典型相關係數為0.2112(相關性低)
 
 ```{r}
 X_loadinds <- cor(X,as.matrix(X) %*% cca$xcoef)
@@ -277,71 +283,76 @@ Y_loadinds <- cor(Y,as.matrix(Y) %*% cca$ycoef)
 X_loadinds;Y_loadinds
 ```
 
-第一典型變數主要受carat(-),volume(-)和price(-)影響
+發現 : 
 
-第二典型變數主要受clarity(+),depth(-)和table(-)影響
+    第一典型變數主要受carat(-),volume(-)和price(-)影響
+
+    第二典型變數主要受clarity(+),depth(-)和table(-)影響
 
 # 3.Construct a predictive model for price
 
-## Linear regression model
+## Data splitting 
 
-我們採用線性回歸模型搭配AIC的逐步回歸進行變數選取，
-
-```{r}
-model.1 <- lm(price ~ ., data = data)
-
-# 使用 stepAIC 進行變數選擇
-step_model <- stepAIC(model.1,
-                      direction = "both",
-                      trace = 0)
-summary(step_model)
-vif(step_model)
-
-```
-
-檢查VIF可發現 carat 和 volume 值很大，故試將carat刪除建立model.2
+資料集以7:3比例切割成訓練集和測試集。
 
 ```{r}
-model.2 <- lm(price ~.-carat  , data = data)
-step_model <- stepAIC(model.2,
-                      direction = "both",
-                      trace = 0)
-summary(step_model)
-vif(step_model)
-
-```
-
-而model.2的R-squared = 0.9041，VIF檢查後各變數也無異常
-
-接著我們把資料集切割成訓練集70%和測試集30%來對此模型評估預測表現
-
-```{r}
-
 set.seed(123)
 train_ratio <- 0.7
 n <- nrow(data)
 train_indices <- sample(1:n, size = floor(train_ratio * n))
 train_data <- data[train_indices, ]
 test_data <- data[-train_indices, ]
-
-model <- lm(price ~ cut + color + clarity + table + volume, data = train_data)
-summary(model)
-
-predictions <- predict(model, data = test_data)
-
-
-
-
 ```
 
-```{r}
-# 計算 MSE 和 RMSE
-mse <- mean((test_data$price - predictions)^2)
-rmse <- sqrt(mse)
+## Linear regression model
 
+我們採用線性回歸模型搭配AIC的逐步回歸進行變數選取。
+
+```{r}
+model.1 <- stepAIC(
+  lm(price ~ ., data = train_data),
+  direction = "both",
+  trace = 0)
+summary(model.1)
+vif(model.1)
+
+# remove carat
+model.2 <- stepAIC(
+  lm(price ~.-carat  , data = train_data),
+  direction = "both",
+  trace = 0)
+summary(model.2)
+vif(model.2)
+oldformula <- model.2$formula
+
+# remove depth
+newformula <- update(oldformula, .~.-depth)
+model.2 <- lm( newformula, data = train_data)
+summary(model.2)
+```
+
+檢查VIF可發現 carat 和 volume 值很大，故試將carat刪除建立model.2
+
+移除carat之後發現，depth在顯著水準0.05之下變得不顯著，因此移除此變數，再配適一個模型。
+
+而model.2的R-squared = 0.9053，VIF檢查後各變數也無異常。
+
+因此以model.2作為預測模型。
+
+以下將測試集資料輸入預測模型並評估表現:
+
+```{r}
+predictions <- predict(model.2, newdata = test_data)
+# 計算 MSE 和 RMSE
+rmse <- sqrt(mean((test_data$price - predictions)^2))
+test_r2 <- 1 - sum((predictions - test_data$price)^2) / 
+                sum((test_data$price - mean(test_data$price))^2)
 # 輸出結果
-cat("Mean Squared Error (MSE):", mse, "\n")
+cat("Testing R^2:", test_r2, "\n")
 cat("Root Mean Squared Error (RMSE):", rmse, "\n")
 ```
 
-經過測試後，這個模型R-square = 0.9053，RMSE = 5348.818
+經過測試後，這個模型在測試集上的R-square = 0.9043，RMSE = 1236.306
+
+以線性回歸模型來說，已經是不錯的表現了。
+
