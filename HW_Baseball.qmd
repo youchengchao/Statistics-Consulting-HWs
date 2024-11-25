@@ -109,8 +109,7 @@ win_matrix <- results %>%
 win_matrix <- as.data.frame(win_matrix)
 rownames(win_matrix) <- win_matrix$勝隊
 win_matrix <- win_matrix[,-which(names(win_matrix)=='勝隊')]
-Head2head <- countsToBinomial(win_matrix)
-names(Head2head)[3:4] <- c('Win','Lose')
+
 
 tie_matrix <- results %>%
   mutate(隊伍1 = 球隊, 隊伍2 = 對戰球隊, 和數 = 和) %>%
