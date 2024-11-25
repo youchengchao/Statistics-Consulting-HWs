@@ -86,6 +86,7 @@ df.to_csv("".join(["球隊對戰戰績",'.csv']), index=False, encoding='utf-8-s
 ## 資料前處理
 
 ```{r}
+showtext::showtext_auto()
 winlose <- data.table::fread("球隊對戰戰績.csv")
 library(dplyr)
 library(tidyr)
@@ -135,7 +136,6 @@ summary(fit_ties)
 在Brat這個function當中，他將各隊的對戰情形表示了出來，例如中信兄弟贏統一獅8局，那在Brat中就會表示為'中信兄弟>統一獅'為8，而根據我們fit出的模型可以給出以下的解釋。首先分為intercept1~intercept6，其中的intercept1~intercept5是指log(αj),j=1...5，並且由1到5分別代表的球隊為味全龍，統一獅，樂天桃園，台鋼雄鷹以及富邦悍將，至於中信兄弟為baseline，而最後的intercept6是指log(α0)，他代表的則是平局。在此模型當中， i打贏j的機率為αi/(αi + αj + α0)，i與j和局的機率為 α0/(αi +αj +α0)。舉例來說，中信兄弟為baseline，令他為αi=1(也就是refvalue=1)，則中信兄弟擊敗味全龍的機率為1/(1+exp(-0.347)+exp(-4.2693))=0.581，並且和局的機率為exp(-4.2693)/(1+exp(-0.347)+exp(-4.2693))=0.008。
 ```{r}
 library(ggplot2)
-showtext::showtext_auto()
 teams <- c("味全龍", "統一7-ELEVEn獅", "樂天桃猿", "台鋼雄鷹", "富邦悍將")
 loglink_values <- c(-0.3469979, -0.5170282, -0.5170282, -0.6879753, -0.8036663, -4.269289)
 names(loglink_values) <- c("alpha2", "alpha3", "alpha4", "alpha5", "alpha6", "alpha0")
