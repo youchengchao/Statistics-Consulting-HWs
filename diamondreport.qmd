@@ -22,7 +22,7 @@ execute:
   cache: true
 ---
 
-Kaggle URL: https://www.kaggle.com/datasets/enashed/diamond-prices/discussion/547512
+[(Kaggle)Diamonds Prices 2022](https://www.kaggle.com/datasets/nancyalaswad90/diamonds-prices)
 
 ```{r}
 #| output: FALSE
@@ -330,8 +330,6 @@ oldformula <- model.2$formula
 newformula <- update(oldformula, .~.-depth)
 model.2 <- lm( newformula, data = train_data)
 summary(model.2)
-
-
 ```
 
 檢查VIF可發現 carat 和 volume 值很大，故試將carat刪除建立model.2
@@ -348,7 +346,6 @@ summary(model.2)
 以下將測試集資料輸入預測模型並評估表現:
 
 ```{r}
-
 predictions <- predict(model.2, newdata = test_data)
 # 計算 MSE 和 RMSE
 rmse <- sqrt(mean((test_data$price - predictions)^2))
@@ -385,3 +382,196 @@ cat("Root Mean Squared Error (RMSE):", rmse, "\n")
 可看到此模型的R-square進步到92.6%，rmse下降到1085.26
 
 可知交互作用存在於此模型，因此我們選擇繼續使用機器學習模型來適配
+
+## randomForest 參數微調
+
+依據RMSE進行網格搜索，結果為 mtry: 4, min.node.size: 5
+
+```{r}
+library(ranger)
+library(parallel)
+library(doParallel)
+```
+
+```{r}
+#| eval: false
+#| error: true
+#  使用caret調參
+
+# train_index <- caret::createDataPartition(data$price, times = 1, p = 0.7, list = FALSE)
+# train_data <- data[train_indices, ]
+# test_data <- data[-train_indices, ]
+
+control <- trainControl(
+  method = "cv",
+  number = 5,
+  search = "grid"       # gridsearch
+  allowParallel = TRUE  # 開啟平行運算
+)
+
+# Hyperparameter space
+tune_grid <- expand.grid(
+  mtry = c(1:6),
+  splitrule = "variance",
+  min.node.size = c(5,10,20,40,100,200,250)
+)
+
+# 依據 RMSE 進行 Grid search 
+set.seed(123)
+rf_model <- train(
+  x = train_data[,-7],
+  y = train_data$price,
+  method = "ranger",
+  tuneGrid = tune_grid,
+  trControl = control,
+  metric = "RMSE",
+  num.trees = 1000
+)
+
+rf_model$bestTune
+# Best parameters of Grid search: 
+# mtry = 4
+# min.node.size = 5
+```
+
+```{r}
+# 使用最佳參數
+set.seed(123)
+final_rf <- ranger(
+  formula = price ~.,
+  data = train_data,
+  importance = 'permutation',
+  num.trees = 500,
+  splitrule = 'variance',
+  mtry = 4,
+  min.node.size = 5,
+  num.threads = 5    #ranger support parallel computation
+)
+
+predictions <- predict(final_rf, test_data)
+rmse <- sqrt(mean((predictions$predictions - test_data$price)^2))
+cat("測試集 RMSE:", rmse, "\n")
+```
+
+可以發現測試集的RMSE降低到了523.06，此模型相較線性回歸模型突出許多。
+
+各變數的重要程度如圖10所示。
+
+雖然無法得知哪些變數有交互作用，但RMSE下降許多，表示模型已經捕捉到交互作用。
+
+```{r}
+library(dplyr)
+importance_df <- final_rf$variable.importance %>%
+  data.frame(variable = names(.), importance = .) %>%
+  arrange(desc(importance))
+
+ggplot(importance_df, aes(x = reorder(variable, importance), y = importance)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  coord_flip() +
+  labs(title = "Fig.10 Variable Importance from Random Forest",
+       x = "Variables",
+       y = "Difference in MSE") +
+  theme_minimal()
+```
+
+```{r}
+#| eval: false
+#| error: true
+#| echo: false
+#  使用mlr3調參
+library(mlr3)
+library(mlr3learners)
+library(mlr3tuning)
+
+# 平行運算的套件
+library(future)
+library(future.apply)
+
+# 設定 預測任務
+task <- TaskRegr$new("DiamondPrice_task", backend = train_data, target = "price")
+
+# 定義 預測模型(使用ranger)
+learner <- lrn("regr.ranger", num.trees = 500)
+
+# 設定 hyperparameter space
+param_set <- ParamSet$new(list(
+  ParamInt$new("mtry", lower = 2, upper = 10),           # mtry 範圍
+  ParamInt$new("min.node.size", lower = 1, upper = 5),   # min.node.size 範圍
+  ParamFct$new("splitrule", levels = c("variance", "extratrees"))  # splitrule 選項
+))
+
+# 設定 調參單元(random search)
+tuner_random <- TunerRandomSearch$new()
+
+# 設定 調參實驗
+instance_random <- TuningInstanceSingleCrit$new(
+  task = task,
+  learner = learner,
+  resampling = rsmp("cv", folds = 5),
+  measure = msr("regr.rmse"),               # RMSE 作為評估指標
+  param_set = param_set,                    # 搜尋空間
+  terminator = trm("evals", n_evals = 20)   # 最大搜尋 20 次
+)
+
+# 設定平行運算計畫
+future::plan(future::multisession, workers = 5)
+
+# 執行 random search
+tuner_random$optimize(instance_random)
+
+instance_random$result
+
+# 依據隨機搜索的結果定義網格
+
+param_set_grid <- ParamSet$new(list(
+  ParamInt$new("mtry", lower = 2, upper = 6),           # mtry 範圍
+  ParamInt$new("min.node.size", lower = 2, upper = 4),   # min.node.size 範圍
+  ParamFct$new("splitrule", levels = c("variance", "extratrees"))  # splitrule 選項
+))
+
+# 定義網格，但是mlr3使用的格式與caret不同，需要轉換成list
+grid <- expand.grid(
+  mtry = 2:6,                                      # mtry 範圍
+  min.node.size = 2:4,                             # min.node.size 範圍
+  splitrule = c("variance", "extratrees")          # splitrule 選項
+)
+list_of_param <- lapply(1:nrow(grid), function(i) {
+  as.list(grid[i, ])
+})
+
+# 設定 調參單元(grid search)
+tuner_grid <- TunerGridSearch$new()
+
+# 設定 調參實驗
+instance_grid <- TuningInstanceSingleCrit$new(
+  task = task,
+  learner = learner,
+  resampling = rsmp("cv", folds = 5),
+  measure = msr("regr.rmse"),               # RMSE 作為評估指標
+  param_set = param_set_grid,                # 搜尋空間
+  terminator = trm("evals", n_evals = nrow(grid))  # 使用 Grid 的每一組參數
+)
+
+# 執行 Grid Search
+tuner_grid$optimize(instance_grid)
+
+# 顯示 Grid Search 的最佳參數組合
+instance_grid$result
+
+# 獲取最佳參數
+best_params <- instance_grid$result$params
+
+# 設定最佳參數
+learner$param_set$values <- best_params
+
+# 使用最佳參數訓練最終的模型
+final_model <- learner$train(task)
+
+# 顯示最終模型的詳細信息
+final_model
+
+```
+
+
+
+
