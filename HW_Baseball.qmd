@@ -109,8 +109,7 @@ win_matrix <- results %>%
 win_matrix <- as.data.frame(win_matrix)
 rownames(win_matrix) <- win_matrix$勝隊
 win_matrix <- win_matrix[,-which(names(win_matrix)=='勝隊')]
-Head2head <- countsToBinomial(win_matrix)
-names(Head2head)[3:4] <- c('Win','Lose')
+
 
 tie_matrix <- results %>%
   mutate(隊伍1 = 球隊, 隊伍2 = 對戰球隊, 和數 = 和) %>%
@@ -120,21 +119,84 @@ tie_matrix <- as.data.frame(tie_matrix)
 rownames(tie_matrix) <- tie_matrix$隊伍1
 tie_matrix <- tie_matrix[,-which(names(tie_matrix) == '隊伍1')]
 ```
+為了針對和局的出現，我們除了一般勝負的6x6矩陣，還額外做出了一個6x6的和局矩陣以此來分析出現和局的狀況。
 
 ## Bradley-Terry model
 
 ```{r}
 library(VGAM)
-fit <- vglm(Brat(as.matrix(win_matrix)) ~1, brat(refgp = 1), trace = FALSE, crit = "coef")
-fit_ties <- vglm(Brat(as.matrix(win_matrix), as.matrix(tie_matrix)) ~1, bratt(refgp = 1), trace = FALSE,crit = "coef")
+#fit <- vglm(Brat(as.matrix(win_matrix)) ~1, brat(refgp = 1), trace = FALSE, crit = "coef")
+fit_ties <- vglm(Brat(as.matrix(win_matrix), as.matrix(tie_matrix)) ~1, bratt(refgp = 1,refvalue = 1), trace = FALSE,crit = "coef")
 
-summary(fit)
 summary(fit_ties)
 
-fitted(fit_ties)
-predict(fit_ties)
-```
 
+```
+在Brat這個function當中，他將各隊的對戰情形表示了出來，例如中信兄弟贏統一獅8局，那在Brat中就會表示為'中信兄弟>統一獅'為8，而根據我們fit出的模型可以給出以下的解釋。首先分為intercept1~intercept6，其中的intercept1~intercept5是指log(αj),j=1...5，並且由1到5分別代表的球隊為味全龍，統一獅，樂天桃園，台鋼雄鷹以及富邦悍將，至於中信兄弟為baseline，而最後的intercept6是指log(α0)，他代表的則是平局。在此模型當中， i打贏j的機率為αi/(αi + αj + α0)，i與j和局的機率為 α0/(αi +αj +α0)。舉例來說，中信兄弟為baseline，令他為αi=1(也就是refvalue=1)，則中信兄弟擊敗味全龍的機率為1/(1+exp(-0.347)+exp(-4.2693))=0.581，並且和局的機率為exp(-4.2693)/(1+exp(-0.347)+exp(-4.2693))=0.008。
+```{r}
+library(ggplot2)
+showtext::showtext_auto()
+teams <- c("味全龍", "統一7-ELEVEn獅", "樂天桃猿", "台鋼雄鷹", "富邦悍將")
+loglink_values <- c(-0.3469979, -0.5170282, -0.5170282, -0.6879753, -0.8036663, -4.269289)
+names(loglink_values) <- c("alpha2", "alpha3", "alpha4", "alpha5", "alpha6", "alpha0")
+
+alpha0 <- loglink_values["alpha0"]
+
+probabilities <- sapply(loglink_values[1:5], function(loglink_alpha) {
+  1 / (1 + exp(loglink_alpha) + exp(alpha0))
+})
+probabilitiestie<-sapply(loglink_values[1:5], function(loglink_alpha) {
+  exp(alpha0) / (1 + exp(loglink_alpha) + exp(alpha0))
+})
+
+beats <- data.frame(
+  Team = teams,
+  Probability = probabilities
+)
+
+tiess <- data.frame(
+  Team = teams,
+  Probability = probabilitiestie
+)
+
+ggplot(beats, aes(x = Team, y = Probability, fill = Team)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_text(aes(label = scales::percent(Probability, accuracy = 0.1)), 
+            vjust = 1.5, size = 4, color = "black") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "中信兄弟擊敗對手機率",
+    x = "Teams",
+    y = "Probabilities (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+
+ggplot(tiess, aes(x = Team, y = Probability, fill = Team)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_text(aes(label = scales::percent(Probability, accuracy = 0.1)), 
+            vjust = 1.5, size = 4, color = "black") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "中信兄弟和局機率",
+    x = "Teams",
+    y = "Probabilities (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+
+
+
+```
+由最後兩張圖片可以很直接地看出中信兄弟贏味全龍的機率為0.581，而贏富邦悍將的機率為0.684，也代表著他在面對其他5隊的時候勝算是相當高的。其中贏味全龍的機率相較於其他隊伍是低的，我認為這是由於味全龍的戰績是第二名，並且中信兄弟在隊上他們僅僅拿到7場勝利，而在面對統一獅、台鋼雄鷹和富邦悍將時各拿下8場勝利。在和局的方面，可以發現中信兄弟面對不同隊伍的和局機率都是偏低的，這可能是由於此筆資料中他未曾拿下平局。
 
 
 
