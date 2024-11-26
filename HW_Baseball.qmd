@@ -110,7 +110,6 @@ win_matrix <- as.data.frame(win_matrix)
 rownames(win_matrix) <- win_matrix$勝隊
 win_matrix <- win_matrix[,-which(names(win_matrix)=='勝隊')]
 
-
 tie_matrix <- results %>%
   mutate(隊伍1 = 球隊, 隊伍2 = 對戰球隊, 和數 = 和) %>%
   select(隊伍1, 隊伍2, 和數) %>%
@@ -129,8 +128,6 @@ library(VGAM)
 fit_ties <- vglm(Brat(as.matrix(win_matrix), as.matrix(tie_matrix)) ~1, bratt(refgp = 1,refvalue = 1), trace = FALSE,crit = "coef")
 
 summary(fit_ties)
-
-
 ```
 在Brat這個function當中，他將各隊的對戰情形表示了出來，例如中信兄弟贏統一獅8局，那在Brat中就會表示為'中信兄弟>統一獅'為8，而根據我們fit出的模型可以給出以下的解釋。首先分為intercept1~intercept6，其中的intercept1~intercept5是指log(αj),j=1...5，並且由1到5分別代表的球隊為味全龍，統一獅，樂天桃園，台鋼雄鷹以及富邦悍將，至於中信兄弟為baseline，而最後的intercept6是指log(α0)，他代表的則是平局。在此模型當中， i打贏j的機率為αi/(αi + αj + α0)，i與j和局的機率為 α0/(αi +αj +α0)。舉例來說，中信兄弟為baseline，令他為αi=1(也就是refvalue=1)，則中信兄弟擊敗味全龍的機率為1/(1+exp(-0.347)+exp(-4.2693))=0.581，並且和局的機率為exp(-4.2693)/(1+exp(-0.347)+exp(-4.2693))=0.008。
 ```{r}
@@ -192,10 +189,8 @@ ggplot(tiess, aes(x = Team, y = Probability, fill = Team)) +
     legend.position = "none",
     plot.title = element_text(hjust = 0.5)
   )
-
-
-
 ```
+
 由最後兩張圖片可以很直接地看出中信兄弟贏味全龍的機率為0.581，而贏富邦悍將的機率為0.684，也代表著他在面對其他5隊的時候勝算是相當高的。其中贏味全龍的機率相較於其他隊伍是低的，我認為這是由於味全龍的戰績是第二名，並且中信兄弟在隊上他們僅僅拿到7場勝利，而在面對統一獅、台鋼雄鷹和富邦悍將時各拿下8場勝利。在和局的方面，可以發現中信兄弟面對不同隊伍的和局機率都是偏低的，這可能是由於此筆資料中他未曾拿下平局。
 
 
