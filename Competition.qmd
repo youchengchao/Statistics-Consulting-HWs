@@ -22,88 +22,81 @@ execute:
   warning: false
 ---
 
-report的重要頁碼:
+# Memo
 
-```         
-52-網路癮誘與脫序行為之子題說明
+report的重要頁碼: 52-網路癮誘與脫序行為之子題說明, 92-資料人口結構與母群人口結構比較表, 281-各題目之測量概念
 
-92-資料人口結構與母群人口結構比較表
+# 資料簡介與資料視覺化
 
-281-各題目之測量概念
-```
+對資料各變數之前處理如表1所示: 
 
-# 資料簡介
-
-| Variables | Manipulation                                                                                                                                                                                         |
-|-----------------|-------------------------------------------------------|
-| q2        | 出生年改成年齡                                                                                                                                                                                       |
-| q2_rr     | 將 rrq2 的年齡分層變數重新命名q2_rr                                                                                                                                                                  |
-| q3        | 移除。不關心地區造成的差異                                                                                                                                                                           |
-| q4        | 重新劃分為四個等級，劃分參考人口結構表格的分類方式                                                                                                                                                   |
-| q6,q7     | 時間統一單位 (分)                                                                                                                                                                                    |
-| q8        | 移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。                                                                                                                                  |
-| q9        | 移除。無法界定是工作性質或娛樂性質                                                                                                                                                                   |
-| q10       | 改成"使用幾個與yt名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。                                                                                                                     |
-| q11       | 改成"有無使用YT或Twitch"，原因與第十題類似。                                                                                                                                                         |
-| q12\~q15  | 移除。q28,q29關心的時間範圍較廣並不只局限於疫情期間。                                                                                                                                                |
-| q16\~q19  | 將每個類別補 0(變成1,0)，再創建一個標籤變數1719_label                                                                                                                                                |
+|變數| 處理                                                      |
+|---------|------------------------------------------------------|
+| q2  | 出生年改成年齡                                          |
+| q2_rr | 將 rrq2 的年齡分層變數重新命名q2_rr                          |
+| q3        | 移除。不關心地區造成的差異                                                |
+| q4        | 重新劃分為四個等級，劃分參考人口結構表格的分類方式                         |
+| q6,q7     | 時間統一單位 (分)                                                         |
+| q8        | 移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。         |
+| q9        | 移除。無法界定是工作性質或娛樂性質                                          |
+| q10       | 改成"使用幾個與yt名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。   |
+| q11       | 改成"有無使用YT或Twitch"，原因與第十題類似。                                |
+| q12\~q15  | 移除。q28,q29關心的時間範圍較廣並不只局限於疫情期間。                       |
+| q16\~q19  | 將每個類別補 0(變成1,0)，再創建一個標籤變數1719_label                       |
 | q20\~q26  | 參考碩士論文:台灣消費者抵制行為之研究 -以台商親中言論衍生之抵制為例 (https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)之做法，將相同大主題的ordinal主觀評分加總 作為該主題程度的分數。 |
 
 : 變數前處理
 
 原始資料維度: rows$\times$columns = $1004\times207$
 
-處理後資料維度: rows$\times$columns = $1004\times42$
+處理後資料維度: rows$\times$columns = $1004\times40$
 
-表格需要再整理一下
-
-| 變數名稱   | 解釋                               | 備註                                                          |
-|------------------|----------------------------|--------------------------|
-| q1          | 性別                                      | 1:男性, 2:女性                                                  |
-| q2_rr       | 年齡分層                                  | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
-| q4          | 教育程度                                  | 1:高中及以下, 2:專科,\newline 3:大學, 4:研究所                  |
-| q5_1        | 週平均上網天數                            |                                                                 |
-| q6          | 上網分鐘(工作、學習)                      |                                                                 |
-| q7          | 上網分鐘(娛樂、休閒)                      |                                                                 |
-| q10         | 使用幾個與名人討論相關的社群媒體          |                                                                 |
-| q11         | 是否使用YT,Twitch或bilibili               | 1:是,0:否                                                       |
-| q17_01      | 是否參與過:不傷害、騙人                   | 1:是,0:否                                                       |
-| q17_02      | 是否參與過:不傷害、不騙人                 | 1:是,0:否                                                       |
-| q19_01      | 是否參與過:傷害、騙人                     | 1:是,0:否                                                       |
-| q19_02      | 是否參與過:傷害、不騙人                   | 1:是,0:否                                                       |
+|變數名稱| 解釋                   | 備註                  |
+|-------|---------------------------------|----------------|
+| q1    | 性別                                      | 1:男性, 2:女性                                                  |
+| q2_rr | 年齡分層                                  | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
+| q4    | 教育程度                                  | 1:高中及以下, 2:專科,\newline 3:大學, 4:研究所                  |
+| q5    | 週平均上網天數                            |                                                                 |
+| q6    | 上網分鐘(工作、學習)                      |                                                                 |
+| q7    | 上網分鐘(娛樂、休閒)                      |                                                                 |
+| q10   | 使用幾個與名人討論相關的社群媒體          |                                                                 |
+| q11   | 是否使用YT,Twitch或bilibili               | 1:是,0:否                                                       |
+| q17_01| 是否參與過:不傷害、騙人                   | 1:是,0:否                                                       |
+| q17_02| 是否參與過:不傷害、不騙人                 | 1:是,0:否                                                       |
+| q19_01| 是否參與過:傷害、騙人                     | 1:是,0:否                                                       |
+| q19_02| 是否參與過:傷害、不騙人                   | 1:是,0:否                                                       |
 | q1719 | 是否至少有參與過一種網路惡搞              | 1:是,0:否                                                       |
-| q20         | 主動激化(引戰)行為接受度                  | (接受)2\~10(可以接受)                                           |
-| q22         | 他人攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
-| q23         | 自己攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
-| q24         | 媒體識讀素養                              | (低)5\~20(高)                                                   |
-| q25         | 網路論戰接受度                            | (低)4\~20(高)                                                   |
-| q26         | 不文明留言的影響力                        | (低)3\~12(高)                                                   |
-| q27_1       | 抵制意圖                                  | (弱)1\~5(強)                                                    |
-| q28_YN      | 是否採取過抵制行為                        | 1:是, 0:否                                                      |
-| q28_1       | 採取過:取消關注                           | 1:是, 0:否                                                      |
-| q28_2       | 採取過:拒絕觀看                           | 1:是, 0:否                                                      |
-| q28_3       | 採取過:在網路上留言或發文指責             | 1:是, 0:否                                                      |
-| q29_1       | 抵制的原因:歧視特定國家、種族或性別       | 1:是, 0:否                                                      |
-| q29_2       | 抵制的原因:有不同的政治意識型態或價值觀   | 1:是, 0:否                                                      |
-| q29_3       | 抵制的原因:做出不道德、不正當或不合法行為 | 1:是, 0:否                                                      |
-| q30_1       | 抵制行為的有效程度                        | (無效)1\~5(有效)                                                |
-| q31_1       | 抵制前的同理心                            | (沒同理)1\~4(有同理)                                            |
-| q32_1       | 抵制行為的對名人的傷害程度                | (不嚴重)1\~5(嚴重)                                              |
-| q33_1       | 抵制行為的對自己的重要程度                | (不重要)1\~5(重要)                                              |
-| q34_1       | 抵制成本                                  | (非常少)1\~5(非常多)                                            |
-| q35_1       | 抵制規模感知                              | (小)1\~5(大)                                                    |
-| q36_1       | 抵制的社會壓力                            | (小)1\~4(大)                                                    |
-| q38         | 心理幸福感                                | (不滿意)2\~10(滿意)                                             |
-| q39_1       | 生活品質                                  | (不快樂)1\~5(快樂)                                              |
-| q40         | 國民黨喜好程度                            | (不喜歡)0\~5 (喜歡)                                             |
-| q41         | 民進黨喜好程度                            | (不喜歡) 0\~5 (喜歡)                                            |
-| q42_1       | 意識形態                                  | (台獨)0\~10: (統一)                                             |
-| weight      | 人口結構修正權重                          |                                                                 |
+| q20   | 主動激化(引戰)行為接受度                  | (接受)2\~10(可以接受)                                           |
+| q22   | 他人攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
+| q23   | 自己攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
+| q24   | 媒體識讀素養                              | (低)5\~20(高)                                                   |
+| q25   | 網路論戰接受度                            | (低)4\~20(高)                                                   |
+| q26   | 不文明留言的影響力                        | (低)3\~12(高)                                                   |
+| q27   | 抵制意圖                                  | (弱)1\~5(強)                                                    |
+| q28_YN| 是否採取過抵制行為                        | 1:是, 0:否                                                      |
+| q28_1 | 採取過:取消關注                           | 1:是, 0:否                                                      |
+| q28_2 | 採取過:拒絕觀看                           | 1:是, 0:否                                                      |
+| q28_3 | 採取過:在網路上留言或發文指責             | 1:是, 0:否                                                      |
+| q29_1 | 抵制的原因:歧視特定國家、種族或性別       | 1:是, 0:否                                                      |
+| q29_2 | 抵制的原因:有不同的政治意識型態或價值觀   | 1:是, 0:否                                                      |
+| q29_3 | 抵制的原因:做出不道德、不正當或不合法行為 | 1:是, 0:否                                                      |
+| q30    | 抵制行為的有效程度                        | (無效)1\~5(有效)                                                |
+| q31    | 抵制前的同理心                            | (沒同理)1\~4(有同理)                                            |
+| q32    | 抵制行為的對名人的傷害程度                | (不嚴重)1\~5(嚴重)                                              |
+| q33    | 抵制行為的對自己的重要程度                | (不重要)1\~5(重要)                                              |
+| q34   | 抵制成本                                  | (非常少)1\~5(非常多)                                            |
+| q35    | 抵制規模感知                              | (小)1\~5(大)                                                    |
+| q36    | 抵制的社會壓力                            | (小)1\~4(大)                                                    |
+| q38   | 心理幸福感                                | (不滿意)2\~10(滿意)                                             |
+| q39   | 生活品質                                  | (不快樂)1\~5(快樂)                                              |
+| q40   | 國民黨喜好程度                            | (不喜歡)0\~5 (喜歡)                                             |
+| q41   | 民進黨喜好程度                            | (不喜歡) 0\~5 (喜歡)                                            |
+| q42   | 意識形態                                  | (台獨)0\~10: (統一)                                             |
+| weight| 人口結構修正權重                          |                                                                 |
 
 : 變數解釋
 
 ```{r}
-#| warning: FALSE
 library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
@@ -356,6 +349,8 @@ colnames(DB.csv) <- c('q1','q2_rr','q4','q5','q6','q7','q10','q11','q17_1','q17_
 
 ## 敘述統計
 
+以Hmisc::describe()的方式繪製各變數之直方圖與敘述統計量。
+
 ```{r}
 #| output: asis
 latex(describe(DB.csv,title=""),file="")
@@ -420,181 +415,43 @@ Barplot.p <- function(din){
 
 ## 各變數依有無抵制行為分類畫比例圖
 
+以抵制與否作為依據，將各變數的類別比例繪製出來。其中並無繪製類別過多或是q28以後的變數。
+
 ```{r, fig.align='center', fig.width=12, fig.height=7, out.width='100%'}
 var.label <- c("q1","q2_rr","q4","q11",
                "q17_1","q17_2","q19_1","q19_2","q1719",
-               "q29_1","q29_2","q29_3")
+               "q38","q39","q40","q41")
 showtext_auto()
 Barplot.p(din = myCount_q28(DB.csv, var.label))
 ```
 
-# 抵制程度與其他因素之關聯分析
+可以發現有些變數的比例十分不平衡，如q19，預期在進行變數挑選或是分析時不會起到太大作用。除此之外並無發現明顯比例差異。
 
-## Canonical analysis and PCA-對全部變數做
+# 分析影響抵制與否之因素
 
-```{r}
-library(FactoMineR)
-library(factoextra)
-boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
-#缺失值轉0
-boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
-boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
-boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
-boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
+## Logistic regression model
 
-
-boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
-
-
-y <-boycott[,c('q30','q32','q35')]
-
-allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
-
-allcca <-cancor(allx,y)
-#典型相關係數
-allcca$cor
-#最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33_1 和q35_1貢獻組成
-allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
-ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
-allx_lodings[,c(1,2)]
-ally_lodings[,c(1,2)]
-#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3中度相關
-#第一典型變數與q35_1高度相關,q30_1中度相關
-#越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
-
-data <-allx_lodings[,c(1)]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
-  labs(x = "題號", y = "典型負荷量絕對值") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "none")
-
-#自我相關係數
-round((colSums(allx_lodings^2)[1:2]/4),4)
-round((colSums(ally_lodings^2)[1:2]/4),4)
-#典型相關係數平方
-allnum<-round(allcca$cor^2,4)[1:2]
-
-round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
-round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
-#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
-```
-
-把相關性\<0.2的刪除
-
-## Canonical analysis and PCA-對部分變數做
-
-```{r, fig.align='center', fig.width=6, fig.height=2, out.width="100%"}
-y <-boycott[,c('q30','q32','q35')]
-x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
-
-cca <-cancor(x,y)
-#典型相關係數
-cca$cor
-#最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33_1 和q35_1貢獻組成
-x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
-y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
-x_lodings[,c(1,2)]
-y_lodings[,c(1,2)]
-#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3中度相關
-#第一典型變數與q35_1高度相關,q30_1中度相關
-#越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
-
-data <-x_lodings[,c(1)]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 3) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
-                    labels = c("負相關", "正相關"))+
-  labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-#自我相關係數
-round((colSums(x_lodings^2)[1:2]/4),4)
-round((colSums(y_lodings^2)[1:2]/4),4)
-#典型相關係數平方
-num<-round(cca$cor^2,4)[1:2]
-
-round((colSums(x_lodings^2)[1:2]/4)*num,4)
-round((colSums(y_lodings^2)[1:2]/4)*num,4)
-#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
-gridExtra::grid.arrange(p1,p2,ncol=1)
-```
-
-```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
-data <-x_lodings[,c(1)]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
-                    labels = c("負相關", "正相關"))+
-  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 15),
-        axis.text.y = element_text(size = 15),
-        axis.title.y = element_text(size = 15),
-        legend.position = c(0.9,0.8),
-        legend.background = element_rect(fill="#fff0f0", color=NA))
-data <-y_lodings[,1]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
-                    labels = c("負相關", "正相關"))+
-  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 15),
-        axis.text.y = element_text(size = 15),
-        axis.title.y = element_text(size = 15),
-        legend.position = "none" )
-gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
-```
-
-
-# Logistic regression model
-
-可以知道有使用youtube和twitch的人、越不能接受別人因為一些因素而罵他的人做出抵制行為的機率越小，越常做出網路攻擊行為和看到別人的攻擊行為、越想抵制名人的話就越有可能做出抵制行為。
-
-q10跟q24注意一下可能有關連
-
-Logistic model的變數選取方法參照[Variable selection – A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067)整理出的建議標準。
-
-
-我們的EPV(Event Per Variable)是
-以q28_YN作為反應變數的情況下，可使用的解釋變數是36=41-weight-q28_1\~q28_3-q28_YN(反應變數)=
+我們採用逐步選取法（Heinze，2018）對可能影響抵制行為的變數進行篩選並加上人口權重。結果如
+表2所示，此模型有10個顯著變數，以下針對顯著變數解讀： 
+1. 抵制意圖(q27數值評分:1\~5)：抵制意圖越高的人，更容易付諸實際行動。每增加1單位使得抵制行為
+勝算比變成2.56倍。 
+2. 民進黨好感度(q41數值評分:1\~5): 對民進黨有好感，傾向採取抵制行動。每增加1單位使得勝算比變
+為1.36 倍。 
+3. 年齡分層(q2_rr數值分層:1\~6)：年齡越大的人，越可能有抵制行動。每往上移動一層，勝算比變成
+1.23 倍。 
+4. 教育程度(q4數值評分:1\~4)：教育程度越高，採取抵制行動的可能性越大。例如研究所學歷對大學學歷
+的勝算比是1.18。 
+5. 看見網路攻擊頻率與自己網路攻擊頻率 (q22、q23數值評分:5\~20)：越常接觸他人的負面言論，或自身
+越常發表負面言論，均會顯著提高抵制的可能性。每增加一單位分別使得勝算比變為1.13及1.11倍。 
+6. 休閒娛樂上網時間(q7分鐘)：上網時間越長，抵制行為的可能性越高，呈現正相關，每多半小時勝算比
+變成1.03倍。 
+3 
+7. 意識形態(q42評分:1\~10)：獨立意識形態(評分較低)的人，傾向採取抵制行動。評分每增加1單位使得
+勝算比變成0.92倍。 
+8. 心理幸福感(q38評分:2\~10)：較快樂(評分較高)的人，較少採取抵制行動。評分每增加1單位，勝算比
+變成0.75倍。 
+9. 使用可討論名人之平台數量(q11計數:0,1,2)：用越多的人，越少採取抵制行動。每多用一個，勝算比變
+成0.59 倍。 
 
 ```{r}
 glm_log <- glm(
@@ -603,38 +460,15 @@ glm_log <- glm(
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42,
   family = binomial, data = DB.csv, weights = weight)
-
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
 stepmodel$coefficients
-summary(glm_log)$coefficients
 ```
 
-# Decision tree
-
-```{r, fig.align='center', fig.width=8, fig.height=3, out.width="100%"}
-library(rpart)
-library(rpart.plot)
-tree_model <- rpart(
-  factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27+
-    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
-custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
-par(mar = c(2, 2, 1, 2))
-rpart.plot(tree_model,
-           type = 2,
-           extra = 0,
-           under = TRUE,
-           faclen = 0,
-           fallen.leaves = TRUE, 
-           box.palette = custom_palette(100),
-           shadow.col = "gray",
-           cex = 1.7)
-```
-
-# glmnet
+## glmnet
 
 ```{r}
+#| eval: false
+#| error: true
 library(glmnet)
 x <- model.matrix(
   factor(q28_YN)~
@@ -650,21 +484,48 @@ lasso.coef <- predict(glmnet_2, type = 'coefficients', s = bestlam)
 lasso.coef
 lasso.glm <- glm(
   factor(q28_YN)~q2_rr+
-    q4+
-    q5+
-    q6+
-    q11+
-    q20+
-    q22+ q23+ q24+ q25+ q26+ q27, family = binomial, data = DB.csv, weights = weight)
+    q4+ q5+ q6+ q11+ 
+    q20+ q22+ q23+ q24+ q25+ q26+ q27,
+  family = binomial, data = DB.csv, weights = weight)
 summary(lasso.glm)
 ```
 
-# XGboost
+## Decision tree
 
-```{r, fig.align='center', fig.width=4, fig.height=8,out.width="100%"}
+決策樹選出的重要變數和邏輯式模型大致相同，但更能捕捉變數間交互作用。在圖3中，先從抵制意願做區分，具有高度抵制意圖的人，會有抵制行為。然而較不具備抵制意圖的人會受他人網路攻擊行為影響，如果常看到他人網路攻擊行為，便可能會有抵制行為；反之則不會有抵制行為。另外，就算經常看到他人攻擊言論，如果對國民黨好感度較高、能接受網路攻擊行為且教育程度較低，也不會有抵制行為。
+
+```{r, fig.align='center', fig.width=8, fig.height=3, out.width="100%"}
+library(rpart)
+library(rpart.plot)
+tree_model <- rpart(
+  factor(q28_YN)~
+    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
+custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
+par(mar = c(2, 2, 1, 2))
+rpart.plot(tree_model,
+           type = 3,
+           extra = 0,
+           under = TRUE,
+           faclen = 0,
+           fallen.leaves = TRUE, 
+           box.palette = custom_palette(100),
+           shadow.col = "gray",
+           cex = 0.7)
+```
+
+## XGboost
+
+```{r, fig.align='center', fig.width=4, fig.height=4}
 library(xgboost)
 library(DiagrammeR)
 set.seed(2012)
+x <- model.matrix(
+  factor(q28_YN)~
+    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
 y <-as.factor(DB.csv$q28_YN) 
 xgb_data <- xgb.DMatrix(data = x,
                         label = as.numeric(y) - 1,
@@ -678,25 +539,194 @@ xgb_model <- xgboost(data = xgb_data,
 # importance_matrix
 library(SHAPforxgboost)
 
-# 計算 SHAP 值
+# 計算 SHAP 值和 mean SHAP 值
 shap_values <- shap.values(xgb_model = xgb_model, X_train = x)
-shap_values
-# SHAP 值和 mean SHAP 值
 shap_mean <- shap_values$mean_shap_score
 shap_values_df <- shap_values$shap_score
+
+# long format
 shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
-shap_long$value
+showtext_auto()
 shap.plot.summary(shap_long,
                   min_color_bound = "lightblue",
                   max_color_bound = "#355f7a") +
-  labs(color = "Shap值", y = "Shap值", x = "變數名稱")
+  labs(x = "變數名稱", y = "Shap值")
+```
+
+
+# 分析影響抵制程度之因素(典型相關分析CCA)
+
+我們認為抵制程度能用「抵制效度」、「抵制傷害程度」、「抵制規模」這三個問題來衡量，因此我們將這些變數設為反應變數、其他的變數設為解釋變數，去進行典型相關分析。
+
+## Canonical Correlation Analysis and PCA-對全部變數做
+
+```{r}
+library(FactoMineR)
+library(factoextra)
+boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
+#缺失值轉0
+boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
+boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
+
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+
+y <-boycott[,c('q30','q32','q35')]
+
+allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
+
+allcca <-cancor(allx,y)
+cat('典型相關係數',allcca$cor)
+
+allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
+ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
+#allx_lodings[,c(1,2)]
+#ally_lodings[,c(1,2)]
+
+# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3, q31, q36_1, q29_1_3中度相關
+# 第一典型變數與q35高度相關,q30中度相關
+data <-allx_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
+  labs(x = "題號", y = "典型負荷量絕對值") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = "none")
+
+#自我相關係數
+cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1:2]/4),4))
+cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1:2]/4),4))
+
+#典型相關係數平方
+allnum <-round(allcca$cor^2,4)[1:2]
+round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
+round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+```
+
+分析結果發現: 典型相關係數為0.56、0.38、0.25。但是因為有11個變數的值和第一典型變數的相關性小於0.2，因此決定將這
+些變數去除後，再做一次典型相關分析。
+
+## Canonical analysis and PCA-對部分變數做
+
+這次的結果顯示: 典型相關係數為0.55、0.31、0.22。
+
+第一典型變數主要由
+
+```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%"}
+y <-boycott[,c('q30','q32','q35')]
+x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
+
+# 典型相關係數
+cca <-cancor(x,y)
+cat('典型相關係數', cca$cor) # 最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33 和q35貢獻組成
+
+x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
+y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
+# x_lodings[,c(1,2)]
+# y_lodings[,c(1,2)]
+# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31,q36,q29_1_3中度相關
+# 第一典型變數與q35高度相關,q30中度相關
+# 越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
+
+data <- x_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3))
+#自我相關係數
+round((colSums(x_lodings^2)[1:2]/4),4)
+round((colSums(y_lodings^2)[1:2]/4),4)
+#典型相關係數平方
+num<-round(cca$cor^2,4)[1:2]
+
+round((colSums(x_lodings^2)[1:2]/4)*num,4)
+round((colSums(y_lodings^2)[1:2]/4)*num,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+showtext_auto()
+gridExtra::grid.arrange(p1,p2,ncol=1)
+```
+
+```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
+data <-x_lodings[,c(1)]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  ylim(0, 1)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = c(0.9,0.8),
+        legend.background = element_rect(fill="#fff0f0", color=NA))
+data <-y_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  ylim(0, 1)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = "none" )
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ```
 
 
 ```{r}
 #| error: true
 #| eval: false
-# t-SNE visualization
+# t-SNE visualization ( failed )
 library(Rtsne)
 library(ggpubr)
 library(magrittr)
@@ -769,15 +799,8 @@ for(i in 1:dim(mygrid)[1]){
 Pictures.level[]
 ```
 
-
-
-
 # 參考文獻
 
 \[1\] [台灣消費者抵制行為之研究 ---以台商親中言論衍生之抵制為例](https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)
 
 \[2\] [Variable selection – A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067)
-
-
-
-
