@@ -17,7 +17,7 @@ format:
 toc: true
 documentclass: article
 execute: 
-  cache: false
+  cache: true
   echo: false
   warning: false
 ---
@@ -57,7 +57,7 @@ report的重要頁碼:
 
 表格需要再整理一下
 
-| Variables   | Explanation                               | remark                                                          |
+| 變數名稱   | 解釋                               | 備註                                                          |
 |------------------|----------------------------|--------------------------|
 | q1          | 性別                                      | 1:男性, 2:女性                                                  |
 | q2_rr       | 年齡分層                                  | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
@@ -71,7 +71,7 @@ report的重要頁碼:
 | q17_02      | 是否參與過:不傷害、不騙人                 | 1:是,0:否                                                       |
 | q19_01      | 是否參與過:傷害、騙人                     | 1:是,0:否                                                       |
 | q19_02      | 是否參與過:傷害、不騙人                   | 1:是,0:否                                                       |
-| q1719_label | 是否至少有參與過一種網路惡搞              | 1:是,0:否                                                       |
+| q1719 | 是否至少有參與過一種網路惡搞              | 1:是,0:否                                                       |
 | q20         | 主動激化(引戰)行為接受度                  | (接受)2\~10(可以接受)                                           |
 | q22         | 他人攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
 | q23         | 自己攻擊行為的頻率                        | (從來沒有)5\~20(經常)                                           |
@@ -189,13 +189,13 @@ DB.csv$q17_02[is.na(DB.csv$q17_02)|DB.csv$q17_02==2] <- 0
 DB.csv$q19_01[is.na(DB.csv$q19_01)|DB.csv$q19_01==2] <- 0
 DB.csv$q19_02[is.na(DB.csv$q19_02)|DB.csv$q19_02==2] <- 0
 
-DB.csv$q1719_label <- apply(
+DB.csv$q1719 <- apply(
   DB.csv[,match("q17_01",colnames(DB.csv)):match("q19_02",colnames(DB.csv))],
   MARGIN = 1,
   function(row){
     return(paste0(row,collapse = ""))
   })
-DB.csv$q1719_label <- ifelse(DB.csv$q1719_label=="0000", 0, 1)
+DB.csv$q1719 <- ifelse(DB.csv$q1719=="0000", 0, 1)
 #20~26
 DB.csv$q20 <- rowSums(DB.csv[,c('q20_01_1','q20_02_1')])
 DB.csv$q22 <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
@@ -345,13 +345,13 @@ DB.csv$q28_YN[!(DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3)] <- 0
 
 #重新調整欄位index
 #colnames(DB.csv)
-DB.csv <- DB.csv[,c('q1','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719_label','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
+DB.csv <- DB.csv[,c('q1','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
 
 for(i in c(1:3,5:39)){
   DB.csv[,i] <- as.integer(DB.csv[,i])
 }
 
-colnames(DB.csv) <- c('q1','q2_rr','q4','q5','q6','q7','q10','q11','q17_1','q17_2','q19_1','q19_2','q1719_label','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
+colnames(DB.csv) <- c('q1','q2_rr','q4','q5','q6','q7','q10','q11','q17_1','q17_2','q19_1','q19_2','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
 ```
 
 ## 敘述統計
@@ -422,7 +422,7 @@ Barplot.p <- function(din){
 
 ```{r, fig.align='center', fig.width=12, fig.height=7, out.width='100%'}
 var.label <- c("q1","q2_rr","q4","q11",
-               "q17_1","q17_2","q19_1","q19_2","q1719_label",
+               "q17_1","q17_2","q19_1","q19_2","q1719",
                "q29_1","q29_2","q29_3")
 showtext_auto()
 Barplot.p(din = myCount_q28(DB.csv, var.label))
@@ -438,9 +438,9 @@ library(factoextra)
 boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
 #缺失值轉0
 boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
-boycott$q29_1_2_inter<-boycott$q29_1*boycott$q29_2
-boycott$q29_1_3_inter<-boycott$q29_1*boycott$q29_3
-boycott$q29_2_3_inter<-boycott$q29_3*boycott$q29_2
+boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
 
 
 boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
@@ -448,7 +448,7 @@ boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q
 
 y <-boycott[,c('q30','q32','q35')]
 
-allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719_label","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2_inter","q29_1_3_inter","q38","q39","q40","q41","q42")]
+allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
 
 allcca <-cancor(allx,y)
 #典型相關係數
@@ -458,7 +458,7 @@ allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
 ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
 allx_lodings[,c(1,2)]
 ally_lodings[,c(1,2)]
-#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3_inter中度相關
+#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3中度相關
 #第一典型變數與q35_1高度相關,q30_1中度相關
 #越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
 
@@ -494,9 +494,9 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 
 ## Canonical analysis and PCA-對部分變數做
 
-```{r, fig.align='center', fig.width=6, fig.height=4, out.width="100%"}
+```{r, fig.align='center', fig.width=6, fig.height=2, out.width="100%"}
 y <-boycott[,c('q30','q32','q35')]
-x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719_label","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2_inter","q29_1_3_inter","q40","q42")]
+x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
 
 cca <-cancor(x,y)
 #典型相關係數
@@ -506,7 +506,7 @@ x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
 y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
 x_lodings[,c(1,2)]
 y_lodings[,c(1,2)]
-#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3_inter中度相關
+#第一典型變數與q22,q33_1高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31_1,q36_1,q29_1_3中度相關
 #第一典型變數與q35_1高度相關,q30_1中度相關
 #越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
 
@@ -526,7 +526,6 @@ p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.f
   labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 #自我相關係數
 round((colSums(x_lodings^2)[1:2]/4),4)
 round((colSums(y_lodings^2)[1:2]/4),4)
@@ -538,6 +537,52 @@ round((colSums(y_lodings^2)[1:2]/4)*num,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 gridExtra::grid.arrange(p1,p2,ncol=1)
 ```
+
+```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
+data <-x_lodings[,c(1)]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        legend.position = c(0.9,0.8),
+        legend.background = element_rect(fill="#fff0f0", color=NA))
+data <-y_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        legend.position = "none" )
+gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
+```
+
 
 # Logistic regression model
 
@@ -566,7 +611,7 @@ summary(glm_log)$coefficients
 
 # Decision tree
 
-```{r, fig.align='center', fig.width=8, fig.height=2.9, out.width="100%"}
+```{r, fig.align='center', fig.width=8, fig.height=3, out.width="100%"}
 library(rpart)
 library(rpart.plot)
 tree_model <- rpart(
@@ -575,15 +620,16 @@ tree_model <- rpart(
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
 custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
+par(mar = c(2, 2, 1, 2))
 rpart.plot(tree_model,
-           type = 3,
-           extra = 106,
+           type = 2,
+           extra = 0,
            under = TRUE,
            faclen = 0,
            fallen.leaves = TRUE, 
            box.palette = custom_palette(100),
-           shadow.col = "gray",    
-           cex = 1.2)
+           shadow.col = "gray",
+           cex = 1.7)
 ```
 
 # glmnet
