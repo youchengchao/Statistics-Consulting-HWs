@@ -54,8 +54,8 @@ execute:
 -   40個變數，其中用於H1之解釋變數有
 
 
-## 資料前處理{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 資料前處理
 <table style="width: 100%; font-size: 22px; margin: 0 auto;">
   <tr>
     <th>變數</th>
@@ -113,7 +113,8 @@ execute:
 
 
 
-## 假說1使用之解釋變數{background-image=background.jpeg}
+## {background-image=background.jpeg}
+### 假說1使用之解釋變數
 ::::{.columns}
 
 :::{.column width="50%"}
@@ -128,8 +129,8 @@ table1_data <- data.frame(
     "年齡分層", 
     "教育程度", 
     "週均上網天數", 
-    "正事上網分鐘", 
-    "娛樂上網分鐘", 
+    "日均正事上網分鐘", 
+    "日均娛樂上網分鐘", 
     "使用可討論名人之社群媒體數量", 
     "是否使用可討論名人之影音平台", 
     "是否至少有參與過一種網路惡搞",
@@ -556,7 +557,10 @@ DB.csv <- cbind(DB.csv[,1:2],q2rr,DB.csv[4:37])
 ```
 
 ## {background-image=background.jpeg}
-### H1之資料分析 - weighted Logistic regression model
+### H1之資料分析 - 加權邏輯式迴歸
+
+這個部分希望透過邏輯式迴歸模型觀察各變數之主效應。
+
 ```{r}
 #| echo: false
 table_data <- data.frame(
@@ -566,16 +570,15 @@ table_data <- data.frame(
   係數 = c(0.940, 0.304, 0.204, 0.165, 0.126, 
            0.107, 0.001, -0.087, -0.285, -0.535)
 )
-
 # 顯示顯著變數表格
 table_data %>%
   kable(align = c("l", "r"), format = "html") %>%
   kable_styling(full_width = TRUE, font_size = 30)
 ```
 
-
 ## {background-image=background.jpeg}
 ### 邏輯式迴歸模型之顯著變數之解讀
+
 ```{r}
 #| echo: false
 data1 <- data.frame(
@@ -628,22 +631,25 @@ glm_log <- glm(
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42,
   family = binomial, data = DB.csv, weights = weight)
-summary(glm_log)
+#summary(glm_log)
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
 #stepmodel$coefficients
 ```
 
-
-## H1之資料分析 - Decision tree{background-image=background.jpeg}
+## {background-image=background.jpeg}
+### H1之資料分析 - Decision tree
 
 決策樹選出的重要變數和邏輯式模型大致相同，但更能捕捉變數間交互作用。在圖3中，先從抵制意願做區分，具有高度抵制意圖的人，會有抵制行為。然而較不具備抵制意圖的人會受他人網路攻擊行為影響，如果常看到他人網路攻擊行為，便可能會有抵制行為；反之則不會有抵制行為。另外，就算經常看到他人攻擊言論，如果對國民黨好感度較高、能接受網路攻擊行為且教育程度較低，也不會有抵制行為。
+
+## {background-image=background.jpeg}
+### H1之資料分析 - 決策樹
 
 ```{r}
 library(rpart)
 library(rpart.plot)
 tree_model <- rpart(
   factor(q28_YN)~
-    factor(q1)+ q2 +q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
+    factor(q1)+q2+q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
     q4+ q5+ q6+ q7+ q10+ q11+ q1719+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
@@ -657,10 +663,13 @@ rpart.plot(tree_model,
            fallen.leaves = TRUE, 
            box.palette = custom_palette(100),
            shadow.col = "gray",
-           cex = 0.7)
+           cex = 0.9)
 ```
 
 ## H1之資料分析 - XGBoost{background-image=background.jpeg}
+
+此外希望透過XGBoost模型的結果結合SHAP值，更精準地觀察變數的重要性。
+
 
 ```{r}
 library(xgboost)
@@ -700,14 +709,14 @@ shap.plot.summary(shap_long,
 ```
 
 
-## H2之資料分析-典型相關分析{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### H2之資料分析-典型相關分析
 我們認為抵制程度能用「抵制效度」、「抵制傷害程度」、「抵制規模」這三個問題來衡量，因此我們將這些變數設為反應變數、其他的變數設為解釋變數，去進行典型相關分析。
 
 分析結果發現: 典型相關係數為0.56、0.38、0.25。
 
-## Canonical Correlation Analysis and PCA-對全部變數做{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 典型相關分析(全部變數)
 ```{r}
 library(FactoMineR)
 library(factoextra)
@@ -765,13 +774,10 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
-因為有11個變數的值和第一典型變數的相關性小於0.2，因此決定將這 些變數去除後，再做一次典型相關分析。
+因為有11個變數的值和第一典型負荷量小於0.2，因此將這些變數去除後，再做一次典型相關分析。
 
-## Canonical analysis and PCA-對部分變數做{background-image=background.jpeg}
-
-這次的結果顯示: 典型相關係數為0.55、0.31、0.22。
-
-第一典型變數主要由
+## {background-image=background.jpeg}
+### 典型相關分析(移除第一典型負荷量低於0.2的變數)
 
 ```{r}
 y <-boycott[,c('q30','q32','q35')]
