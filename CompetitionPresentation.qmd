@@ -12,7 +12,7 @@ format:
     code-summary: "Full Code"
     margin: 0
 execute:
-  cache: true
+  cache: false
   echo: false
   warning: false
 ---
@@ -29,6 +29,7 @@ execute:
 
 
 ## 目的與動機{background-image=background.jpeg}
+
 在現今社會中，頻繁出現的抵制行為已成為民眾表達對名人不滿的一種手段。台灣民眾對名人的抵制中，引起軒然大波的莫過於劉芒事件。2023年8月劉芒因工作態度不佳遭工作人員爆料，事後她火速道歉希望平息眾怒，卻也因「人設翻車」YouTube訂閱人數下降約11%，影片倒讚率高達90%。因此，無論是對抵制發起者，或是對尋求因應策略的名人而言，抵制行為是一個必須正視的管理問題。我們希望建構民眾抵制行為指標和描繪抵制者輪廓並分析抵制效果，以此來讓名人了解抵制行為背後的原因，並且去預防和應對抵制風波。
 
 
@@ -51,7 +52,7 @@ execute:
 
 -   1004個有效樣本
 
--   40個變數，其中用於H1之解釋變數有
+-   27個解釋變數，其中22個變數用於對H1的分析、H2另加入5個變數。
 
 
 ## {background-image=background.jpeg}
@@ -520,7 +521,7 @@ Barplot.p <- function(din){
                        position = "stack",
                        stat = "identity")+
               geom_text(
-                aes(label = paste0(din$unique_value,"\n",proportion * 100, "%"),
+                aes(label = paste0("(",din$unique_value,")",proportion * 100, "%"),
                     x = factor(!!sym(split_label)),
                     y = (start + end) / 2),
                 position = position_dodge2(width = 0.2,padding = 0.2),
