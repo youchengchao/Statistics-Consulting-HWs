@@ -124,7 +124,10 @@ execute:
   </tr>
 </table>
 
-###資料前處理另一種寫法
+##  {background-image="background.jpeg"}
+
+### 資料前處理1
+
 ```{r}
 library(knitr)
 library(kableExtra)
