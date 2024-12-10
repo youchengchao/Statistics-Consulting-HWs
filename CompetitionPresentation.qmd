@@ -1,0 +1,774 @@
+---
+title: "抵制文化之現象分析"
+author: '第四組'
+format:
+  pptx:
+    incremental: true
+execute: 
+  echo: false
+---
+
+# 大綱
+
+-   1.  目的與動機
+
+-   2.  資料簡介
+
+-   3.  資料前處理與視覺化
+
+-   4.  分析方法
+
+------------------------------------------------------------------------
+
+# 目的與動機
+
+在現今社會中，頻繁出現的抵制行為已成為民眾表達對名人不滿的一種手段。台灣民眾對名人的抵制中，引起軒然大波的莫過於劉芒事件。2023年8月劉芒因工作態度不佳遭工作人員爆料，事後她火速道歉希望平息眾怒，卻也因「人設翻車」YouTube訂閱人數下降約11%，影片倒讚率高達90%。因此，無論是對抵制發起者，或是對尋求因應策略的名人而言，抵制行為是一個必須正視的管理問題。我們希望建構民眾抵制行為指標和描繪抵制者輪廓並分析抵制效果，以此來讓名人了解抵制行為背後的原因，並且去預防和應對抵制風波。
+
+------------------------------------------------------------------------
+
+# 研究架構圖
+
+![架構圖](structureimg.png)
+
+------------------------------------------------------------------------
+
+# 研究假設
+
+-   H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。
+
+-   H2：針對有做出抵制行為的人，網路使用行為、回聲室效應、網路貶抑發言、政治立場與生活感受和抵制相關調查都會影響抵制程度高低。
+
+------------------------------------------------------------------------
+
+# 資料來源
+
+台灣傳播調查資料庫第二期第五次問卷（2021年）
+
+-   前處理後
+
+-   1004個有效樣本
+
+-   40個變數，其中用於H1之解釋變數有
+
+------------------------------------------------------------------------
+
+# 資料前處理
+
+| 變數     | 處理                                                                             |
+|------------------|------------------------------------------------------|
+| q2       | 出生年改成年齡                                                                   |
+| q2rr     | 將 rrq2 的年齡分層變數重新命名q2rr                                               |
+| q3       | 移除。不關心地區造成的差異                                                       |
+| q4       | 重新劃分為四個等級，劃分參考人口結構表格的分類方式                               |
+| q6,q7    | 時間統一單位 (分)                                                                |
+| q8       | 移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。              |
+| q9       | 移除。無法界定是工作性質或娛樂性質                                               |
+| q10      | 改成"使用幾個與yt名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。 |
+| q11      | 改成"有無使用YT或Twitch"，原因與第十題類似。                                     |
+| q12\~q15 | 移除。q28,q29關心的時間範圍較廣並不只局限於疫情期間。                            |
+| q16\~q19 | 將四個網路惡搞行為有無的1,0變數整合成至少有一項網路惡搞行為的1,0變數1719         |
+| q20\~q26 | 參考ref\[1\]之做法，將相同主題的ordinal主觀評分加總作為該主題程度的分數。        |
+
+------------------------------------------------------------------------
+
+# 假說1使用之解釋變數
+
+| 變數名稱 | 解釋                             | 備註                                                            |
+|----------------|---------------------------------------|-----------------|
+| q1       | 性別                             | 1:男性, 2:女性                                                  |
+| q2       | 年齡                             | 連續型數值變數                                                  |
+| q2rr     | 年齡分層                         | 1:18\~29, 2:30\~39, 3:40\~49,\newline 4:50\~59, 5:60\~69, 6:70+ |
+| q4       | 教育程度                         | 1:高中及以下, 2:專科,\newline 3:大學, 4:研究所                  |
+| q5       | 週平均上網天數                   |                                                                 |
+| q6       | 上網分鐘(工作、學習)             |                                                                 |
+| q7       | 上網分鐘(娛樂、休閒)             |                                                                 |
+| q10      | 使用幾個與名人討論相關的社群媒體 |                                                                 |
+| q11      | 是否使用YT,Twitch或bilibili      | 1:是,0:否                                                       |
+| q1719    | 是否至少有參與過一種網路惡搞     | 1:是,0:否                                                       |
+| q20      | 主動激化(引戰)行為接受度         | (接受)2\~10(可以接受)                                           |
+| q22      | 他人攻擊行為的頻率               | (從來沒有)5\~20(經常)                                           |
+| q23      | 自己攻擊行為的頻率               | (從來沒有)5\~20(經常)                                           |
+| q24      | 媒體識讀素養                     | (低)5\~20(高)                                                   |
+| q25      | 網路論戰接受度                   | (低)4\~20(高)                                                   |
+| q26      | 不文明留言的影響力               | (低)3\~12(高)                                                   |
+| q27      | 抵制意圖                         | (弱)1\~5(強)                                                    |
+| q38      | 心理幸福感                       | (不滿意)2\~10(滿意)                                             |
+| q39      | 生活品質                         | (不快樂)1\~5(快樂)                                              |
+| q40      | 國民黨喜好程度                   | (不喜歡)0\~5 (喜歡)                                             |
+| q41      | 民進黨喜好程度                   | (不喜歡) 0\~5 (喜歡)                                            |
+| q42      | 意識形態                         | (台獨)0\~10: (統一)                                             |
+| weight   | 人口結構修正權重                 |                                                                 |
+
+------------------------------------------------------------------------
+
+# 假說2另加入之解釋變數
+
+| 變數名稱 | 解釋                                      | 備註                 |
+|----------------|----------------------------------------|----------------|
+| q29_1    | 抵制的原因:歧視特定國家、種族或性別       | 1:是, 0:否           |
+| q29_2    | 抵制的原因:有不同的政治意識型態或價值觀   | 1:是, 0:否           |
+| q29_3    | 抵制的原因:做出不道德、不正當或不合法行為 | 1:是, 0:否           |
+| q30      | 抵制行為的有效程度                        | (無效)1\~5(有效)     |
+| q31      | 抵制前的同理心                            | (沒同理)1\~4(有同理) |
+| q32      | 抵制行為的對名人的傷害程度                | (不嚴重)1\~5(嚴重)   |
+| q33      | 抵制行為的對自己的重要程度                | (不重要)1\~5(重要)   |
+| q34      | 抵制成本                                  | (非常少)1\~5(非常多) |
+| q35      | 抵制規模感知                              | (小)1\~5(大)         |
+| q36      | 抵制的社會壓力                            | (小)1\~4(大)         |
+
+------------------------------------------------------------------------
+
+# 反應變數
+
+| 變數名稱 | 解釋                       | 備註 |
+|----------|----------------------------|------|
+| q28_YN   | 是否採取過抵制行為         | $H1$ |
+| q30      | 抵制行為的有效程度         | $H2$ |
+| q32      | 抵制行為的對名人的傷害程度 | $H2$ |
+| q35      | 抵制規模感知               | $H2$ |
+
+------------------------------------------------------------------------
+
+```{r}
+library(haven)         #read sav file
+library(labelled)      #remove attribute of sav data
+library(Hmisc)         #describe
+library(showtext)      #show zw-tw in ggplot2
+library(dplyr);library(ggplot2);library(MASS);
+#library(ggrepel)
+library(caret)
+library(rlang)         #for building function
+#DB.sav <-read_sav("DisruptiveBehavior.sav")
+#write.csv(DB.sav,file= "DisruptiveBehavior.csv", row.names= FALSE)
+DB.csv <-read.csv("DisruptiveBehavior.csv")[,-c(1:4)]
+
+#移除注意力偵測題
+DB.csv[,match("q21a_1", colnames(DB.csv)):match("q21a_6_text", colnames(DB.csv))] <- NULL
+DB.csv$q37a <- NULL
+DB.csv$rq21a <- NULL
+DB.csv$rq37a <- NULL 
+DB.csv$r <- NULL #基本資料與第一波網調是否相符
+
+#移除q8,q9
+DB.csv[, match("q8_1", colnames(DB.csv)):match("q8_90", colnames(DB.csv))] <- NULL
+DB.csv[, match("q9_1",colnames(DB.csv)):match("q9_90",colnames(DB.csv))] <- NULL
+
+#移除疫情相關的問題(12題到15題)
+DB.csv[,match("q12_1", colnames(DB.csv)):match("q15_03_1", colnames(DB.csv))] <- NULL
+```
+
+```{r}
+#第二題(出生年)改成年齡的區段
+DB.csv$q2 <- DB.csv$qrq2
+DB.csv$qrq2 <- NULL
+DB.csv$q2rr <- DB.csv$rrq2
+DB.csv$rrq2 <- NULL
+#把第三題(出生地)的其他類別歸為一類
+DB.csv$q3_other <- NULL
+DB.csv$q3 <- NULL
+#第四題沒有人選其他
+DB.csv$q4_88_text <- NULL
+
+#教育程度重新劃分為四個等級
+DB.csv$q4[DB.csv$q4<=8] <- 1
+DB.csv$q4[DB.csv$q4!=1 & DB.csv$q4<=15] <- 2
+DB.csv$q4[DB.csv$q4>2 & DB.csv$q4<=19] <- 3
+DB.csv$q4[DB.csv$q4>3] <- 4
+
+#時間統一單位(分)
+DB.csv$q6 <- DB.csv$q6_h*60+DB.csv$q6_m
+DB.csv$q7 <- DB.csv$q7_h*60+DB.csv$q7_m
+DB.csv$q6_h <- NULL; DB.csv$q6_m <- NULL
+DB.csv$q7_h <- NULL; DB.csv$q7_m <- NULL
+
+#整理第十題
+DB.csv$q10_4 <- NULL
+DB.csv$q10_10 <- NULL
+DB.csv$q10_90 <- NULL
+DB.csv$q10_88[DB.csv$q10_88_text!="巴哈姆特場外休憩區"&
+                DB.csv$q10_88_text!="巴哈姆特"] <- NA
+DB.csv$q10_88_text <- NULL
+DB.csv$q10 <- apply(DB.csv[,c("q10_1", "q10_2", "q10_3","q10_5",
+                              "q10_6", "q10_7", "q10_8", "q10_9","q10_88")],
+                    1, function(row){sum(!is.na(row))})
+DB.csv[,c("q10_1", "q10_2", "q10_3", "q10_5",
+          "q10_6", "q10_7", "q10_8", "q10_9", "q10_88")] <- NULL
+#整理第十一題
+DB.csv$q11_2 <- NULL
+DB.csv$q11_3 <- NULL
+DB.csv$q11_4 <- NULL
+DB.csv$q11_5 <- NULL
+DB.csv$q11_6 <- NULL
+DB.csv$q11_8 <- NULL
+DB.csv$q11_90 <- NULL
+DB.csv$q11_88[DB.csv$q11_88_text!="bilibili"] <- NA
+DB.csv$q11_88_text <- NULL
+DB.csv$q11 <- apply(DB.csv[,c("q11_1", "q11_7")],
+                    1, function(row){sum(!is.na(row))})
+DB.csv[,c("q11_1", "q11_7","q11_88")] <- NULL
+#16~19
+DB.csv$q16 <- NULL
+DB.csv$q18 <- NULL
+DB.csv$q17_01[is.na(DB.csv$q17_01)|DB.csv$q17_01==2] <- 0
+DB.csv$q17_02[is.na(DB.csv$q17_02)|DB.csv$q17_02==2] <- 0
+
+DB.csv$q19_01[is.na(DB.csv$q19_01)|DB.csv$q19_01==2] <- 0
+DB.csv$q19_02[is.na(DB.csv$q19_02)|DB.csv$q19_02==2] <- 0
+
+DB.csv$q1719 <- apply(
+  DB.csv[,match("q17_01",colnames(DB.csv)):match("q19_02",colnames(DB.csv))],
+  MARGIN = 1,
+  function(row){
+    return(paste0(row,collapse = ""))
+  })
+DB.csv$q1719 <- ifelse(DB.csv$q1719=="0000", 0, 1)
+DB.csv$q17_01 <- NULL
+DB.csv$q17_02 <- NULL
+DB.csv$q19_01 <- NULL
+DB.csv$q19_02 <- NULL
+
+#20~26
+DB.csv$q20 <- rowSums(DB.csv[,c('q20_01_1','q20_02_1')])
+DB.csv$q22 <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
+DB.csv$q23 <- rowSums(DB.csv[,c("q23_01_1", "q23_02_1", "q23_03_1", "q23_04_1", "q23_05_1")])
+DB.csv$q24 <- rowSums(DB.csv[,c("q24_01_1", "q24_02_1", "q24_03_1", "q24_04_1", "q24_05_1")])
+DB.csv$q25 <- rowSums(DB.csv[,c("q25_01_1", "q25_02_1", "q25_03_1", "q25_04_1")])
+DB.csv$q26 <- rowSums(DB.csv[,c("q26_01_1", "q26_02_1", "q26_03_1")])
+DB.csv[,match("q20_01_1",colnames(DB.csv)):match("q26_03_1",colnames(DB.csv))] <- NULL
+#38~42
+DB.csv$q38 <- rowSums(DB.csv[,c("q38_01_1", "q38_02_1")])
+DB.csv$q38_01_1 <- NULL
+DB.csv$q38_02_1 <- NULL
+
+DB.csv$q40 <- cut(DB.csv$q40_1, 
+                        breaks = c(0, 20, 40, 60, 80, 100), 
+                        labels = c(1, 2, 3, 4, 5), 
+                        right = TRUE)
+DB.csv$q40[is.na(DB.csv$q40)] <- 1
+
+DB.csv$q41 <- cut(DB.csv$q41_1, 
+                       breaks = c(0, 20, 40, 60, 80, 100), 
+                       labels = c(1, 2, 3, 4, 5), 
+                       right = TRUE)
+DB.csv$q41[is.na(DB.csv$q41)] <- 1
+
+DB.csv$q41_1 <- NULL
+DB.csv$q40_1 <- NULL
+
+#處理28的選項
+DB.csv$q28_5 <- NULL
+q28.manipulation <- function(row){
+  #亂回答的要把其他抵制行為的問題回答(28-36)也移除
+  delete.term <- c("會破壞我對他（她）的形象",
+                   "從來都不關注",
+                   "若名人不自我反省就會抵制，但是通常名人都會願意出來面對錯誤",
+                   "未來此人所說的話均會產生疑問",
+                   "用選票來抵制",
+                   "很多時候都是立場不同、換位思考一下後，就可以消弭一些爭議。",
+                   "看看就好",
+                   "沒意見",
+                   "看看就好,自己會有自己的判斷")
+  #要移除q28_4標籤的
+  amend.term <- c("指正他的錯誤",
+                  "拒買相關商品",
+                  "與親朋好友說明事實真相",
+                  "要看是什麼原因決定一時間這麼做還是永久")
+  if(row[5] %in% delete.term){row <- c(rep(NA,4),"",rep(NA,5),"",rep(NA,7))}
+  else if(row[5] %in% amend.term){row[4:5] <- c(NA,"")}
+  return(row)
+}
+
+DB.csv[,match("q28_1",colnames(DB.csv)):match("q36_1",colnames(DB.csv))] <- as.data.frame(
+  t(apply(DB.csv[,match("q28_1",colnames(DB.csv)):match("q36_1",colnames(DB.csv))],
+        1,
+        q28.manipulation))
+)
+#要歸類的要一個一個看歸在哪類
+DB.csv[DB.csv$q28_4_text=="每個人有合法的言論自由，我只會拒絕觀看有問題違法的影片，不會ㄧ竿子打翻ㄧ條船。",
+       c('q28_2','q28_4','q28_4_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q28_4_text=="減少看他們的發文或影片",  c('q28_2','q28_4','q28_4_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q28_4_text=="轉發相關的指正或譴責文章",c('q28_3','q28_4','q28_4_text')] <- c(1,NA,"")
+
+DB.csv$q28_4 <- NULL
+DB.csv$q28_4_text <- NULL
+
+#處理29的選項
+#29的第五選項改定義為 錯誤資訊、不當言論
+q29.manipulation <- function(row){
+  #亂回答的要把其他抵制行為的問題回答(28-36)也移除
+  delete.term <- c("道不同不相為謀不理他們",
+                   "沒有此情況",
+                   "不會抵制",
+                   "我沒有特別抵制過呢",
+                   "從來沒有",
+                   "不明白指的是什麼",
+                   "已讀",
+                   "不理他們",
+                   "不予置評",
+                   "無",
+                   "不會做無聊的事情",
+                   "目前沒有",
+                   "不曾",
+                   "沒遇過要抵制的事",
+                   "沒有",
+                   "沒有抵制過")
+  #要被歸類到第五類(不當發言、錯誤資訊)的
+  class5 <- c("錯誤資訊",
+              "發表錯誤資訊且不更改",
+              "指鹿為馬，不實言論，刻意誤導輿論方向。",
+              "不當發言",
+              "縵罵",
+              "誤導",
+              "散播不正確消息且不認錯",
+              "對動物議題留下錯誤言論，對疫情走向發出錯誤言論（去年康健發文說嬰幼兒不會染疫，被我指正，卻不改言論，",
+              "假名人之姿發表利己損害公眾利益的言論，企圖影響他人判斷的言論者。",
+              "")
+  if(row[9] %in% delete.term){row <- c(rep(NA,8),"",rep(NA,7))}
+  else if(row[9] %in% class5){row[9] <- ""}
+  return(row)
+}
+
+DB.csv[,match("q28_1",colnames(DB.csv)):match("q36_1",colnames(DB.csv))] <- as.data.frame(
+  t(apply(DB.csv[,match("q28_1",colnames(DB.csv)):match("q36_1",colnames(DB.csv))],
+        1,
+        q29.manipulation))
+)
+#要歸類的要一個一個看歸在哪類
+DB.csv[DB.csv$q29_5_text=="過於私人或主觀意識的回答會讓我反感進而抵制收看",
+       c('q29_2','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="味全黑心油事件",
+       c('q29_5','q29_5_text')] <- c(NA,"")
+
+DB.csv[DB.csv$q29_5_text=="說謊話（至少是我覺得他在說謊），做錯事不負責還甩鍋給別人。",
+  c('q29_5','q29_5_text')] <- c(NA,"")
+
+DB.csv[DB.csv$q29_5_text=="有些事情的看法 做法不同",
+       c('q29_2','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[DB.csv$q29_5_text=="違反當初自己宣揚的理念",
+       c('q29_4','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv[
+  DB.csv$q29_5_text=="泛指公眾人物沒有責任表態但有義務不支持通稱反人類行為，私領域不要太誇張都沒差",
+  c('q29_4','q29_5','q29_5_text')] <- c(1,NA,"")
+
+DB.csv$q29_5_text <- NULL
+
+#處理完其他類之後先把NA補0
+DB.csv <- as.data.frame(
+  apply(DB.csv,2,function(col){
+    col <- as.numeric(col)
+    col[is.na(col)] <- 0
+    return(col)
+}))
+
+DB.csv$q29_2 <- ifelse(DB.csv$q29_2 | DB.csv$q29_3, 1,0)
+DB.csv$q29_3 <- ifelse(DB.csv$q29_4 | DB.csv$q29_5, 1,0)
+DB.csv$q29_4 <- NULL
+DB.csv$q29_5 <- NULL
+
+#有無抵制行為(1:有,0:沒有)
+DB.csv$q28_YN[DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3] <- 1
+DB.csv$q28_YN[!(DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3)] <- 0
+
+#重新調整欄位index
+#colnames(DB.csv)
+DB.csv <- DB.csv[,c('q1','q2','q2rr','q4','q5_1','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
+
+for(i in c(1:4,6:36)){
+  DB.csv[,i] <- as.integer(DB.csv[,i])
+}
+
+colnames(DB.csv) <- c('q1','q2','q2rr','q4','q5','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
+```
+
+```{r}
+#針對q28_YN二元變數對其他類別變數畫圖
+myCount_q28 <- function(din, target_label){
+  temp <- purrr::map(target_label, ~ {
+      din %>%
+        group_by(q28_YN, !!sym(.x)) %>%
+        summarise(count = n(), .groups = "drop")%>%
+        mutate(var_name = .x) %>%
+        rename(unique_value = !!sym(.x)) %>%
+        group_by(.,q28_YN, var_name) %>%
+        mutate(
+          barcolor = scales::rescale(
+            as.numeric(factor(unique_value)),
+            to = c(0.1,0.9)
+          )
+        ) %>%
+        mutate(proportion = round(count/sum(count), 4) ) %>%
+        ungroup()
+    })
+  temp <- bind_rows(temp)
+  temp$count <- NULL
+  return(temp)
+}
+Barplot.p <- function(din){
+    split_label<- colnames(din)[1]
+    din <- din %>%
+      group_by(q28_YN, var_name) %>%
+      mutate(
+        start = 1-cumsum(proportion),
+        end = 1-lag(cumsum(proportion), default = 0)
+      )
+    pic <- ggplot(din) +
+              geom_bar(aes(x = factor(!!sym(split_label)),
+                           y = proportion,
+                           fill = as.character(barcolor)),
+                       position = "stack",
+                       stat = "identity")+
+              geom_text(
+                aes(label = paste0(din$unique_value,"\n",proportion * 100, "%"),
+                    x = factor(!!sym(split_label)),
+                    y = (start + end) / 2),
+                position = position_dodge2(width = 0.2,padding = 0.2),
+                size = 2.5
+              )+
+              facet_grid(.~var_name, switch = "x", labeller = labeller(var_name = label_wrap_gen(width = 10)))+
+              scale_fill_grey(start = 0.7,end = 0.3)+
+              ggtitle(label = "各變數依據是否有抵制行為分類之比例圖")+
+              labs(x = "變數名稱", y="比例")+
+              theme(strip.placement = "outside",
+                    strip.background = element_rect(fill = NA, color = "white"),
+                    panel.spacing = unit(-.01,"cm"),
+                    legend.position = "none",
+                    plot.margin = unit(c(0.15, 0.15, 0.15, 0.15),"inches"))
+    return(pic)
+}
+```
+
+# H1之資料分析
+
+以抵制與否作為依據，將各變數的類別比例繪製出來。其中並無繪製類別過多或是q28以後的變數。
+
+```{r}
+var.label <- c("q1","q2rr","q4","q11","q1719", "q38","q39","q40","q41")
+showtext_auto()
+Barplot.p(din = myCount_q28(DB.csv, var.label))
+
+# 畫完圖再把q2rr轉成ordinal variable
+DB.csv$q2rr <- factor(DB.csv$q2rr,
+                      levels = 1:6,
+                      labels = c("18~29", "30~39", "40~49", "50~59", "60~69", "70+"),
+                      ordered = TRUE)
+q2rr <- data.frame(model.matrix(~DB.csv$q2rr-1))
+colnames(q2rr) <- c("q2rr_18_29", "q2rr_30_39", "q2rr_40_49", "q2rr_50_59", "q2rr_60_69", "q2rr_over70")
+DB.csv <- cbind(DB.csv[,1:2],q2rr,DB.csv[4:37])
+```
+
+------------------------------------------------------------------------
+
+# H1之資料分析 - weighted Logistic regression model
+
+-   變數選取: 逐步回歸(AIC)
+
+| 變數 | 抵制意圖 | 民進黨好感度 | 年齡  | 教育程度 | 看見網路攻擊頻率 | 自身網路攻擊 | 娛樂上網時間 | 意識形態 | 心理幸福感 | 使用可討論名人平台 |
+|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+| 係數 | 0.940    | 0.304        | 0.204 | 0.165    | 0.126            | 0.107        | 0.001        | -0.087   | -0.285     | -0.535             |
+
+: 顯著之變數
+
+------------------------------------------------------------------------
+
+# 顯著變數之解讀
+
+1.  抵制意圖(q27數值評分:1\~5)：抵制意圖越高的人，更容易付諸實際行動。每增加1單位使得抵制行為 勝算比變成2.56倍。
+
+2.  民進黨好感度(q41數值評分:1\~5): 對民進黨有好感，傾向採取抵制行動。每增加1單位使得勝算比變 為1.36 倍。
+
+3.  年齡分層(q2rr數值分層:1\~6)：年齡越大的人，越可能有抵制行動。每往上移動一層，勝算比變成 1.23 倍。
+
+4.  教育程度(q4數值評分:1\~4)：教育程度越高，採取抵制行動的可能性越大。例如研究所學歷對大學學歷 的勝算比是1.18。
+
+5.  看見網路攻擊頻率與自己網路攻擊頻率 (q22、q23數值評分:5\~20)：越常接觸他人的負面言論，或自身 越常發表負面言論，均會顯著提高抵制的可能性。每增加一單位分別使得勝算比變為1.13及1.11倍。
+
+6.  休閒娛樂上網時間(q7分鐘)：上網時間越長，抵制行為的可能性越高，呈現正相關，每多半小時勝算比 變成1.03倍。
+
+7.  意識形態(q42評分:1\~10)：獨立意識形態(評分較低)的人，傾向採取抵制行動。評分每增加1單位使得 勝算比變成0.92倍。
+
+8.  心理幸福感(q38評分:2\~10)：較快樂(評分較高)的人，較少採取抵制行動。評分每增加1單位，勝算比 變成0.75倍。
+
+9.  使用可討論名人之平台數量(q11計數:0,1,2)：用越多的人，越少採取抵制行動。每多用一個，勝算比變 成0.59 倍。
+
+```{r}
+glm_log.q2rr <- glm(
+  factor(q28_YN)~
+    factor(q1)+ q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
+    q4+ q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42,
+  family = binomial, data = DB.csv, weights = weight)
+stepmodel.q2rr <- summary(stepAIC(glm_log.q2rr, direction = 'both', trace = 0))
+stepmodel.q2rr$coefficients
+
+glm_log.q2 <- glm(
+  factor(q28_YN)~
+    factor(q1)+ q2+ q4+ q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42,
+  family = binomial, data = DB.csv, weights = weight)
+stepmodel.q2 <- summary(stepAIC(glm_log.q2, direction = 'both', trace = 0))
+stepmodel.q2$coefficients
+
+glm_log <- glm(
+  factor(q28_YN)~
+    factor(q1)+ q2+ q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
+    q4+ q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42,
+  family = binomial, data = DB.csv, weights = weight)
+summary(glm_log)
+stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
+stepmodel$coefficients
+```
+
+------------------------------------------------------------------------
+
+# H1之資料分析 - Decision tree
+
+決策樹選出的重要變數和邏輯式模型大致相同，但更能捕捉變數間交互作用。在圖3中，先從抵制意願做區分，具有高度抵制意圖的人，會有抵制行為。然而較不具備抵制意圖的人會受他人網路攻擊行為影響，如果常看到他人網路攻擊行為，便可能會有抵制行為；反之則不會有抵制行為。另外，就算經常看到他人攻擊言論，如果對國民黨好感度較高、能接受網路攻擊行為且教育程度較低，也不會有抵制行為。
+
+```{r}
+library(rpart)
+library(rpart.plot)
+tree_model <- rpart(
+  factor(q28_YN)~
+    factor(q1)+ q2 +q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
+    q4+ q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
+custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
+par(mar = c(2, 2, 1, 2))
+rpart.plot(tree_model,
+           type = 2,
+           extra = 0,
+           under = TRUE,
+           faclen = 0,
+           fallen.leaves = TRUE, 
+           box.palette = custom_palette(100),
+           shadow.col = "gray",
+           cex = 0.7)
+```
+
+------------------------------------------------------------------------
+
+## H1之資料分析 - XGBoost
+
+```{r}
+library(xgboost)
+library(DiagrammeR)
+set.seed(2012)
+x <- model.matrix(
+  factor(q28_YN)~
+    factor(q1)+q2rr_18_29+ q2rr_30_39+ q2rr_40_49+ q2rr_50_59+ q2rr_60_69+ q2rr_over70+
+    q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
+y <-as.factor(DB.csv$q28_YN) 
+xgb_data <- xgb.DMatrix(data = x,
+                        label = as.numeric(y) - 1,
+                        weight = DB.csv$weight)
+xgb_model <- xgboost(data = xgb_data,
+                     objective = "binary:logistic",
+                     nrounds = 100,
+                     verbose = 0,
+                     )
+# importance_matrix <- xgb.importance(model = xgb_model)
+# importance_matrix
+library(SHAPforxgboost)
+
+# 計算 SHAP 值和 mean SHAP 值
+shap_values <- shap.values(xgb_model = xgb_model, X_train = x)
+shap_mean <- shap_values$mean_shap_score
+shap_values_df <- shap_values$shap_score
+
+# long format
+shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
+showtext_auto()
+shap.plot.summary(shap_long,
+                  min_color_bound = "lightblue",
+                  max_color_bound = "#355f7a") +
+  labs(x = "變數名稱", y = "Shap值")
+```
+
+------------------------------------------------------------------------
+
+# 分析影響抵制程度之因素(典型相關分析CCA)
+
+我們認為抵制程度能用「抵制效度」、「抵制傷害程度」、「抵制規模」這三個問題來衡量，因此我們將這些變數設為反應變數、其他的變數設為解釋變數，去進行典型相關分析。
+
+## Canonical Correlation Analysis and PCA-對全部變數做
+
+```{r}
+library(FactoMineR)
+library(factoextra)
+boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
+#缺失值轉0
+boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
+boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
+
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+
+y <-boycott[,c('q30','q32','q35')]
+
+allx <-boycott[,c("q2","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
+
+allcca <-cancor(allx,y)
+cat('典型相關係數',allcca$cor,'\n')
+
+allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
+ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
+#allx_lodings[,c(1,2)]
+#ally_lodings[,c(1,2)]
+
+# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3, q31, q36_1, q29_1_3中度相關
+# 第一典型變數與q35高度相關,q30中度相關
+data <-allx_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
+  labs(x = "題號", y = "典型負荷量絕對值") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = "none")
+
+#自我相關係數
+cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1:2]/4),4),"\n")
+cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1:2]/4),4),"\n")
+
+#典型相關係數平方
+allnum <-round(allcca$cor^2,4)[1:2]
+round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
+round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+```
+
+## 分析結果發現: 典型相關係數為0.56、0.38、0.25。但是因為有11個變數的值和第一典型變數的相關性小於0.2，因此決定將這 些變數去除後，再做一次典型相關分析。
+
+## Canonical analysis and PCA-對部分變數做
+
+這次的結果顯示: 典型相關係數為0.55、0.31、0.22。
+
+第一典型變數主要由
+
+```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%"}
+y <-boycott[,c('q30','q32','q35')]
+x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
+
+# 典型相關係數
+cca <-cancor(x,y)
+cat('典型相關係數', cca$cor) # 最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33 和q35貢獻組成
+
+x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
+y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
+# x_lodings[,c(1,2)]
+# y_lodings[,c(1,2)]
+# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31,q36,q29_1_3中度相關
+# 第一典型變數與q35高度相關,q30中度相關
+# 越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
+
+data <- x_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3))
+#自我相關係數
+round((colSums(x_lodings^2)[1:2]/4),4)
+round((colSums(y_lodings^2)[1:2]/4),4)
+#典型相關係數平方
+num<-round(cca$cor^2,4)[1:2]
+
+round((colSums(x_lodings^2)[1:2]/4)*num,4)
+round((colSums(y_lodings^2)[1:2]/4)*num,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+showtext_auto()
+gridExtra::grid.arrange(p1,p2,ncol=1)
+```
+
+```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
+data <-x_lodings[,c(1)]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  ylim(0, 1)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = c(0.9,0.8),
+        legend.background = element_rect(fill="#fff0f0", color=NA))
+data <-y_lodings[,1]
+df <- data.frame(
+  Name = names(data),
+  Value = data,
+  Positive = ifelse(data > 0, 1, 0)
+)
+df <- df[order(abs(df$Value), decreasing = TRUE), ]
+p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(abs(Value), 2)), 
+            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
+                    labels = c("負相關", "正相關"))+
+  labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
+  ylim(0, 1)+
+  theme_minimal() +
+  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 3),
+        axis.text.y = element_text(size = 3),
+        axis.title.y = element_text(size = 3),
+        legend.position = "none" )
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
+```
+
+------------------------------------------------------------------------
+
+# 參考文獻
+
+\[1\] [台灣消費者抵制行為之研究 ---以台商親中言論衍生之抵制為例](https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)
+
+\[2\] [Variable selection -- A review and recommendations for the practicing statistician](https://onlinelibrary.wiley.com/doi/full/10.1002/bimj.201700067)
