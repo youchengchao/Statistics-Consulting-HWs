@@ -753,14 +753,14 @@ df <- df[order(abs(df$Value), decreasing = TRUE), ]
 p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
   scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
   labs(x = "題號", y = "典型負荷量絕對值") +
   theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3),
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
         legend.position = "none")
 p1
 #自我相關係數
@@ -774,14 +774,14 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
-因為有11個變數的值和第一典型負荷量小於0.2，因此將這些變數去除後，再做一次典型相關分析。
+因為有11個變數的值和第一典型負荷量小於等於0.2，因此將這些變數去除後，再做一次典型相關分析。
 
 ## {background-image=background.jpeg}
 ### 典型相關分析(移除第一典型負荷量低於0.2的變數)
 
 ```{r}
 y <-boycott[,c('q30','q32','q35')]
-x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
+x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_3","q31",'q33','q36',"q29_1_3","q40","q42")]
 
 # 典型相關係數
 cca <-cancor(x,y)
@@ -805,15 +805,15 @@ df <- df[order(abs(df$Value), decreasing = TRUE), ]
 p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+            vjust = -0.5, size = 10) +  # 在條形圖上顯示絕對值
   scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
                     labels = c("負相關", "正相關"))+
   labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
   theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3))
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15))
 p2
 #自我相關係數
 round((colSums(x_lodings^2)[1:2]/4),4)
