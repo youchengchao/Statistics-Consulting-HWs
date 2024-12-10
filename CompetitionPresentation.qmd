@@ -8,6 +8,8 @@ format:
     theme: simple
     title-slide-attributes: 
       data-background-image: 'background.jpeg'
+    code-fold: true
+    code-summary: "Full Code"
     
 execute: 
   echo: true
@@ -236,31 +238,41 @@ execute:
 
 ## 假說2另加入之解釋變數{background-image=background.jpeg}
 
-| 變數名稱 | 解釋                                      | 備註                 |
-|----------------|----------------------------------------|----------------|
-| q29_1    | 抵制的原因:歧視特定國家、種族或性別       | 1:是, 0:否           |
-| q29_2    | 抵制的原因:有不同的政治意識型態或價值觀   | 1:是, 0:否           |
-| q29_3    | 抵制的原因:做出不道德、不正當或不合法行為 | 1:是, 0:否           |
-| q30      | 抵制行為的有效程度                        | (無效)1\~5(有效)     |
-| q31      | 抵制前的同理心                            | (沒同理)1\~4(有同理) |
-| q32      | 抵制行為的對名人的傷害程度                | (不嚴重)1\~5(嚴重)   |
-| q33      | 抵制行為的對自己的重要程度                | (不重要)1\~5(重要)   |
-| q34      | 抵制成本                                  | (非常少)1\~5(非常多) |
-| q35      | 抵制規模感知                              | (小)1\~5(大)         |
-| q36      | 抵制的社會壓力                            | (小)1\~4(大)         |
 
+```{r}
+#| echo: false
+library(knitr) 
+library(kableExtra)
+
+table_data <- data.frame( 
+  變數名稱 = c("q29_1", "q29_2", "q29_3", "q30", "q31", "q32", "q33", "q34", "q35", "q36"), 
+  解釋 = c("歧視特定國家、種族或性別", "有不同的政治意識型態或價值觀", "做出不道德、不正當或不合法行為", "抵制行為的有效程度", "抵制前的同理心", "抵制行為的對名人的傷害程度", "抵制行為的對自己的重要程度", "抵制成本", "抵制規模感知", "抵制的社會壓力"), 
+  備註 = c("1:是, 0:否", "1:是, 0:否", "1:是, 0:否", "(無效)1~5(有效)", "(沒同理)1~4(有同理)", "(不嚴重)1~5(嚴重)", "(不重要)1~5(重要)", "(非常少)1~5(非常多)", "(小)1~5(大)", "(小)1~4(大)") )
+
+table_data %>% 
+  kable(align = c("l","l","l"), format = "html") %>% 
+  kable_styling(font_size = 20, full_width = TRUE)
+```
 
 ## 反應變數{background-image=background.jpeg}
+```{r}
+#| echo: false
+table_datap3 <- data.frame(
+  變數名稱 = c("q28_YN", "q30", "q32", "q35"),
+  解釋 = c("是否採取過抵制行為", "抵制行為的有效程度", 
+           "抵制行為的對名人的傷害程度", "抵制規模感知"),
+  備註 = c("$H1$", "$H2$", "$H2$", "$H2$")
+)
 
-| 變數名稱 | 解釋                       | 備註 |
-|----------|----------------------------|------|
-| q28_YN   | 是否採取過抵制行為         | $H1$ |
-| q30      | 抵制行為的有效程度         | $H2$ |
-| q32      | 抵制行為的對名人的傷害程度 | $H2$ |
-| q35      | 抵制規模感知               | $H2$ |
+# 產生表格並設置對齊方式
+table_data %>%
+  kable(align = c("l", "l", "l"), format = "html") %>%
+  kable_styling(full_width = TRUE, font_size = 20)
+```
 
 
 ```{r}
+#| echo: false
 library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
