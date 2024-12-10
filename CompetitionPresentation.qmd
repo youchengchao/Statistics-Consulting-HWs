@@ -241,6 +241,7 @@ execute:
 
 ```{r}
 #| echo: false
+#install.package(kableExtra)如果有需要安裝的話
 library(knitr) 
 library(kableExtra)
 
