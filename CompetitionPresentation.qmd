@@ -702,12 +702,35 @@ my_scatter(DB.csv, x = 'q2rr', y = 'q39', group = 'q28_YN',
 ```
 
 ```{r}
-my_scatter(DB.csv, x = 'q2', y = 'q40', group = 'q28_YN',
+my_scatter(DB.csv, x = 'q2', y = 'q39', group = 'q28_YN',
            title = "不同年齡的生活滿意度", 
            xlab = "年齡", 
            ylab = "生活滿意度",
            legend.lab = "抵制者:1\n未抵制者:0")
 
+
+my_scatter(DB.csv, x = 'q2', y = 'q6', group = 'q28_YN',
+           title = "不同年齡的工作學習上網時間", 
+           xlab = "年齡", 
+           ylab = "工作學習上網時間",
+           legend.lab = "抵制者:1\n未抵制者:0")
+
+my_scatter(DB.csv, x = 'q2', y = 'q7', group = 'q28_YN',
+           title = "不同年齡的休閒娛樂上網時間", 
+           xlab = "年齡", 
+           ylab = "休閒娛樂上網時間",
+           legend.lab = "抵制者:1\n未抵制者:0")
+
+my_scatter(DB.csv, x = 'q2rr', y = 'q6', group = 'q28_YN',
+           title = "不同年齡的工作學習上網時間", 
+           xlab = "年齡分層", 
+           ylab = "工作學習上網時間",
+           legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q7', group = 'q28_YN',
+           title = "不同年齡的休閒娛樂上網時間", 
+           xlab = "年齡分層", 
+           ylab = "休閒娛樂上網時間",
+           legend.lab = "抵制者:1\n未抵制者:0")
 ```
 
 
