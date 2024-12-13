@@ -731,6 +731,27 @@ my_scatter(DB.csv, x = 'q2rr', y = 'q7', group = 'q28_YN',
            xlab = "年齡分層", 
            ylab = "休閒娛樂上網時間",
            legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q42', group = 'q28_YN',
+           title = "不同年齡的意識形態", 
+           xlab = "年齡", 
+           ylab = "意識形態",
+           legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q42', group = 'q28_YN',
+           title = "不同年齡的意識形態", 
+           xlab = "年齡分層", 
+           ylab = "意識形態",
+           legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
+           title = "不同年齡的抵制意圖", 
+           xlab = "年齡", 
+           ylab = "抵制意圖",
+           legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q27', group = 'q28_YN',
+           title = "不同年齡的抵制意圖", 
+           xlab = "年齡", 
+           ylab = "抵制意圖",
+           legend.lab = "抵制者:1\n未抵制者:0")
+
 ```
 
 
