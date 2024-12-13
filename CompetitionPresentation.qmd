@@ -642,7 +642,8 @@ ggplot(data = tempDF, aes(y=q22_mean,x=q2rr, group=factor(q28_YN)))+
 # 連續型年齡
 tempDF <- DB.csv %>%
   group_by(q2,q28_YN) %>% 
-  summarise(q23_mean = mean(q23), q23_sd = sd(q23))
+  summarise(q23_mean = mean(q23),
+            q23_sd = sd(q23), .groups = "drop")
 
 ggplot(data = tempDF)+
   geom_line(aes(y=q23_mean,
@@ -662,7 +663,8 @@ ggplot(data = tempDF)+
 # 年齡分層
 tempDF <- DB.csv %>%
   group_by(q2rr,q28_YN) %>% 
-  summarise(q23_mean = mean(q23), q23_sd = sd(q23))
+  summarise(q23_mean = mean(q23),
+            q23_sd = sd(q23), .groups = "drop")
 
 ggplot(data = tempDF, aes(y=q23_mean,x=q2rr,group=factor(q28_YN)))+
   geom_point(show.legend = FALSE) +
@@ -685,7 +687,8 @@ ggplot(data = tempDF, aes(y=q23_mean,x=q2rr,group=factor(q28_YN)))+
 # 連續型年齡
 tempDF <- DB.csv %>%
   group_by(q2,q28_YN) %>% 
-  summarise(q38_mean = mean(q38), q38_sd = sd(q38))
+  summarise(q38_mean = mean(q38),
+            q38_sd = sd(q38), .groups = "drop")
 
 ggplot(data = tempDF)+
   geom_line(aes(y=q38_mean,
@@ -705,7 +708,8 @@ ggplot(data = tempDF)+
 # 年齡分層
 tempDF <- DB.csv %>%
   group_by(q2rr,q28_YN) %>% 
-  summarise(q38_mean = mean(q38), q38_sd = sd(q38))
+  summarise(q38_mean = mean(q38),
+            q38_sd = sd(q38), .groups = "drop")
 
 ggplot(data = tempDF, aes(y=q38_mean,x=q2rr,group=factor(q28_YN)))+
   geom_point(show.legend = FALSE) +
@@ -720,6 +724,10 @@ ggplot(data = tempDF, aes(y=q38_mean,x=q2rr,group=factor(q28_YN)))+
        y = "心理幸福感",
        group = "抵制者:1\n未抵制者:0")
 ```
+
+
+
+
 
 
 ## {background-image=background.jpeg}
