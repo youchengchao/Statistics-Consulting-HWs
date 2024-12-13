@@ -599,7 +599,8 @@ DB.csv$q2rr <- factor(DB.csv$q2rr,
 # 連續型年齡
 tempDF <- DB.csv %>%
   group_by(q2,q28_YN) %>% 
-  summarise(q22_mean = mean(q22), q22_sd = sd(q22))
+  summarise(q22_mean = mean(q22), q22_sd = sd(q22),
+            .groups = "drop")
 
 ggplot(data = tempDF)+
   geom_line(aes(y=q22_mean,
@@ -619,7 +620,8 @@ ggplot(data = tempDF)+
 # 年齡分層
 tempDF <- DB.csv %>%
   group_by(q2rr,q28_YN) %>% 
-  summarise(q22_mean = mean(q22), q22_sd = sd(q22))
+  summarise(q22_mean = mean(q22), q22_sd = sd(q22),
+            .groups = "drop")
 
 ggplot(data = tempDF, aes(y=q22_mean,x=q2rr, group=factor(q28_YN)))+
   geom_point()+
