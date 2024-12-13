@@ -580,6 +580,7 @@ Barplot.p <- function(din){
 }
 ```
 
+
 ```{r}
 var.label <- c("q1","q2rr","q4","q11","q1719", "q38","q39","q40","q41")
 showtext_auto()
@@ -592,49 +593,59 @@ DB.csv$q2rr <- factor(DB.csv$q2rr,
                       ordered = TRUE)
 ```
 
+
+```{r}
+# 折線圖繪圖工具
+my_scatter <- function(data, x, y, group,
+                       title="",
+                       xlab=x,ylab=y,legend.lab="") {
+  # 確認所需欄位是否存在
+  required_cols <- c(x, y, group)
+  if (!all(required_cols %in% names(data))) {
+    stop("Some specified columns are not in the data.")
+  }
+
+  # 計算平均值與標準差
+  tempDF <- data %>%
+    group_by(across(all_of(c(x, group)))) %>%
+    summarise(mean_y = mean(.data[[y]], na.rm = TRUE),
+              sd_y = sd(.data[[y]], na.rm = TRUE),
+              .groups = "drop")
+  # 繪製圖形
+  p <- ggplot(data = tempDF,
+              aes(y = mean_y,
+                  x = .data[[x]],
+                  group = .data[[group]])) +
+    geom_point()+
+    geom_line(aes(color = factor(.data[[group]])),
+                show.legend = FALSE) +
+    geom_ribbon(aes(x = .data[[x]],
+                      ymin = mean_y - sd_y,
+                      ymax = mean_y + sd_y,
+                      fill = factor(.data[[group]])), 
+                  alpha = 0.2) +
+    labs(title = title, x = xlab, y = ylab, fill = legend.lab)
+  return(p)
+}
+```
+
 ## {background-image=background.jpeg}
 ### 觀察不同年齡下，抵制者與不抵制者的平均看見網路攻擊頻率
 
 ```{r}
 # 連續型年齡
-tempDF <- DB.csv %>%
-  group_by(q2,q28_YN) %>% 
-  summarise(q22_mean = mean(q22), q22_sd = sd(q22),
-            .groups = "drop")
-
-ggplot(data = tempDF)+
-  geom_line(aes(y=q22_mean,
-                x=q2, 
-                color=factor(q28_YN)),
-            show.legend = FALSE) +
-  geom_ribbon(aes(x = q2,
-                  ymin = q22_mean - q22_sd,
-                  ymax = q22_mean + q22_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的網路環境好壞",
-       x = "年齡",
-       y = "平均看見網路攻擊頻繁程度",
-       fill = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
+           title = "不同年齡的網路環境好壞", 
+           xlab = "年齡", 
+           ylab = "平均看見網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
 
 # 年齡分層
-tempDF <- DB.csv %>%
-  group_by(q2rr,q28_YN) %>% 
-  summarise(q22_mean = mean(q22), q22_sd = sd(q22),
-            .groups = "drop")
-
-ggplot(data = tempDF, aes(y=q22_mean,x=q2rr, group=factor(q28_YN)))+
-  geom_point()+
-  geom_line(aes(color=factor(q28_YN)),show.legend = FALSE) +
-  geom_ribbon(aes(x = q2rr,
-                  ymin = q22_mean - q22_sd,
-                  ymax = q22_mean + q22_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的網路環境好壞",
-       x = "年齡",
-       y = "平均看見網路攻擊頻繁程度",
-       fill = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q22', group = 'q28_YN',
+           title = "不同年齡的網路環境好壞", 
+           xlab = "年齡", 
+           ylab = "平均看見網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
 ```
 
 ## {background-image=background.jpeg}
@@ -642,44 +653,18 @@ ggplot(data = tempDF, aes(y=q22_mean,x=q2rr, group=factor(q28_YN)))+
 
 ```{r}
 # 連續型年齡
-tempDF <- DB.csv %>%
-  group_by(q2,q28_YN) %>% 
-  summarise(q23_mean = mean(q23),
-            q23_sd = sd(q23), .groups = "drop")
-
-ggplot(data = tempDF)+
-  geom_line(aes(y=q23_mean,
-                x=q2, 
-                color=factor(q28_YN)),
-            show.legend = FALSE) +
-  geom_ribbon(aes(x = q2,
-                  ymin = q23_mean - q23_sd,
-                  ymax = q23_mean + q23_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的自己網路攻擊頻率",
-       x = "年齡",
-       y = "自己的網路攻擊頻繁程度",
-       fill = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
+           title = "不同年齡的自己網路攻擊頻率", 
+           xlab = "年齡", 
+           ylab = "自己的網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
 
 # 年齡分層
-tempDF <- DB.csv %>%
-  group_by(q2rr,q28_YN) %>% 
-  summarise(q23_mean = mean(q23),
-            q23_sd = sd(q23), .groups = "drop")
-
-ggplot(data = tempDF, aes(y=q23_mean,x=q2rr,group=factor(q28_YN)))+
-  geom_point(show.legend = FALSE) +
-  geom_line(aes(color=factor(q28_YN)))+
-  geom_ribbon(aes(x = q2rr,
-                  ymin = q23_mean - q23_sd,
-                  ymax = q23_mean + q23_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的自己網路攻擊頻率",
-       x = "年齡",
-       y = "自己的網路攻擊頻繁程度",
-       group = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q23', group = 'q28_YN',
+           title = "不同年齡的自己網路攻擊頻率", 
+           xlab = "年齡", 
+           ylab = "自己的網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
 ```
 
 ## {background-image=background.jpeg}
@@ -687,47 +672,43 @@ ggplot(data = tempDF, aes(y=q23_mean,x=q2rr,group=factor(q28_YN)))+
 
 ```{r}
 # 連續型年齡
-tempDF <- DB.csv %>%
-  group_by(q2,q28_YN) %>% 
-  summarise(q38_mean = mean(q38),
-            q38_sd = sd(q38), .groups = "drop")
-
-ggplot(data = tempDF)+
-  geom_line(aes(y=q38_mean,
-                x=q2, 
-                color=factor(q28_YN)),
-            show.legend = FALSE) +
-  geom_ribbon(aes(x = q2,
-                  ymin = q38_mean - q38_sd,
-                  ymax = q38_mean + q38_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的心理幸福感",
-       x = "年齡",
-       y = "心理幸福感",
-       fill = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q38', group = 'q28_YN',
+           title = "不同年齡的心理幸福感", 
+           xlab = "年齡", 
+           ylab = "心理幸福感",
+           legend.lab = "抵制者:1\n未抵制者:0")
 
 # 年齡分層
-tempDF <- DB.csv %>%
-  group_by(q2rr,q28_YN) %>% 
-  summarise(q38_mean = mean(q38),
-            q38_sd = sd(q38), .groups = "drop")
-
-ggplot(data = tempDF, aes(y=q38_mean,x=q2rr,group=factor(q28_YN)))+
-  geom_point(show.legend = FALSE) +
-  geom_line(aes(color=factor(q28_YN)))+
-  geom_ribbon(aes(x = q2rr,
-                  ymin = q38_mean - q38_sd,
-                  ymax = q38_mean + q38_sd,
-                  fill = factor(q28_YN)),
-              alpha = 0.2) + 
-  labs(title = "不同年齡的心理幸福感",
-       x = "年齡",
-       y = "心理幸福感",
-       group = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2', y = 'q38', group = 'q28_YN',
+           title = "不同年齡的心理幸福感", 
+           xlab = "年齡", 
+           ylab = "心理幸福感",
+           legend.lab = "抵制者:1\n未抵制者:0")
 ```
 
+```{r}
+my_scatter(DB.csv, x = 'q2', y = 'q39', group = 'q28_YN',
+           title = "不同年齡的生活滿意度", 
+           xlab = "年齡", 
+           ylab = "生活滿意度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+my_scatter(DB.csv, x = 'q2rr', y = 'q39', group = 'q28_YN',
+           title = "不同年齡的生活滿意度", 
+           xlab = "年齡", 
+           ylab = "生活滿意度",
+           legend.lab = "抵制者:1\n未抵制者:0")
 
+
+```
+
+```{r}
+my_scatter(DB.csv, x = 'q2', y = 'q40', group = 'q28_YN',
+           title = "不同年齡的生活滿意度", 
+           xlab = "年齡", 
+           ylab = "生活滿意度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+
+```
 
 
 
