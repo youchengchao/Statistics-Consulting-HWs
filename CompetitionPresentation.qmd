@@ -123,7 +123,7 @@ execute:
 ##  {background-image="background.jpeg"}
 ### 資料前處理2
 
-![](q2829.png)
+![](q2829.jpg)
 
 ## {background-image=background.jpeg}
 ### 假說1使用之解釋變數
