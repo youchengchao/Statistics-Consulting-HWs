@@ -17,12 +17,13 @@ execute:
   warning: false
 ---
 
-## 大綱{background-image=background.jpeg}
+## {background-image=background.jpeg}
+### 大綱
 ::: incremental
 <div style="font-size:40px">
-1.  **目的與動機**
+1.  目的與動機
 
-2.  **資料簡介**
+2.  資料簡介
 
 3.  資料前處理與視覺化
 
@@ -30,21 +31,20 @@ execute:
 </div>
 :::
 
-## 目的與動機{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 目的與動機
 ::: {style="position: absolute; top: 40%; left: 55%;width :120%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
 抵制行為已成為民眾表達不滿的重要手段。<br>\
 以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。<br>\
 為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，描繪抵制者輪廓，並分析其影響。
 :::
 
-## 研究架構圖{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 研究架構圖
 ![](structureimg.png)
 
-
-## 研究假設{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 研究假設
 ::: incremental
 ::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
 -   H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。
@@ -53,8 +53,8 @@ execute:
 
 :::
 :::
-## 資料來源{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### 資料來源
 ::: incremental
 ::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
 台灣傳播調查資料庫第二期第五次問卷（2021年）
@@ -121,7 +121,6 @@ execute:
 </table>
 
 ##  {background-image="background.jpeg"}
-
 ### 資料前處理2
 
 ![](q2829.png)
@@ -491,7 +490,8 @@ for(i in c(1:3,5:35)){
 colnames(DB.csv) <- c('q1','q2','q4','q5','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
 ```
 
-## H1之資料分析{background-image=background.jpeg}
+## {background-image=background.jpeg}
+### H1之資料分析
 
 ```{r}
 #針對q28_YN二元變數對其他類別變數畫圖
@@ -702,9 +702,9 @@ split.fun <- function(x, labs, digits, varlen, faclen)
 {
     # replace variable names in the labels
     labs   <- sub("q27",   "抵制意圖", labs)
-    labs <- sub("q22", "花萼寬度", labs)
+    labs <- sub("q22", "他人攻擊行為的頻率", labs)
     labs <- sub("q2",      "年齡", labs)
-    labs   <- sub("q40",      "花瓣寬度", labs)
+    labs   <- sub("q40",    "國民黨喜好程度", labs)
     labs   <- sub("q7",    "娛樂上網分鐘", labs)
     labs   <- sub("q26",    "不文明留言影響力", labs)
     labs   <- sub("q10",    "使用可討論名人之\n社群媒體數量", labs)
@@ -728,10 +728,11 @@ rpart.plot(tree_model,
            split.fun = split.fun)
 ```
 
-## H1之資料分析 - XGBoost{background-image=background.jpeg}
-
+## {background-image=background.jpeg}
+### H1之資料分析 - XGBoost
+::: {style="position: absolute; top: 40%; left: 55%;width :120%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
 此外希望透過XGBoost模型的結果結合SHAP值，更精準地觀察變數的重要性。
-
+:::
 
 ```{r}
 library(xgboost)
