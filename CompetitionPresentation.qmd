@@ -490,9 +490,6 @@ for(i in c(1:3,5:35)){
 colnames(DB.csv) <- c('q1','q2','q4','q5','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
 ```
 
-## {background-image=background.jpeg}
-### H1之資料分析
-
 ```{r}
 #針對q28_YN二元變數對其他類別變數畫圖
 myCount_q28 <- function(din, target_label){
@@ -552,11 +549,11 @@ Barplot.p <- function(din){
 
 
 ```{r}
+#| output: false
 var.label <- c("q1","q4","q11","q1719", "q38","q39","q40","q41")
 showtext_auto()
 Barplot.p(din = myCount_q28(DB.csv, var.label))
 ```
-
 
 ```{r}
 # 折線圖繪圖工具
@@ -594,40 +591,59 @@ my_scatter <- function(data, x, y, group,
 ```
 
 ## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的平均看見網路攻擊頻率
+### 觀察不同年齡下，抵制者與不抵制者的平均看見他人網路攻擊頻繁程度
 
 ```{r}
-my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
-           title = "不同年齡的網路環境好壞", 
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
+           title = "", 
            xlab = "年齡", 
-           ylab = "平均看見網路攻擊頻繁程度",
+           ylab = "平均看見他人網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q22', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均看見他人網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
 ## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻率
+### 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
 
 ```{r}
-# 連續型年齡
-my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
-           title = "不同年齡的自己網路攻擊頻率", 
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
+           title = "", 
            xlab = "年齡", 
-           ylab = "自己的網路攻擊頻繁程度",
+           ylab = "平均自己網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q23', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均自己網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
 ## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的心理幸福感
+### 觀察不同年齡下，抵制者與不抵制者的抵制意圖
 
 ```{r}
 # 連續型年齡
-my_scatter(DB.csv, x = 'q2', y = 'q38', group = 'q28_YN',
-           title = "不同年齡的心理幸福感", 
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
+           title = "", 
            xlab = "年齡", 
-           ylab = "心理幸福感",
+           ylab = "平均抵制意圖",
            legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q27', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均抵制意圖",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
-
 
 ## {background-image=background.jpeg}
 ### H1之資料分析 - 加權邏輯式迴歸
@@ -730,8 +746,8 @@ rpart.plot(tree_model,
 
 ## {background-image=background.jpeg}
 ### H1之資料分析 - XGBoost
-::: {style="position: absolute; top: 40%; left: 55%;width :120%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
-此外希望透過XGBoost模型的結果結合SHAP值，更精準地觀察變數的重要性。
+:::{.content-visible style="font-size: 25px;"}
+透過XGBoost模型的結果結合SHAP值觀察變數的重要性。
 :::
 
 ```{r}
