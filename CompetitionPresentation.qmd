@@ -1,6 +1,6 @@
 ---
 title: "抵制文化之現象分析"
-author: '第四組'
+author: '第二組'
 format: 
   revealjs:
     footer: '抵制文化之現象分析'
@@ -33,7 +33,7 @@ execute:
 
 ## {background-image=background.jpeg}
 ### 目的與動機
-::: {style="position: absolute; top: 40%; left: 55%;width :120%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
+::: {style="position: absolute; top: 40%; left: 50%;width :100%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
 抵制行為已成為民眾表達不滿的重要手段。<br>\
 以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。<br>\
 為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，描繪抵制者輪廓，並分析其影響。
@@ -717,15 +717,15 @@ custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
     # replace variable names in the labels
-    labs   <- sub("q27",   "抵制意圖", labs)
+    labs <- sub("q27",   "抵制意圖", labs)
     labs <- sub("q22", "他人攻擊行為的頻率", labs)
-    labs <- sub("q2",      "年齡", labs)
+    labs <- sub("q26",    "不文明留言影響力", labs)
+    labs <- sub("q25",    "網路論戰接受度", labs)
+    labs <- sub("q24",    "媒體識讀素養", labs)
+    labs <- sub("q2", "年齡", labs)
     labs   <- sub("q40",    "國民黨喜好程度", labs)
     labs   <- sub("q7",    "娛樂上網分鐘", labs)
-    labs   <- sub("q26",    "不文明留言影響力", labs)
     labs   <- sub("q10",    "使用可討論名人之\n社群媒體數量", labs)
-    labs   <- sub("q25",    "網路論戰接受度", labs)
-    labs   <- sub("q24",    "媒體識讀素養", labs)
     labs   <- sub("q41",    "民進黨好感度", labs)
     labs   <- sub("q38",    "心理幸福感", labs)
     labs # return the modified labels
