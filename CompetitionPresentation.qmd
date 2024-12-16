@@ -18,221 +18,6 @@ execute:
   warning: false
 ---
 
-## {background-image=background.jpg}
-### 大綱
-::: incremental
-<div style="font-size:40px">
-1.  目的與動機
-
-2.  資料簡介
-
-3.  資料前處理與視覺化
-
-4.  分析方法
-</div>
-:::
-
-## {background-image=background.jpg}
-### 目的與動機
-
-:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
-抵制行為已成為民眾表達不滿的重要手段。
-
-以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。
-
-為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，描繪抵制者輪廓，並分析其影響。
-:::
-
-## {background-image=background.jpg}
-### 研究架構圖
-![](structureimg.png)
-
-## {background-image=background.jpg}
-### 研究假設
-::: incremental
-::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
--   H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。
-
--   H2：針對曾參與抵制行為的人，網路使用行為、回聲室效應、網路貶抑發言、政治立場與生活感受和抵制相關調查都會影響抵制程度。
-:::
-:::
-## {background-image=background.jpg}
-### 資料來源
-
-:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
-台灣傳播調查資料庫第二期第五次問卷（2021年）
-
-前處理後
-
--   1004個有效樣本
-
--   27個解釋變數，其中22個變數用於對H1的分析、H2另加入5個變數。
-:::
-
-## {background-image=background.jpg}
-### 資料前處理1
-<table style="width: 100%; font-size: 22px; margin: 0 auto;">
-  <tr>
-    <th>變數</th>
-    <th>處理</th>
-  </tr>
-  <tr>
-    <td>q2</td>
-    <td>出生年改成年齡</td>
-  </tr>
-  <tr>
-    <td>q3</td>
-    <td>移除。不關心地區造成的差異</td>
-  </tr>
-  <tr>
-    <td>q4</td>
-    <td>重新劃分為四個等級，劃分參考人口結構表格的分類方式</td>
-  </tr>
-  <tr>
-    <td>q6, q7</td>
-    <td>時間統一單位 (分)</td>
-  </tr>
-  <tr>
-    <td>q8</td>
-    <td>移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。</td>
-  </tr>
-  <tr>
-    <td>q9</td>
-    <td>移除。無法界定是工作性質或娛樂性質</td>
-  </tr>
-  <tr>
-    <td>q10</td>
-    <td>改成"使用幾個與 YouTube 名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。</td>
-  </tr>
-  <tr>
-    <td>q11</td>
-    <td>改成"有無使用 YouTube 或 Twitch"，原因與第十題類似。</td>
-  </tr>
-  <tr>
-    <td>q12~q15</td>
-    <td>移除。q28, q29 關心的時間範圍較廣並不只局限於疫情期間。</td>
-  </tr>
-  <tr>
-    <td>q16~q19</td>
-    <td>將四個網路惡搞行為有無的 1,0 變數整合成至少有一項網路惡搞行為的 1,0 變數 1719</td>
-  </tr>
-  <tr>
-    <td>q20~q26</td>
-    <td>參考 ref[1] 之做法，將相同主題的 ordinal 主觀評分加總作為該主題程度的分數。</td>
-  </tr>
-</table>
-
-##  {background-image="background.jpg"}
-### 資料前處理2
-
-![](q2829.jpg)
-
-## {background-image=background.jpg}
-### 假說1使用之解釋變數
-::::{.columns}
-
-:::{.column width="50%"}
-```{r}
-library(knitr) 
-library(kableExtra)
-table1_data <- data.frame(
-  變數 = c("q1", "q2", "q4", "q5", "q6", "q7", "q10", "q11", "q1719","q20"),
-  解釋 = c(
-    "是否為女性", 
-    "年齡", 
-    "教育程度", 
-    "週均上網天數", 
-    "日均正事上網分鐘", 
-    "日均娛樂上網分鐘", 
-    "使用可討論名人之社群媒體數量", 
-    "是否使用可討論名人之影音平台", 
-    "是否至少有參與過一種網路惡搞",
-    "主動激化(引戰)行為接受度"
-  ),
-  備註 = c(
-    "0:男性, 1:女性", 
-    "連續型數值變數", 
-    "1:高中及以下  2:專科  3:大學  4:研究所", 
-    "", "", "", "", 
-    "1:是, 0:否", 
-    "1:是, 0:否",
-    "(不接受)2~10(接受)"
-  )
-)
-table1_data %>%
-  kable(align = c("l", "l", "l"), format = "html", escape = FALSE) %>%
-  kable_styling(font_size = 18, full_width = TRUE)
-```
-:::
-:::{.column width="49%"}
-```{r}
-table2_data <- data.frame(
-  變數 = c("q22", "q23", "q24", "q25", "q26", "q27", "q38", "q39", "q40", "q41", "q42"),
-  解釋 = c(
-    "他人攻擊行為的頻率", 
-    "自己攻擊行為的頻率", 
-    "媒體識讀素養", 
-    "網路論戰接受度", 
-    "不文明留言的影響力", 
-    "抵制意圖", 
-    "心理幸福感", 
-    "生活品質", 
-    "國民黨喜好程度", 
-    "民進黨喜好程度", 
-    "意識形態"
-  ),
-  備註 = c(
-    "(從來沒有)5~20(經常)", 
-    "(從來沒有)5~20(經常)", 
-    "(低)5~20(高)", 
-    "(低)4~20(高)", 
-    "(低)3~12(高)", 
-    "(弱)1~5(強)",
-    "(不滿意)2~10(滿意)",
-    "(不快樂)1~5(快樂)", 
-    "(不喜歡)0~5(喜歡)", 
-    "(不喜歡)0~5(喜歡)", 
-    "(台獨)0~10, (統一)"
-  )
-)
-table2_data %>%
-  kable(align = c("l", "l", "l"), format = "html") %>%
-  kable_styling(font_size = 18, full_width = TRUE)
-```
-:::
-::::
-
-## {background-image=background.jpg}
-### 假說2另加入之解釋變數
-```{r}
-table_data <- data.frame( 
-  變數名稱 = c("q29_1", "q29_2", "q29_3", "q31", "q33", "q34", "q36"), 
-  解釋 = c("歧視特定國家、種族或性別", "有不同的政治意識型態或價值觀", "做出不道德、不正當或不合法行為", "抵制前的同理心", "抵制行為的對自己的重要程度", "抵制成本", "抵制的社會壓力"), 
-  備註=c("1:是, 0:否","1:是, 0:否","1:是,0:否", "(沒同理)1~4(有同理)",
-        "(不重要)1~5(重要)", "(非常少)1~5(非常多)", "(小)1~4(大)") )
-
-table_data %>% 
-  kable(align = c("l","l","l"), format = "html") %>% 
-  kable_styling(font_size = 22, full_width = TRUE)
-```
-
-### 反應變數
-
-```{r}
-table_datap3 <- data.frame(
-  變數名稱 = c("q28_YN", "q30", "q32", "q35"),
-  解釋 = c("是否採取過抵制行為", "抵制行為的有效程度", 
-           "抵制行為的對名人的傷害程度", "抵制規模感知"),
-  假說 = c("H1","H2", "H2", "H2"),
-  備註 = c("1:是,0:否","(無效)1~5(有效)"," (不嚴重)1~5(嚴重)","(小)1~5(大)")
-)
-
-# 產生表格並設置對齊方式
-table_datap3 %>%
-  kable(align = c("l", "l", "l"), format = "html") %>%
-  kable_styling(full_width = TRUE, font_size = 22)
-```
-
 ```{r}
 library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
@@ -571,6 +356,221 @@ my_scatter <- function(data, x, y, group,
     labs(title = title, x = xlab, y = ylab, fill = legend.lab)
   return(p)
 }
+```
+
+## {background-image=background.jpg}
+### 大綱
+::: incremental
+<div style="font-size:40px">
+1.  目的與動機
+
+2.  資料簡介
+
+3.  資料前處理與視覺化
+
+4.  分析方法
+</div>
+:::
+
+## {background-image=background.jpg}
+### 目的與動機
+
+:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+抵制行為已成為民眾表達不滿的重要手段。
+
+以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。
+
+為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，描繪抵制者輪廓，並分析其影響。
+:::
+
+## {background-image=background.jpg}
+### 研究架構圖
+![](structureimg.png)
+
+## {background-image=background.jpg}
+### 研究假設
+::: incremental
+::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+-   H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。
+
+-   H2：針對曾參與抵制行為的人，網路使用行為、回聲室效應、網路貶抑發言、政治立場與生活感受和抵制相關調查都會影響抵制程度。
+:::
+:::
+## {background-image=background.jpg}
+### 資料來源
+
+:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+台灣傳播調查資料庫第二期第五次問卷（2021年）
+
+前處理後
+
+-   1004個有效樣本
+
+-   27個解釋變數，其中22個變數用於對H1的分析、H2另加入5個變數。
+:::
+
+## {background-image=background.jpg}
+### 資料前處理1
+<table style="width: 100%; font-size: 22px; margin: 0 auto;">
+  <tr>
+    <th>變數</th>
+    <th>處理</th>
+  </tr>
+  <tr>
+    <td>q2</td>
+    <td>出生年改成年齡</td>
+  </tr>
+  <tr>
+    <td>q3</td>
+    <td>移除。不關心地區造成的差異</td>
+  </tr>
+  <tr>
+    <td>q4</td>
+    <td>重新劃分為四個等級，劃分參考人口結構表格的分類方式</td>
+  </tr>
+  <tr>
+    <td>q6, q7</td>
+    <td>時間統一單位 (分)</td>
+  </tr>
+  <tr>
+    <td>q8</td>
+    <td>移除。大部分的人都有透過網路接觸名人的資訊或討論 (只有四個人沒有)。</td>
+  </tr>
+  <tr>
+    <td>q9</td>
+    <td>移除。無法界定是工作性質或娛樂性質</td>
+  </tr>
+  <tr>
+    <td>q10</td>
+    <td>改成"使用幾個與 YouTube 名人討論相關的社群媒體"，因為有些社群媒體不會造成抵制名人行為。</td>
+  </tr>
+  <tr>
+    <td>q11</td>
+    <td>改成"有無使用 YouTube 或 Twitch"，原因與第十題類似。</td>
+  </tr>
+  <tr>
+    <td>q12~q15</td>
+    <td>移除。q28, q29 關心的時間範圍較廣並不只局限於疫情期間。</td>
+  </tr>
+  <tr>
+    <td>q16~q19</td>
+    <td>將四個網路惡搞行為有無的 1,0 變數整合成至少有一項網路惡搞行為的 1,0 變數 1719</td>
+  </tr>
+  <tr>
+    <td>q20~q26</td>
+    <td>參考 ref[1] 之做法，將相同主題的 ordinal 主觀評分加總作為該主題程度的分數。</td>
+  </tr>
+</table>
+
+##  {background-image="background.jpg"}
+### 資料前處理2
+
+![](q2829.jpg)
+
+## {background-image=background.jpg}
+### 假說1使用之解釋變數
+::::{.columns}
+
+:::{.column width="50%"}
+```{r}
+library(knitr) 
+library(kableExtra)
+table1_data <- data.frame(
+  變數 = c("q1", "q2", "q4", "q5", "q6", "q7", "q10", "q11", "q1719","q20"),
+  解釋 = c(
+    "是否為女性", 
+    "年齡", 
+    "教育程度", 
+    "週均上網天數", 
+    "日均正事上網分鐘", 
+    "日均娛樂上網分鐘", 
+    "使用可討論名人之社群媒體數量", 
+    "是否使用可討論名人之影音平台", 
+    "是否至少有參與過一種網路惡搞",
+    "主動激化(引戰)行為接受度"
+  ),
+  備註 = c(
+    "0:男性, 1:女性", 
+    "連續型數值變數", 
+    "1:高中及以下  2:專科  3:大學  4:研究所", 
+    "", "", "", "", 
+    "1:是, 0:否", 
+    "1:是, 0:否",
+    "(不接受)2~10(接受)"
+  )
+)
+table1_data %>%
+  kable(align = c("l", "l", "l"), format = "html", escape = FALSE) %>%
+  kable_styling(font_size = 18, full_width = TRUE)
+```
+:::
+:::{.column width="49%"}
+```{r}
+table2_data <- data.frame(
+  變數 = c("q22", "q23", "q24", "q25", "q26", "q27", "q38", "q39", "q40", "q41", "q42"),
+  解釋 = c(
+    "他人攻擊行為的頻率", 
+    "自己攻擊行為的頻率", 
+    "媒體識讀素養", 
+    "網路論戰接受度", 
+    "不文明留言的影響力", 
+    "抵制意圖", 
+    "心理幸福感", 
+    "生活品質", 
+    "國民黨喜好程度", 
+    "民進黨喜好程度", 
+    "意識形態"
+  ),
+  備註 = c(
+    "(從來沒有)5~20(經常)", 
+    "(從來沒有)5~20(經常)", 
+    "(低)5~20(高)", 
+    "(低)4~20(高)", 
+    "(低)3~12(高)", 
+    "(弱)1~5(強)",
+    "(不滿意)2~10(滿意)",
+    "(不快樂)1~5(快樂)", 
+    "(不喜歡)0~5(喜歡)", 
+    "(不喜歡)0~5(喜歡)", 
+    "(台獨)0~10, (統一)"
+  )
+)
+table2_data %>%
+  kable(align = c("l", "l", "l"), format = "html") %>%
+  kable_styling(font_size = 18, full_width = TRUE)
+```
+:::
+::::
+
+## {background-image=background.jpg}
+### 假說2另加入之解釋變數
+```{r}
+table_data <- data.frame( 
+  變數名稱 = c("q29_1", "q29_2", "q29_3", "q31", "q33", "q34", "q36"), 
+  解釋 = c("歧視特定國家、種族或性別", "有不同的政治意識型態或價值觀", "做出不道德、不正當或不合法行為", "抵制前的同理心", "抵制行為的對自己的重要程度", "抵制成本", "抵制的社會壓力"), 
+  備註=c("1:是, 0:否","1:是, 0:否","1:是,0:否", "(沒同理)1~4(有同理)",
+        "(不重要)1~5(重要)", "(非常少)1~5(非常多)", "(小)1~4(大)") )
+
+table_data %>% 
+  kable(align = c("l","l","l"), format = "html") %>% 
+  kable_styling(font_size = 22, full_width = TRUE)
+```
+
+### 反應變數
+
+```{r}
+table_datap3 <- data.frame(
+  變數名稱 = c("q28_YN", "q30", "q32", "q35"),
+  解釋 = c("是否採取過抵制行為", "抵制行為的有效程度", 
+           "抵制行為的對名人的傷害程度", "抵制規模感知"),
+  假說 = c("H1","H2", "H2", "H2"),
+  備註 = c("1:是,0:否","(無效)1~5(有效)"," (不嚴重)1~5(嚴重)","(小)1~5(大)")
+)
+
+# 產生表格並設置對齊方式
+table_datap3 %>%
+  kable(align = c("l", "l", "l"), format = "html") %>%
+  kable_styling(full_width = TRUE, font_size = 22)
 ```
 
 ## {background-image=background.jpg}
@@ -930,7 +930,6 @@ p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.f
         axis.title.y = element_text(size = 15),
         legend.position = "none" )
 showtext_auto()
-# 顯示繪圖
 gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ```
 

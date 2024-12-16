@@ -30,7 +30,7 @@ report的重要頁碼: 52-網路癮誘與脫序行為之子題說明, 92-資料�
 
 在現今社會中，頻繁出現的抵制行為已成為民眾表達對名人不滿的一種手段。台灣民眾對名人的抵制中，引起軒然大波的莫過於劉芒事件。2023年8月劉芒因工作態度不佳遭工作人員爆料，事後她火速道歉希望平息眾怒，卻也因「人設翻車」YouTube訂閱人數下降約11%，影片倒讚率高達90%。因此，無論是對抵制發起者，或是對尋求因應策略的名人而言，抵制行為是一個必須正視的管理問題。我們希望建構民眾抵制行為指標和描繪抵制者輪廓並分析抵制效果，以此來讓名人了解抵制行為背後的原因，並且去預防和應對抵制風波。 我們根據以上目的畫出研究架構圖(圖1)並提出以下假設，H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。H2：針對有做出抵制行為的人，網路使用行為、回聲室效應、網路貶抑發言、政治立場與生活感受和抵制相關調查都會影響抵制程度高低。
 
-![架構圖](images/Picture1.png)
+![架構圖](structureimg.png)
 
 # 科學方法與工具使用
 
@@ -117,8 +117,10 @@ library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
 library(showtext)      #show zw-tw in ggplot2
-library(dplyr);library(ggplot2);library(MASS);
+library(dplyr);library(ggplot2);library(MASS)
+library(tibble); library(tidyselect)
 #library(ggrepel)
+library(cowplot)
 library(caret)
 library(rlang)         #for building function
 #DB.sav <-read_sav("DisruptiveBehavior.sav")
@@ -141,10 +143,12 @@ DB.csv[,match("q12_1", colnames(DB.csv)):match("q15_03_1", colnames(DB.csv))] <-
 ```
 
 ```{r}
+# 性別1,2改成0,1
+DB.csv$q1 <- ifelse(DB.csv$q1==1,0,1)
+
 #第二題(出生年)改成年齡的區段
-DB.csv$q2 <- NULL
+DB.csv$q2 <- DB.csv$qrq2
 DB.csv$qrq2 <- NULL
-DB.csv$q2_rr <- DB.csv$rrq2
 DB.csv$rrq2 <- NULL
 #把第三題(出生地)的其他類別歸為一類
 DB.csv$q3_other <- NULL
@@ -205,6 +209,11 @@ DB.csv$q1719 <- apply(
     return(paste0(row,collapse = ""))
   })
 DB.csv$q1719 <- ifelse(DB.csv$q1719=="0000", 0, 1)
+DB.csv$q17_01 <- NULL
+DB.csv$q17_02 <- NULL
+DB.csv$q19_01 <- NULL
+DB.csv$q19_02 <- NULL
+
 #20~26
 DB.csv$q20 <- rowSums(DB.csv[,c('q20_01_1','q20_02_1')])
 DB.csv$q22 <- rowSums(DB.csv[,c("q22_01_1", "q22_02_1", "q22_03_1", "q22_04_1", "q22_05_1")])
@@ -354,13 +363,58 @@ DB.csv$q28_YN[!(DB.csv$q28_1 | DB.csv$q28_2 | DB.csv$q28_3)] <- 0
 
 #重新調整欄位index
 #colnames(DB.csv)
-DB.csv <- DB.csv[,c('q1','q2_rr','q4','q5_1','q6','q7','q10','q11','q17_01','q17_02','q19_01','q19_02','q1719','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
+DB.csv <- DB.csv[,c('q1','q2','q4','q5_1','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27_1','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30_1','q31_1','q32_1','q33_1','q34_1','q35_1','q36_1','q38','q39_1','q40','q41','q42_1','weight')]
 
-for(i in c(1:3,5:39)){
+for(i in c(1:3,5:35)){
   DB.csv[,i] <- as.integer(DB.csv[,i])
 }
 
-colnames(DB.csv) <- c('q1','q2_rr','q4','q5','q6','q7','q10','q11','q17_1','q17_2','q19_1','q19_2','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
+colnames(DB.csv) <- c('q1','q2','q4','q5','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
+```
+
+```{r}
+# build a name dictionary to convert variable name to actual name
+name_dict <- c(
+  "q1" = "性別",
+  "q2" = "年齡",
+  "q4" = "教育程度",
+  "q5" = "週均上網天數",
+  "q6" = "正事上網分鐘",
+  "q7" = "娛樂上網分鐘",
+  "q10" = "使用社群媒體數量",
+  "q11" = "使用影音平台與否",
+  "q1719" = "是否參與過網路惡搞",
+  "q20" = "引戰行為接受度",
+  "q22" = "他人攻擊行為的頻率",
+  "q23" = "自己攻擊行為的頻率",
+  "q24" = "媒體識讀素養",
+  "q25" = "網路論戰接受度",
+  "q26" = "不文明留言的影響力",
+  "q27" = "抵制意圖",
+  "q28_YN" = "是否採取過抵制行為",
+  "q28_1" = "抵制行為1",
+  "q28_2" = "抵制行為2",
+  "q28_1_2" = "抵制行為1:3",
+  "q28_3" = "抵制行為3",
+  "q29_1" = "抵制的原因1",
+  "q29_2" = "抵制的原因2",
+  "q29_3" = "抵制的原因3",
+  "q29_1_3" = "抵制原因1:3",
+  "q29_2_3" = "抵制原因2:3",
+  "q29_1_2" = "抵制原因1:2",
+  "q30" = "抵制行為的有效程度",
+  "q31" = "抵制前的同理心",
+  "q32" = "抵制行為的傷害程度",
+  "q33" = "抵制行為的重要程度",
+  "q34" = "抵制成本",
+  "q35" = "抵制規模感知",
+  "q36" = "抵制的社會壓力",
+  "q38" = "心理幸福感",
+  "q39" = "生活品質",
+  "q40" = "國民黨喜好程度",
+  "q41" = "民進黨喜好程度",
+  "q42" = "意識形態"
+)
 ```
 
 ## 敘述統計
@@ -373,6 +427,9 @@ latex(describe(DB.csv,title=""),file="")
 ```
 
 ```{r}
+#| output: false
+#| eval: false
+#| echo: false
 #針對q28_YN二元變數對其他類別變數畫圖
 myCount_q28 <- function(din, target_label){
   temp <- purrr::map(target_label, ~ {
@@ -434,6 +491,9 @@ Barplot.p <- function(din){
 以抵制與否作為依據，將各變數的類別比例繪製出來。其中並無繪製類別過多或是q28以後的變數。
 
 ```{r, fig.align='center', fig.width=12, fig.height=7, out.width='100%'}
+#| output: false
+#| eval: false
+#| echo: false
 var.label <- c("q1","q2_rr","q4","q11",
                "q17_1","q17_2","q19_1","q19_2","q1719",
                "q38","q39","q40","q41")
@@ -450,65 +510,54 @@ Barplot.p(din = myCount_q28(DB.csv, var.label))
 我們採用逐步選取法（Heinze，2018）對可能影響抵制行為的變數進行篩選並加上人口權重。結果如 表2所示，此模型有10個顯著變數，以下針對顯著變數解讀： 1. 抵制意圖(q27數值評分:1\~5)：抵制意圖越高的人，更容易付諸實際行動。每增加1單位使得抵制行為 勝算比變成2.56倍。 2. 民進黨好感度(q41數值評分:1\~5): 對民進黨有好感，傾向採取抵制行動。每增加1單位使得勝算比變 為1.36 倍。 3. 年齡分層(q2_rr數值分層:1\~6)：年齡越大的人，越可能有抵制行動。每往上移動一層，勝算比變成 1.23 倍。 4. 教育程度(q4數值評分:1\~4)：教育程度越高，採取抵制行動的可能性越大。例如研究所學歷對大學學歷 的勝算比是1.18。 5. 看見網路攻擊頻率與自己網路攻擊頻率 (q22、q23數值評分:5\~20)：越常接觸他人的負面言論，或自身 越常發表負面言論，均會顯著提高抵制的可能性。每增加一單位分別使得勝算比變為1.13及1.11倍。 6. 休閒娛樂上網時間(q7分鐘)：上網時間越長，抵制行為的可能性越高，呈現正相關，每多半小時勝算比 變成1.03倍。 3 7. 意識形態(q42評分:1\~10)：獨立意識形態(評分較低)的人，傾向採取抵制行動。評分每增加1單位使得 勝算比變成0.92倍。 8. 心理幸福感(q38評分:2\~10)：較快樂(評分較高)的人，較少採取抵制行動。評分每增加1單位，勝算比 變成0.75倍。 9. 使用可討論名人之平台數量(q11計數:0,1,2)：用越多的人，越少採取抵制行動。每多用一個，勝算比變 成0.59 倍。
 
 ```{r}
-glm_log <- glm(
+glm_log<- glm(
   factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q1+ q2 + q4+q5+ q6+ q7+ q10+ q11+ q1719+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42,
   family = binomial, data = DB.csv, weights = weight)
 stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
-stepmodel$coefficients
-```
-
-## glmnet
-
-```{r}
-#| eval: false
-#| error: true
-library(glmnet)
-x <- model.matrix(
-  factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27+
-    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
-y <- DB.csv$q28_YN
-glmnet_model <- cv.glmnet(x, y, family = "binomial", alpha = 1)
-bestlam <- glmnet_model$lambda.min
-grid<-10^seq(10, -2,length = 100)
-glmnet_2 <- glmnet(x,y,alpha = 1, lambda = grid)
-lasso.coef <- predict(glmnet_2, type = 'coefficients', s = bestlam)
-lasso.coef
-lasso.glm <- glm(
-  factor(q28_YN)~q2_rr+
-    q4+ q5+ q6+ q11+ 
-    q20+ q22+ q23+ q24+ q25+ q26+ q27,
-  family = binomial, data = DB.csv, weights = weight)
-summary(lasso.glm)
 ```
 
 ## Decision tree
 
 決策樹選出的重要變數和邏輯式模型大致相同，但更能捕捉變數間交互作用。在圖3中，先從抵制意願做區分，具有高度抵制意圖的人，會有抵制行為。然而較不具備抵制意圖的人會受他人網路攻擊行為影響，如果常看到他人網路攻擊行為，便可能會有抵制行為；反之則不會有抵制行為。另外，就算經常看到他人攻擊言論，如果對國民黨好感度較高、能接受網路攻擊行為且教育程度較低，也不會有抵制行為。
 
-```{r, fig.align='center', fig.width=8, fig.height=3, out.width="100%"}
+```{r}
 library(rpart)
 library(rpart.plot)
 tree_model <- rpart(
   factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+ q1719+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
 custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
-par(mar = c(2, 2, 1, 2))
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+    labs <- sub("q27", "抵制意圖", labs)
+    labs <- sub("q22", "看見他人網路攻擊的頻率", labs)
+    labs <- sub("q26", "不文明留言影響力", labs)
+    labs <- sub("q25", "網路論戰接受度", labs)
+    labs <- sub("q24", "媒體識讀素養", labs)
+    labs <- sub("q2",  "年齡", labs)
+    labs <- sub("q40", "國民黨好感度", labs)
+    labs <- sub("q7",  "娛樂上網分鐘", labs)
+    labs <- sub("q10", "使用可討論名人之社群媒體數量", labs)
+    labs <- sub("q41", "民進黨好感度", labs)
+    labs <- sub("q38", "心理幸福感", labs)
+    labs
+}
+
 rpart.plot(tree_model,
-           type = 3,
+           type = 2,
            extra = 0,
            under = TRUE,
            faclen = 0,
-           fallen.leaves = TRUE, 
+           fallen.leaves = TRUE,
            box.palette = custom_palette(100),
            shadow.col = "gray",
-           cex = 0.7)
+           cex = 1.7, 
+           split.fun = split.fun, Margin = 0, space = 0)
 ```
 
 ## XGboost
@@ -519,7 +568,7 @@ library(DiagrammeR)
 set.seed(2012)
 x <- model.matrix(
   factor(q28_YN)~
-    factor(q1)+ q2_rr+ q4+ q5+ q6+ q7+ q10+ q11+
+    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
 y <-as.factor(DB.csv$q28_YN) 
@@ -569,10 +618,10 @@ boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q
 
 y <-boycott[,c('q30','q32','q35')]
 
-allx <-boycott[,c("q2_rr","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
+allx <-boycott[,c("q1","q2","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
 
 allcca <-cancor(allx,y)
-cat('典型相關係數',allcca$cor)
+cat('典型相關係數',round(allcca$cor[1],4),'\n')
 
 allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
 ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
@@ -581,34 +630,15 @@ ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
 
 # 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3, q31, q36_1, q29_1_3中度相關
 # 第一典型變數與q35高度相關,q30中度相關
-data <-allx_lodings[,1]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"))+
-  labs(x = "題號", y = "典型負荷量絕對值") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3),
-        legend.position = "none")
-
 #自我相關係數
-cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1:2]/4),4))
-cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1:2]/4),4))
+
+cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1]/4),4),"\n")
+cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1]/4),4),"\n")
 
 #典型相關係數平方
-allnum <-round(allcca$cor^2,4)[1:2]
-round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
-round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
+#allnum <-round(allcca$cor^2,4)[1:2]
+#round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
+#round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
@@ -622,73 +652,48 @@ round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
 
 ```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%"}
 y <-boycott[,c('q30','q32','q35')]
-x <-boycott[,c("q2_rr","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_2","q29_3","q31",'q33','q36',"q29_1_2","q29_1_3","q40","q42")]
+x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_3","q31",'q33','q36',"q29_1_3","q40","q42")]
 
 # 典型相關係數
 cca <-cancor(x,y)
-cat('典型相關係數', cca$cor) # 最大典型相關係數為0.47，且第一典型變數主要由  q29_3 和q33 和q35貢獻組成
+cat('典型相關係數', round(cca$cor[1],4),'\n')
 
 x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
 y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
-# x_lodings[,c(1,2)]
-# y_lodings[,c(1,2)]
-# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3,q31,q36,q29_1_3中度相關
-# 第一典型變數與q35高度相關,q30中度相關
-# 越常看到別人在網路上的攻擊行為，抵制行為程度越高。如果認為抵制行為很重要，抵制程度也會比較高。抵制程度與抵制方法無關，但和抵制原因有關，如果做出歧視行為和不道德不合法行為，抵制程度就會越高。
 
-data <- x_lodings[,1]
-df <- data.frame(
-  Name = names(data),
-  Value = data,
-  Positive = ifelse(data > 0, 1, 0)
-)
-df <- df[order(abs(df$Value), decreasing = TRUE), ]
-p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
-  scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
-                    labels = c("負相關", "正相關"))+
-  labs(x = "題號", y = "典型負荷量絕對值", fill = "相關性") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3))
 #自我相關係數
-round((colSums(x_lodings^2)[1:2]/4),4)
-round((colSums(y_lodings^2)[1:2]/4),4)
+cat("解釋變數之自我相關係數",round((colSums(x_lodings^2)[1]/4),4),"\n")
+cat("反應變數之自我相關係數",round((colSums(y_lodings^2)[1]/4),4),"\n")
+
 #典型相關係數平方
 num<-round(cca$cor^2,4)[1:2]
-
-round((colSums(x_lodings^2)[1:2]/4)*num,4)
-round((colSums(y_lodings^2)[1:2]/4)*num,4)
+#round((colSums(x_lodings^2)[1:2]/4)*num,4)
+#round((colSums(y_lodings^2)[1:2]/4)*num,4)
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
-showtext_auto()
-gridExtra::grid.arrange(p1,p2,ncol=1)
 ```
 
 ```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
-data <-x_lodings[,c(1)]
+data <- x_lodings[,c(1)]
 df <- data.frame(
   Name = names(data),
   Value = data,
   Positive = ifelse(data > 0, 1, 0)
 )
 df <- df[order(abs(df$Value), decreasing = TRUE), ]
+df$Name <- name_dict[df$Name]
 p1 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
   scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
                     labels = c("負相關", "正相關"))+
   labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
   ylim(0, 1)+
   theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3),
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
         legend.position = c(0.9,0.8),
         legend.background = element_rect(fill="#fff0f0", color=NA))
 data <-y_lodings[,1]
@@ -698,21 +703,23 @@ df <- data.frame(
   Positive = ifelse(data > 0, 1, 0)
 )
 df <- df[order(abs(df$Value), decreasing = TRUE), ]
+df$Name <- name_dict[df$Name]
 p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.factor(Positive))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = round(abs(Value), 2)), 
-            vjust = -0.5, size = 2) +  # 在條形圖上顯示絕對值
+            vjust = -0.5, size = 5) +  # 在條形圖上顯示絕對值
   scale_fill_manual(values = c("0" = "skyblue", "1" = "#457B9D"), 
                     labels = c("負相關", "正相關"))+
   labs(x = "", y = "典型負荷量絕對值", fill = "相關性") +
   ylim(0, 1)+
   theme_minimal() +
-  theme(axis.text.x = element_text(size = 3, angle = 45, hjust = 1),
-        axis.title.x = element_text(size = 3),
-        axis.text.y = element_text(size = 3),
-        axis.title.y = element_text(size = 3),
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
+        axis.title.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
         legend.position = "none" )
 showtext_auto()
+# 顯示繪圖
 gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ```
 
