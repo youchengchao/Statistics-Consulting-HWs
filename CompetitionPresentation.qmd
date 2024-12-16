@@ -7,10 +7,10 @@ format:
     transition: slide
     theme: simple
     title-slide-attributes: 
-      data-background-image: 'background.jpeg'
+      data-background-image: 'background.jpg'
     code-fold: true
     code-summary: "Full Code"
-    margin: 0
+    margin: 0.2
     slide-number: c/t
 execute:
   cache: false
@@ -18,7 +18,7 @@ execute:
   warning: false
 ---
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 大綱
 ::: incremental
 <div style="font-size:40px">
@@ -32,33 +32,34 @@ execute:
 </div>
 :::
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 目的與動機
-::: {style="position: absolute; top: 40%; left: 60%;width :100%; transform: translate(-50%, -50%);text-align: left; font-size: 23px; line-height:2;"}
-抵制行為已成為民眾表達不滿的重要手段。<br>\
-以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。<br>\
-為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，<br>\
-描繪抵制者輪廓，並分析其影響。
+
+:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+抵制行為已成為民眾表達不滿的重要手段。
+
+以2023年劉芒事件為例，因工作態度爭議引發訂閱人數下降11%、影片倒讚率高達90%。
+
+為協助名人理解抵制背後原因並有效應對，本研究建構抵制行為指標，描繪抵制者輪廓，並分析其影響。
 :::
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 研究架構圖
 ![](structureimg.png)
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 研究假設
 ::: incremental
 ::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
 -   H1：網路使用行為、回聲室效應、網路貶抑發言和政治立場與生活感受都會造成人們抵制與否。
 
 -   H2：針對曾參與抵制行為的人，網路使用行為、回聲室效應、網路貶抑發言、政治立場與生活感受和抵制相關調查都會影響抵制程度。
-
 :::
 :::
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 資料來源
-::: incremental
-::: {style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+
+:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
 台灣傳播調查資料庫第二期第五次問卷（2021年）
 
 前處理後
@@ -67,9 +68,8 @@ execute:
 
 -   27個解釋變數，其中22個變數用於對H1的分析、H2另加入5個變數。
 :::
-:::
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 資料前處理1
 <table style="width: 100%; font-size: 22px; margin: 0 auto;">
   <tr>
@@ -122,12 +122,12 @@ execute:
   </tr>
 </table>
 
-##  {background-image="background.jpeg"}
+##  {background-image="background.jpg"}
 ### 資料前處理2
 
 ![](q2829.jpg)
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 假說1使用之解釋變數
 ::::{.columns}
 
@@ -202,7 +202,7 @@ table2_data %>%
 :::
 ::::
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 假說2另加入之解釋變數
 ```{r}
 table_data <- data.frame( 
@@ -238,7 +238,8 @@ library(haven)         #read sav file
 library(labelled)      #remove attribute of sav data
 library(Hmisc)         #describe
 library(showtext)      #show zw-tw in ggplot2
-library(dplyr);library(ggplot2);library(MASS);
+library(dplyr);library(ggplot2);library(MASS)
+library(tibble); library(tidyselect)
 #library(ggrepel)
 library(cowplot)
 library(caret)
@@ -493,362 +494,7 @@ colnames(DB.csv) <- c('q1','q2','q4','q5','q6','q7','q10','q11','q1719','q20','q
 ```
 
 ```{r}
-#針對q28_YN二元變數對其他類別變數畫圖
-myCount_q28 <- function(din, target_label){
-  temp <- purrr::map(target_label, ~ {
-      din %>%
-        group_by(q28_YN, !!sym(.x)) %>%
-        summarise(count = n(), .groups = "drop")%>%
-        mutate(var_name = .x) %>%
-        rename(unique_value = !!sym(.x)) %>%
-        group_by(.,q28_YN, var_name) %>%
-        mutate(
-          barcolor = scales::rescale(
-            as.numeric(factor(unique_value)),
-            to = c(0.1,0.9)
-          )
-        ) %>%
-        mutate(proportion = round(count/sum(count), 4) ) %>%
-        ungroup()
-    })
-  temp <- bind_rows(temp)
-  temp$count <- NULL
-  return(temp)
-}
-Barplot.p <- function(din){
-    split_label<- colnames(din)[1]
-    din <- din %>%
-      group_by(q28_YN, var_name) %>%
-      mutate(
-        start = 1-cumsum(proportion),
-        end = 1-lag(cumsum(proportion), default = 0)
-      )
-    pic <- ggplot(din) +
-              geom_bar(aes(x = factor(!!sym(split_label)),
-                           y = proportion,
-                           fill = as.character(barcolor)),
-                       position = "stack",
-                       stat = "identity")+
-              geom_text(
-                aes(label = paste0("(",din$unique_value,")",proportion * 100, "%"),
-                    x = factor(!!sym(split_label)),
-                    y = (start + end) / 2),
-                position = position_dodge2(width = 0.2,padding = 0.2),
-                size = 5
-              )+
-              facet_grid(.~var_name, switch = "x", labeller = labeller(var_name = label_wrap_gen(width = 10)))+
-              scale_fill_grey(start = 0.7,end = 0.3)+
-              ggtitle(label = "各變數依據是否有抵制行為分類之比例圖")+
-              labs(x = "變數名稱", y="比例")+
-              theme(strip.placement = "outside",
-                    strip.background = element_rect(fill = NA, color = "white"),
-                    panel.spacing = unit(-.01,"cm"),
-                    legend.position = "none",
-                    plot.margin = unit(c(0.15, 0.15, 0.15, 0.15),"inches"))
-    return(pic)
-}
-```
-
-
-```{r}
-#| output: false
-var.label <- c("q1","q4","q11","q1719", "q38","q39","q40","q41")
-showtext_auto()
-Barplot.p(din = myCount_q28(DB.csv, var.label))
-```
-
-```{r}
-# 折線圖繪圖工具
-my_scatter <- function(data, x, y, group,
-                       title="",
-                       xlab=x,ylab=y,legend.lab="") {
-  # 確認所需欄位是否存在
-  required_cols <- c(x, y, group)
-  if (!all(required_cols %in% names(data))) {
-    stop("Some specified columns are not in the data.")
-  }
-
-  # 計算平均值與標準差
-  tempDF <- data %>%
-    group_by(across(all_of(c(x, group)))) %>%
-    summarise(mean_y = mean(.data[[y]], na.rm = TRUE),
-              sd_y = sd(.data[[y]], na.rm = TRUE),
-              .groups = "drop")
-  # 繪製圖形
-  p <- ggplot(data = tempDF,
-              aes(y = mean_y,
-                  x = .data[[x]],
-                  group = .data[[group]])) +
-    geom_point()+
-    geom_line(aes(color = factor(.data[[group]])),
-                show.legend = FALSE) +
-    geom_ribbon(aes(x = .data[[x]],
-                      ymin = mean_y - sd_y,
-                      ymax = mean_y + sd_y,
-                      fill = factor(.data[[group]])), 
-                  alpha = 0.2) +
-    labs(title = title, x = xlab, y = ylab, fill = legend.lab)
-  return(p)
-}
-```
-
-## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的平均看見他人網路攻擊頻繁程度
-
-```{r}
-p1 <- my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
-           title = "", 
-           xlab = "年齡", 
-           ylab = "平均看見他人網路攻擊頻繁程度",
-           legend.lab = "抵制者:1\n未抵制者:0")
-p2 <- my_scatter(DB.csv, x = 'q4', y = 'q22', group = 'q28_YN',
-           title = "", 
-           xlab = "教育程度", 
-           ylab = "平均看見他人網路攻擊頻繁程度",
-           legend.lab = "抵制者:1\n未抵制者:0")
-showtext_auto()
-gridExtra::grid.arrange(p2,p1,ncol=1)
-```
-
-## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
-
-```{r}
-p1 <- my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
-           title = "", 
-           xlab = "年齡", 
-           ylab = "平均自己網路攻擊頻繁程度",
-           legend.lab = "抵制者:1\n未抵制者:0")
-p2 <- my_scatter(DB.csv, x = 'q4', y = 'q23', group = 'q28_YN',
-           title = "", 
-           xlab = "教育程度", 
-           ylab = "平均自己網路攻擊頻繁程度",
-           legend.lab = "抵制者:1\n未抵制者:0")
-showtext_auto()
-gridExtra::grid.arrange(p2,p1,ncol=1)
-```
-
-## {background-image=background.jpeg}
-### 觀察不同年齡下，抵制者與不抵制者的抵制意圖
-
-```{r}
-# 連續型年齡
-p1 <- my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
-           title = "", 
-           xlab = "年齡", 
-           ylab = "平均抵制意圖",
-           legend.lab = "抵制者:1\n未抵制者:0")
-p2 <- my_scatter(DB.csv, x = 'q4', y = 'q27', group = 'q28_YN',
-           title = "", 
-           xlab = "教育程度", 
-           ylab = "平均抵制意圖",
-           legend.lab = "抵制者:1\n未抵制者:0")
-showtext_auto()
-gridExtra::grid.arrange(p2,p1,ncol=1)
-```
-
-## {background-image=background.jpeg}
-### H1之資料分析 - 加權邏輯式迴歸
-
-這個部分希望透過邏輯式迴歸模型觀察各變數之主效應。
-
-```{r}
-#| echo: false
-table_data <- data.frame(
-  變數 = c("抵制意圖", "民進黨好感度", "年齡", "教育程度", 
-           "看見網路攻擊頻率", "自身網路攻擊", "娛樂上網時間", 
-           "意識形態", "心理幸福感", "使用可討論名人平台"),
-  係數 = c(0.940, 0.304, 0.204, 0.165, 0.126, 
-           0.107, 0.001, -0.087, -0.285, -0.535)
-)
-# 顯示顯著變數表格
-table_data %>%
-  kable(align = c("l", "r"), format = "html") %>%
-  kable_styling(full_width = TRUE, font_size = 25)
-```
-
-## {background-image=background.jpeg}
-### 邏輯式迴歸模型之顯著變數之解讀
-
-```{r}
-data1 <- data.frame(
-  變數 = c("抵制意圖", "民進黨好感度", "年齡分層", "教育程度", 
-           "看見網路攻擊頻率", "自己網路攻擊頻率", "休閒娛樂上網時間", 
-           "意識形態", "心理幸福感", "使用可討論名人之平台數量"),
-  描述 = c("每增加1單位使得抵制行為勝算比變成2.56倍",
-           "每增加1單位使得勝算比變為1.36倍",
-           "每往上移動一層，勝算比變成1.23倍",
-           "對大學學歷的勝算比是1.18",
-           "每增加一單位使得勝算比變為1.13倍",
-           "每增加一單位使得勝算比變為1.11倍",
-           "每多半小時勝算比變成1.03倍",
-           "每增加1單位使得勝算比變成0.92倍",
-           "每增加1單位，勝算比變成0.75倍",
-           "每多用一個，勝算比變成0.59倍"),
-  單位 = c("1~5", "1~5", "1~6", "1~4", "5~20", "5~20", "分鐘", "1~10", "2~10", "0,1,2"),
-  勝算比 = c(2.56, 1.36, 1.23, 1.18, 1.13, 1.11, 1.03, 0.92, 0.75, 0.59)
-)
-
-# 顯示表格
-kable(data1, align = c("l", "l", "l", "r"), format = "html") %>%
-  kable_styling(full_width = TRUE, font_size = 20)
-```
-
-```{r}
-glm_log<- glm(
-  factor(q28_YN)~
-    q1+ q2 + q4+ q5+ q6+ q7+ q10+ q11+ q1719+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27+
-    q38+ q39+ q40+ q41+ q42,
-  family = binomial, data = DB.csv, weights = weight)
-stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
-```
-
-## {background-image=background.jpeg}
-### H1之資料分析 - 決策樹
-
-```{r}
-library(rpart)
-library(rpart.plot)
-tree_model <- rpart(
-  factor(q28_YN)~
-    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+ q1719+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27+
-    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
-custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
-split.fun <- function(x, labs, digits, varlen, faclen)
-{
-    # replace variable names in the labels
-    labs <- sub("q27",   "抵制意圖", labs)
-    labs <- sub("q22", "他人攻擊行為的頻率", labs)
-    labs <- sub("q26",    "不文明留言影響力", labs)
-    labs <- sub("q25",    "網路論戰接受度", labs)
-    labs <- sub("q24",    "媒體識讀素養", labs)
-    labs <- sub("q2", "年齡", labs)
-    labs   <- sub("q40",    "國民黨喜好程度", labs)
-    labs   <- sub("q7",    "娛樂上網分鐘", labs)
-    labs   <- sub("q10",    "使用可討論名人之\n社群媒體數量", labs)
-    labs   <- sub("q41",    "民進黨好感度", labs)
-    labs   <- sub("q38",    "心理幸福感", labs)
-    labs # return the modified labels
-}
-
-par(mar = c(2, 2, 1, 2))
-rpart.plot(tree_model,
-           type = 2,
-           extra = 0,
-           under = TRUE,
-           faclen = 0,
-           fallen.leaves = TRUE,
-           box.palette = custom_palette(100),
-           shadow.col = "gray",
-           cex = 1.5, 
-           split.fun = split.fun)
-```
-
-## {background-image=background.jpeg}
-### H1之資料分析 - XGBoost
-:::{.content-visible style="font-size: 25px;"}
-透過XGBoost模型的結果結合SHAP值觀察變數的重要性。
-:::
-
-```{r}
-library(xgboost)
-library(DiagrammeR)
-set.seed(2012)
-x <- model.matrix(
-  factor(q28_YN)~
-    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+
-    q20+ q22+ q23+ q24+ q25+ q26+ q27+
-    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
-y <-as.factor(DB.csv$q28_YN) 
-xgb_data <- xgb.DMatrix(data = x,
-                        label = as.numeric(y) - 1,
-                        weight = DB.csv$weight)
-xgb_model <- xgboost(data = xgb_data,
-                     objective = "binary:logistic",
-                     nrounds = 100,
-                     verbose = 0,
-                     )
-# importance_matrix <- xgb.importance(model = xgb_model)
-# importance_matrix
-library(SHAPforxgboost)
-
-# 計算 SHAP 值和 mean SHAP 值
-shap_values <- shap.values(xgb_model = xgb_model, X_train = x)
-shap_mean <- shap_values$mean_shap_score
-shap_values_df <- shap_values$shap_score
-
-# long format
-shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
-showtext_auto()
-shap.plot.summary(shap_long,
-                  min_color_bound = "lightblue",
-                  max_color_bound = "#355f7a") +
-  labs(x = "變數名稱", y = "Shap值")
-```
-
-
-## {background-image=background.jpeg}
-### H2之資料分析-典型相關分析
-
-:::{.content-visible style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
-我們認為抵制程度能用「抵制效度」、「抵制傷害程度」、「抵制規模」這三個問題來衡量，
-
-因此我們將這些變數設為反應變數、其他的變數設為解釋變數，去進行典型相關分析。
-
-過程中發現有11個變數的值和第一典型負荷量小於等於0.2，因此將這些變數去除後，再做一次典型相關分析。
-:::
-
-## {background-image=background.jpeg}
-### 典型相關分析(全部變數)
-
-
-
-```{r}
-#| output: false
-library(FactoMineR)
-library(factoextra)
-boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
-#缺失值轉0
-boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
-boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
-boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
-boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
-
-boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
-
-y <-boycott[,c('q30','q32','q35')]
-
-allx <-boycott[,c("q2","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
-
-allcca <-cancor(allx,y)
-cat('典型相關係數',allcca$cor[1],'\n')
-
-allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
-ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
-#allx_lodings[,c(1,2)]
-#ally_lodings[,c(1,2)]
-
-# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3, q31, q36_1, q29_1_3中度相關
-# 第一典型變數與q35高度相關,q30中度相關
-#自我相關係數
-
-cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1]/4),4),"\n")
-cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1]/4),4),"\n")
-
-#典型相關係數平方
-#allnum <-round(allcca$cor^2,4)[1:2]
-#round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
-#round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
-#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
-```
-
-:::{.content-visible style="font-size: 25px;"}
-典型相關係數: 0.556     自我相關係數(解釋變數): 0.778     自我相關係數(反應變數): 0.318
-:::
-
-```{r}
+# build a name dictionary to convert variable name to actual name
 name_dict <- c(
   "q1" = "性別",
   "q2" = "年齡",
@@ -890,7 +536,274 @@ name_dict <- c(
   "q41" = "民進黨喜好程度",
   "q42" = "意識形態"
 )
+```
 
+```{r}
+# 折線圖繪圖工具
+my_scatter <- function(data, x, y, group,
+                       title="",
+                       xlab=x,ylab=y,legend.lab="") {
+  # 確認所需欄位是否存在
+  required_cols <- c(x, y, group)
+  if (!all(required_cols %in% names(data))) {
+    stop("Some specified columns are not in the data.")
+  }
+
+  # 計算平均值與標準差
+  tempDF <- data %>%
+    group_by(across(all_of(c(x, group)))) %>%
+    summarise(mean_y = mean(.data[[y]], na.rm = TRUE),
+              sd_y = sd(.data[[y]], na.rm = TRUE),
+              .groups = "drop")
+  # 繪製圖形
+  p <- ggplot(data = tempDF,
+              aes(y = mean_y,
+                  x = .data[[x]],
+                  group = .data[[group]])) +
+    geom_point()+
+    geom_line(aes(color = factor(.data[[group]])),
+                show.legend = FALSE) +
+    geom_ribbon(aes(x = .data[[x]],
+                      ymin = mean_y - sd_y,
+                      ymax = mean_y + sd_y,
+                      fill = factor(.data[[group]])), 
+                  alpha = 0.2) +
+    labs(title = title, x = xlab, y = ylab, fill = legend.lab)
+  return(p)
+}
+```
+
+## {background-image=background.jpg}
+### 觀察不同年齡下，抵制者與不抵制者的平均看見他人網路攻擊頻繁程度
+
+```{r}
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
+           title = "", 
+           xlab = "年齡", 
+           ylab = "平均看見他人網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q22', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均看見他人網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
+```
+
+## {background-image=background.jpg}
+### 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
+
+```{r}
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
+           title = "", 
+           xlab = "年齡", 
+           ylab = "平均自己網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q23', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均自己網路攻擊頻繁程度",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
+```
+
+## {background-image=background.jpg}
+### 觀察不同年齡下，抵制者與不抵制者的抵制意圖
+
+```{r}
+# 連續型年齡
+p1 <- my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
+           title = "", 
+           xlab = "年齡", 
+           ylab = "平均抵制意圖",
+           legend.lab = "抵制者:1\n未抵制者:0")
+p2 <- my_scatter(DB.csv, x = 'q4', y = 'q27', group = 'q28_YN',
+           title = "", 
+           xlab = "教育程度", 
+           ylab = "平均抵制意圖",
+           legend.lab = "抵制者:1\n未抵制者:0")
+showtext_auto()
+gridExtra::grid.arrange(p2,p1,ncol=1)
+```
+
+## {background-image=background.jpg}
+### H1之資料分析 - 加權邏輯式迴歸
+
+```{r}
+glm_log<- glm(
+  factor(q28_YN)~
+    q1+ q2 + q4+q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42,
+  family = binomial, data = DB.csv, weights = weight)
+stepmodel <- summary(stepAIC(glm_log, direction = 'both', trace = 0))
+```
+
+```{r}
+table_data <- stepmodel$coefficients %>%
+  as_tibble(rownames = "Variable") %>%
+  arrange(desc(Estimate)) %>%
+  rename(sd = `Std. Error`, Z_value = `z value`, p_value = `Pr(>|z|)`) %>%
+  mutate(Estimate=round(Estimate,3)) %>% 
+  filter(Variable != "(Intercept)") %>%
+  filter(p_value<0.05) %>%
+  mutate(name = recode(Variable, !!!name_dict))
+
+output <- data.frame(
+  變數 = table_data$name,
+  係數 = table_data$Estimate,
+  勝算的倍數 = round(exp(table_data$Estimate),3),
+  單位 = c("(弱)1~5(強)", "(不喜歡)0~5(喜歡) ", "(高中及以下)1~4(研究所)", "(從來沒有)5~20(經常)", "(從來沒有)5~20(經常)", "歲(連續型)", "分鐘(連續型)","(低)5~20(高)", "(台獨)0~10(統一)","(不滿意)2~10(滿意)")
+)
+
+output %>%
+  kable(align = c("c","c","c","c"),format = "html") %>%
+  kable_styling(full_width = TRUE, font_size = 25)
+```
+
+## {background-image=background.jpg}
+### H1之資料分析 - 決策樹
+
+```{r}
+library(rpart)
+library(rpart.plot)
+tree_model <- rpart(
+  factor(q28_YN)~
+    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+ q1719+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
+custom_palette <- colorRampPalette(c("lightblue", "#355f7a"))
+split.fun <- function(x, labs, digits, varlen, faclen)
+{
+    labs <- sub("q27", "抵制意圖", labs)
+    labs <- sub("q22", "看見他人網路攻擊的頻率", labs)
+    labs <- sub("q26", "不文明留言影響力", labs)
+    labs <- sub("q25", "網路論戰接受度", labs)
+    labs <- sub("q24", "媒體識讀素養", labs)
+    labs <- sub("q2",  "年齡", labs)
+    labs <- sub("q40", "國民黨好感度", labs)
+    labs <- sub("q7",  "娛樂上網分鐘", labs)
+    labs <- sub("q10", "使用可討論名人之社群媒體數量", labs)
+    labs <- sub("q41", "民進黨好感度", labs)
+    labs <- sub("q38", "心理幸福感", labs)
+    labs
+}
+
+rpart.plot(tree_model,
+           type = 2,
+           extra = 0,
+           under = TRUE,
+           faclen = 0,
+           fallen.leaves = TRUE,
+           box.palette = custom_palette(100),
+           shadow.col = "gray",
+           cex = 1.7, 
+           split.fun = split.fun, Margin = 0, space = 0)
+```
+
+## {background-image=background.jpg}
+### H1之資料分析 - XGBoost
+:::{style="font-size: 25px;"}
+透過XGBoost模型的結果結合SHAP值觀察變數的重要性。
+:::
+
+```{r}
+library(xgboost)
+library(DiagrammeR)
+set.seed(2012)
+x <- model.matrix(
+  factor(q28_YN)~
+    q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+
+    q20+ q22+ q23+ q24+ q25+ q26+ q27+
+    q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
+y <-as.factor(DB.csv$q28_YN) 
+xgb_data <- xgb.DMatrix(data = x,
+                        label = as.numeric(y) - 1,
+                        weight = DB.csv$weight)
+xgb_model <- xgboost(data = xgb_data,
+                     objective = "binary:logistic",
+                     nrounds = 100,
+                     verbose = 0,
+                     )
+# importance_matrix <- xgb.importance(model = xgb_model)
+# importance_matrix
+library(SHAPforxgboost)
+
+# 計算 SHAP 值和 mean SHAP 值
+shap_values <- shap.values(xgb_model = xgb_model, X_train = x)
+shap_mean <- shap_values$mean_shap_score
+shap_values_df <- shap_values$shap_score
+
+# long format
+shap_long <- shap.prep(shap_contrib = shap_values_df, X_train = x)
+showtext_auto()
+shap.plot.summary(shap_long,
+                  min_color_bound = "lightblue",
+                  max_color_bound = "#355f7a") +
+  labs(x = "變數名稱", y = "Shap值")
+```
+
+
+## {background-image=background.jpg}
+### H2之資料分析-典型相關分析
+
+:::{style="position: absolute; top: 40%; left: 0; transform: translateY(-50%); text-align: left; font-size: 25px; line-height:3;"}
+我們認為抵制程度能用「抵制效度」、「抵制傷害程度」、「抵制規模」這三個問題來衡量，
+
+因此我們將這些變數設為反應變數、其他的變數設為解釋變數，去進行典型相關分析。
+
+過程中發現有12個變數的值和第一典型負荷量小於等於0.2，因此將這些變數去除後，再做一次典型相關分析。
+:::
+
+## {background-image=background.jpg}
+### 典型相關分析(全部變數)
+
+```{r}
+#| output: false
+library(FactoMineR)
+library(factoextra)
+boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
+#缺失值轉0
+boycott$q28_1_2 <- ifelse(boycott$q28_1==1 | boycott$q28_2==1,1,0)
+boycott$q29_1_2<-boycott$q29_1*boycott$q29_2
+boycott$q29_1_3<-boycott$q29_1*boycott$q29_3
+boycott$q29_2_3<-boycott$q29_3*boycott$q29_2
+
+boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")] <- lapply(boycott[, c("q28_1_2","q28_3","q29_1","q29_2","q29_3")], as.numeric)
+
+y <-boycott[,c('q30','q32','q35')]
+
+allx <-boycott[,c("q1","q2","q4","q5","q6","q7","q10","q11","q1719","q20","q22","q23","q24","q25","q26","q27","q28_1_2","q28_3","q29_1","q29_2","q29_3","q31",'q33',"q34",'q36',"q29_1_2","q29_1_3","q38","q39","q40","q41","q42")]
+
+allcca <-cancor(allx,y)
+cat('典型相關係數',round(allcca$cor[1],4),'\n')
+
+allx_lodings <-cor(allx,as.matrix(allx)%*% allcca$xcoef)
+ally_lodings <-cor(y,as.matrix(y)%*% allcca$ycoef)
+#allx_lodings[,c(1,2)]
+#ally_lodings[,c(1,2)]
+
+# 第一典型變數與q22,q33高度相關,q2(負),q4,q10,q23,q24,q26,q29_1,q29_3, q31, q36_1, q29_1_3中度相關
+# 第一典型變數與q35高度相關,q30中度相關
+#自我相關係數
+
+cat("解釋變數之自我相關係數",round((colSums(allx_lodings^2)[1]/4),4),"\n")
+cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1]/4),4),"\n")
+
+#典型相關係數平方
+#allnum <-round(allcca$cor^2,4)[1:2]
+#round((colSums(allx_lodings^2)[1:2]/4)*allnum,4)
+#round((colSums(ally_lodings^2)[1:2]/4)*allnum,4)
+#第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
+```
+
+:::{style="font-size: 25px;"}
+典型相關係數: 0.556     自我相關係數(解釋變數): 0.775     自我相關係數(反應變數): 0.319
+:::
+
+```{r}
 data <- allx_lodings[,c(1)]
 df <- data.frame(
   Name = names(data),
@@ -940,7 +853,7 @@ showtext_auto()
 gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ```
 
-## {background-image=background.jpeg}
+## {background-image=background.jpg}
 ### 典型相關分析(部分變數)
 
 ```{r}
@@ -950,7 +863,7 @@ x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","
 
 # 典型相關係數
 cca <-cancor(x,y)
-cat('典型相關係數', cca$cor[1])
+cat('典型相關係數', round(cca$cor[1],4),'\n')
 
 x_lodings <-cor(x,as.matrix(x)%*% cca$xcoef)
 y_lodings <-cor(y,as.matrix(y)%*% cca$ycoef)
@@ -966,7 +879,7 @@ num<-round(cca$cor^2,4)[1:2]
 #第一典型變數能解釋約9.67%的預測變數變異、7.42%的準則變數變異
 ```
 
-:::{.content-visible style="font-size: 25px;"}
+:::{style="font-size: 25px;"}
 典型相關係數:0.536  自我相關係數(解釋變數): 0.800  自我相關係數(反應變數): 0.312
 :::
 
@@ -1017,20 +930,11 @@ p2 <- ggplot(df, aes(x = reorder(Name, -abs(Value)), y = abs(Value), fill = as.f
         axis.title.y = element_text(size = 15),
         legend.position = "none" )
 showtext_auto()
-aligned_plot <- plot_grid(
-  p2, p1, 
-  ncol = 2, 
-  align = "v",      # 強制 y 軸對齊
-  axis = "tb",      # 同步上下軸
-  rel_widths = c(1, 5) # 設定左右圖表寬度比例
-)
-
 # 顯示繪圖
 gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ```
 
-
-## 推論與討論 {background-image="background.jpeg"}
+## 推論與討論 {background-image="background.jpg"}
 
 ::: incremental
 ::: {style="font-size:30px"}
@@ -1051,10 +955,7 @@ gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 :::
 
 
-
-
-
-## 參考文獻{background-image=background.jpeg}
+## 參考文獻{background-image=background.jpg}
 
 \[1\] [台灣消費者抵制行為之研究 ---以台商親中言論衍生之抵制為例](https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)
 
