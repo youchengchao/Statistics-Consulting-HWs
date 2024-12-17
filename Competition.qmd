@@ -17,7 +17,7 @@ format:
 toc: true
 documentclass: article
 execute: 
-  cache: true
+  cache: false
   echo: false
   warning: false
 ---
@@ -370,6 +370,18 @@ for(i in c(1:3,5:35)){
 }
 
 colnames(DB.csv) <- c('q1','q2','q4','q5','q6','q7','q10','q11','q1719','q20','q22','q23','q24','q25','q26','q27','q28_YN','q28_1','q28_2','q28_3','q29_1','q29_2','q29_3','q30','q31','q32','q33','q34','q35','q36','q38','q39','q40','q41','q42','weight')
+
+DB.csv <- DB.csv %>%
+  mutate(q1 = factor(q1),
+         q1719 = factor(q1719),
+         q28_YN = factor(q28_YN),
+         q28_1 = factor(q28_1),
+         q28_2 = factor(q28_2),
+         q28_3 = factor(q28_3),
+         q29_1 = factor(q29_1),
+         q29_2 = factor(q29_2),
+         q29_3 = factor(q29_3))
+
 ```
 
 ```{r}
@@ -605,6 +617,8 @@ shap.plot.summary(shap_long,
 ## Canonical Correlation Analysis and PCA-對全部變數做
 
 ```{r}
+#| error: true
+#| eval: false
 library(FactoMineR)
 library(factoextra)
 boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
@@ -651,6 +665,8 @@ cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1]/4),4),
 第一典型變數主要由
 
 ```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%"}
+#| error: true
+#| eval: false
 y <-boycott[,c('q30','q32','q35')]
 x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_3","q31",'q33','q36',"q29_1_3","q40","q42")]
 
@@ -673,6 +689,8 @@ num<-round(cca$cor^2,4)[1:2]
 ```
 
 ```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
+#| error: true
+#| eval: false
 data <- x_lodings[,c(1)]
 df <- data.frame(
   Name = names(data),

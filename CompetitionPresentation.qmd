@@ -3,6 +3,7 @@ title: "抵制文化之現象分析"
 author: '第二組'
 format: 
   revealjs:
+    slide-level: 2
     footer: '抵制文化之現象分析'
     transition: slide
     theme: simple
@@ -55,6 +56,7 @@ DB.csv$q1 <- ifelse(DB.csv$q1==1,0,1)
 #第二題(出生年)改成年齡的區段
 DB.csv$q2 <- DB.csv$qrq2
 DB.csv$qrq2 <- NULL
+rr <- DB.csv$rrq2
 DB.csv$rrq2 <- NULL
 #把第三題(出生地)的其他類別歸為一類
 DB.csv$q3_other <- NULL
@@ -328,32 +330,27 @@ name_dict <- c(
 my_scatter <- function(data, x, y, group,
                        title="",
                        xlab=x,ylab=y,legend.lab="") {
-  # 確認所需欄位是否存在
-  required_cols <- c(x, y, group)
-  if (!all(required_cols %in% names(data))) {
-    stop("Some specified columns are not in the data.")
-  }
-
-  # 計算平均值與標準差
-  tempDF <- data %>%
-    group_by(across(all_of(c(x, group)))) %>%
-    summarise(mean_y = mean(.data[[y]], na.rm = TRUE),
-              sd_y = sd(.data[[y]], na.rm = TRUE),
-              .groups = "drop")
-  # 繪製圖形
-  p <- ggplot(data = tempDF,
-              aes(y = mean_y,
-                  x = .data[[x]],
-                  group = .data[[group]])) +
-    geom_point()+
-    geom_line(aes(color = factor(.data[[group]])),
-                show.legend = FALSE) +
-    geom_ribbon(aes(x = .data[[x]],
-                      ymin = mean_y - sd_y,
-                      ymax = mean_y + sd_y,
-                      fill = factor(.data[[group]])), 
-                  alpha = 0.2) +
-    labs(title = title, x = xlab, y = ylab, fill = legend.lab)
+    # mean and sd
+    tempDF <- data %>%
+      group_by(across(all_of(c(x, group)))) %>%
+      summarise(mean_y = mean(.data[[y]], na.rm = TRUE),
+                sd_y = sd(.data[[y]], na.rm = TRUE),
+                .groups = "drop")
+  
+    p <- ggplot(data = tempDF,
+                aes(y = mean_y,
+                    x = .data[[x]],
+                    group = .data[[group]])) +
+      geom_point()+
+      geom_line(aes(color = factor(.data[[group]])),
+                  show.legend = FALSE) +
+      geom_ribbon(aes(x = .data[[x]],
+                        ymin = mean_y - sd_y,
+                        ymax = mean_y + sd_y,
+                        fill = factor(.data[[group]])), 
+                    alpha = 0.2) +
+      labs(title = title, x = xlab, y = ylab, fill = legend.lab)+
+      theme(text = element_text(size = 25))
   return(p)
 }
 ```
@@ -409,6 +406,24 @@ my_scatter <- function(data, x, y, group,
 -   27個解釋變數，其中22個變數用於對H1的分析、H2另加入5個變數。
 :::
 
+```{r}
+#| eval: false
+#| error: true
+#| output: asis
+# if you want to see Hmisc::describe() result
+latex(
+describe(DB.csv %>%mutate(
+  q1 = factor(q1),
+  q1719 = factor(q1719),
+  q28_YN = factor(q28_YN),
+  q28_1 = factor(q28_1),
+  q28_2 = factor(q28_2),
+  q28_3 = factor(q28_3),
+  q29_1 = factor(q29_1),
+  q29_2 = factor(q29_2),
+  q29_3 = factor(q29_3)),title=""),file="")
+```
+
 ## {background-image=background.jpg}
 ### 資料前處理1
 <table style="width: 100%; font-size: 22px; margin: 0 auto;">
@@ -446,7 +461,7 @@ my_scatter <- function(data, x, y, group,
   </tr>
   <tr>
     <td>q11</td>
-    <td>改成"有無使用 YouTube 或 Twitch"，原因與第十題類似。</td>
+    <td>改成"使用可討論名人影音平台數量"，因為有些影音平台鮮少有交流討論的機會。</td>
   </tr>
   <tr>
     <td>q12~q15</td>
@@ -485,16 +500,15 @@ table1_data <- data.frame(
     "日均正事上網分鐘", 
     "日均娛樂上網分鐘", 
     "使用可討論名人之社群媒體數量", 
-    "是否使用可討論名人之影音平台", 
-    "是否至少有參與過一種網路惡搞",
-    "主動激化(引戰)行為接受度"
+    "使用可討論名人之影音平台數量", 
+    "是否參與過網路惡搞",
+    "主動激化行為接受度"
   ),
   備註 = c(
     "0:男性, 1:女性", 
     "連續型數值變數", 
     "1:高中及以下  2:專科  3:大學  4:研究所", 
-    "", "", "", "", 
-    "1:是, 0:否", 
+    "", "", "", "", "", 
     "1:是, 0:否",
     "(不接受)2~10(接受)"
   )
@@ -574,16 +588,147 @@ table_datap3 %>%
 ```
 
 ## {background-image=background.jpg}
-### 觀察不同年齡下，抵制者與不抵制者的平均看見他人網路攻擊頻繁程度
+### 敘述統計1
+
+![](q2_to_q10.png){width=100%}
+
+
+## {background-image=background.jpg}
+### 敘述統計2
+::::{.columns}
+:::{.column width="33%"}
+![](q1.png)
+![](q28_YN.png)
+:::
+
+:::{.column width="33%"}
+![](q28_1.png)
+![](q28_2.png)
+![](q28_3.png)
+:::
+
+:::{.column width="33%"}
+![](q29_1.png)
+![](q29_2.png)
+![](q29_3.png)
+:::
+:::: 
+
+## {background-image=background.jpg}
+### 敘述統計3
+![](q11_to_q20.png)
+
+## {background-image=background.jpg}
+### 敘述統計4
+![](q22_to_q25.png)
+
+## {background-image=background.jpg}
+### 敘述統計5
+![](q26_q27.png)
+
+## {background-image=background.jpg}
+### 敘述統計6
+![](q30_to_q33.png)
+
+## {background-image=background.jpg}
+### 敘述統計7
+![](q34_to_q38.png)
+
+## {background-image=background.jpg}
+### 敘述統計8
+![](q39_to_q42.png)
+
+## {background-image=background.jpg}
+:::{style="font-size: 25px"}
+年齡對教育程度之抵制者比例
+
+教育程度愈高，抵制者比例愈高；抵制者比例對年齡較無規則，可能有其他原因共同影響。
+:::
+
+```{r}
+DB.csv$q2rr <- rr
+heatmapDF <- DB.csv %>%
+  group_by(q2rr, q4) %>%
+  summarise(
+    proportion = mean(q28_YN),
+    sample_count = n(),  # 樣本數
+    .groups = "drop"
+  )
+
+ggplot(heatmapDF, aes(x = q2rr, y = q4, fill = proportion)) +
+  geom_tile(color = "white", alpha = 0.8) +
+  geom_text(aes(label = sample_count), color = "black", size = 4) +  # 顯示樣本數
+  scale_fill_gradient(high = "#4D4D4D", low = "#D9D9D9", name = "比例") +
+  labs(title = "", x = "年齡", y = "教育程度") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14),
+    panel.grid = element_blank()
+  )
+```
+
+## {background-image=background.jpg}
+:::{style="font-size: 25px"}
+民進黨好感度對意識形態之抵制者比例
+:::
+
+```{r}
+DB.csv$q2rr <- rr
+heatmapDF <- DB.csv %>%
+  group_by(q42, q41) %>%
+  summarise(
+    proportion = mean(q28_YN),
+    sample_count = n(),  # 樣本數
+    .groups = "drop"
+  )
+
+ggplot(heatmapDF, aes(x = q42, y = q41, fill = proportion)) +
+  geom_tile(color = "white", alpha = 0.8) +
+  geom_text(aes(label = sample_count), color = "black", size = 4) +  # 顯示樣本數
+  scale_fill_gradient(high = "#4D4D4D", low = "#D9D9D9", name = "比例") +
+  labs(title = "", x = "意識形態", y = "民進黨好感度") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 14),
+    panel.grid = element_blank()
+  )
+```
+
+
+
+## {background-image=background.jpg}
+:::{style="font-size: 25px"}
+媒體識讀素養對抵制行為的重要性
+:::
+```{r}
+tempDF <- DB.csv %>%
+  filter(q28_YN==1) %>%
+  mutate(weighted_var = weight*q33) %>%
+  group_by(q24) %>%
+  summarise(mean_y = sum(weighted_var)/sum(weight),
+            .groups = "drop")
+
+ggplot(tempDF, aes(x = q24, y = mean_y)) +
+  geom_point() +
+  geom_line() +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 2.5, ymax = 3.5, 
+           fill = "grey", alpha = 0.3) +
+  labs(title = "", x = "媒體識讀素養", y = "抵制行為的重要性") +
+  ylim(c(0,5))+
+  theme(text = element_text(size = 20))
+```
+
+## {background-image=background.jpg}
+:::{style="font-size: 25px"}
+觀察不同年齡下，抵制者與不抵制者的平均看見他人網路攻擊頻繁程度
+:::
 
 ```{r}
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
-           title = "", 
            xlab = "年齡", 
            ylab = "平均看見他人網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
 p2 <- my_scatter(DB.csv, x = 'q4', y = 'q22', group = 'q28_YN',
-           title = "", 
            xlab = "教育程度", 
            ylab = "平均看見他人網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
@@ -592,16 +737,16 @@ gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
 ## {background-image=background.jpg}
-### 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
+:::{style="font-size: 25px"}
+觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
+:::
 
 ```{r}
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
-           title = "", 
            xlab = "年齡", 
            ylab = "平均自己網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
 p2 <- my_scatter(DB.csv, x = 'q4', y = 'q23', group = 'q28_YN',
-           title = "", 
            xlab = "教育程度", 
            ylab = "平均自己網路攻擊頻繁程度",
            legend.lab = "抵制者:1\n未抵制者:0")
@@ -610,17 +755,17 @@ gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
 ## {background-image=background.jpg}
-### 觀察不同年齡下，抵制者與不抵制者的抵制意圖
+:::{style="font-size: 25px"}
+觀察不同年齡下，抵制者與不抵制者的抵制意圖
+:::
 
 ```{r}
 # 連續型年齡
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
-           title = "", 
            xlab = "年齡", 
            ylab = "平均抵制意圖",
            legend.lab = "抵制者:1\n未抵制者:0")
 p2 <- my_scatter(DB.csv, x = 'q4', y = 'q27', group = 'q28_YN',
-           title = "", 
            xlab = "教育程度", 
            ylab = "平均抵制意圖",
            legend.lab = "抵制者:1\n未抵制者:0")
@@ -633,7 +778,7 @@ gridExtra::grid.arrange(p2,p1,ncol=1)
 
 ```{r}
 glm_log<- glm(
-  factor(q28_YN)~
+  q28_YN~
     q1+ q2 + q4+q5+ q6+ q7+ q10+ q11+ q1719+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42,
@@ -670,7 +815,7 @@ output %>%
 library(rpart)
 library(rpart.plot)
 tree_model <- rpart(
-  factor(q28_YN)~
+  q28_YN~
     q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+ q1719+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv, method = "class",weights = weight)
@@ -714,7 +859,7 @@ library(xgboost)
 library(DiagrammeR)
 set.seed(2012)
 x <- model.matrix(
-  factor(q28_YN)~
+  q28_YN~
     q1 + q2+ q4+ q5+ q6+ q7+ q10+ q11+
     q20+ q22+ q23+ q24+ q25+ q26+ q27+
     q38+ q39+ q40+ q41+ q42, data = DB.csv)[, -1]
@@ -744,7 +889,6 @@ shap.plot.summary(shap_long,
                   max_color_bound = "#355f7a") +
   labs(x = "變數名稱", y = "Shap值")
 ```
-
 
 ## {background-image=background.jpg}
 ### H2之資料分析-典型相關分析
@@ -936,20 +1080,18 @@ gridExtra::grid.arrange(p2,p1,ncol=2, widths = c(1, 5))
 ## 推論與討論 {background-image="background.jpg"}
 
 ::: incremental
-::: {style="font-size:30px"}
+::: {style="font-size:25px"}
 
 1.  **教育程度和年齡分層**<br/>
 教育程度與年齡越高的人們有著較成熟的心智，因此傾向參與抵制。<br/>
-2.  **影音平台使用**<br/>
-使用多種平台助於接觸不同觀點，降低煽動效應與參與抵制的可能性。<br/>
+2.  **媒體識讀、抵制行為的重要性與**<br/>
+媒體識讀代表著獨立思考的能力，因此若抵制行動已經產生，媒體識讀能力越高者，其抵制行動的意義也愈發重大，抵制程度也較劇烈。<br/>
 3.  **網路行為**<br/>
-負面環境助長群體的攻擊性，進而提升參與抵制的可能性與抵制程度；
-媒體識讀使得抵制行為產生極化。<br/>
+負面環境助長群體的攻擊性，進而提升參與抵制的可能性與抵制程度。<br/>
 4.  **政黨好感度及意識型態**<br/>
-意識型態上偏好台獨者，更傾向參與抵制，抵制程度也較高。<br/>
-5.  **抵制行為的重要性**<br/>
-抵制行為之於個人越重要，代表越重視抵制成效，也加劇抵制的程度。<br/>
-
+雖然在模型上發現，意識型態上偏好台獨者，更傾向參與抵制，抵制程度也較高。但透過相關視覺化工具較無肉眼可見規則，因此推論需較為謹慎，待蒐集完更多樣本可能可以得到進一步的結論。<br/>
+5. **社群及影音平台使用**<br/>
+藉由社群及影音平台的第一典型負荷量，我們認為此兩項也有助長媒體識讀的可能性，並間接助長了抵制程度。
 :::
 :::
 
