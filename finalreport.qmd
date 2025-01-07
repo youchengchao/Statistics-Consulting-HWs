@@ -11,6 +11,7 @@ format:
          \usepackage{geometry}
          \usepackage{xeCJK}
          \usepackage{float}
+         \floatplacement{figure}{H}
          \geometry{verbose,tmargin=1.5cm,bmargin=1.5cm,lmargin=1.5cm,rmargin=1.5cm}
          \setmainfont{Times New Roman}
          \setCJKmainfont{標楷體}
@@ -54,8 +55,6 @@ execute:
 | q20\~q26 | 參考碩士論文:台灣消費者抵制行為之研究 -以台商親中言論衍生之抵制為例 (https://www.airitilibrary.com/Article/Detail/U0004-G0107932056)之做法，將相同大主題的ordinal主觀評分加總 作為該主題程度的分數。 |
 
 : 變數前處理
-
-前處理過後的資料維度是: rows$\times$columns = $1004\times40$。
 
 ## 複選題處理
 
@@ -463,86 +462,26 @@ my_scatter <- function(data, x, y, group,
 latex(describe(DB.csv,title=""),file="")
 ```
 
-```{r}
-#| output: false
-#| eval: false
-#| echo: false
-#針對q28_YN二元變數對其他類別變數畫圖
-myCount_q28 <- function(din, target_label){
-  temp <- purrr::map(target_label, ~ {
-      din %>%
-        group_by(q28_YN, !!sym(.x)) %>%
-        summarise(count = n(), .groups = "drop")%>%
-        mutate(var_name = .x) %>%
-        rename(unique_value = !!sym(.x)) %>%
-        group_by(.,q28_YN, var_name) %>%
-        mutate(
-          barcolor = scales::rescale(
-            as.numeric(factor(unique_value)),
-            to = c(0.1,0.9)
-          )
-        ) %>%
-        mutate(proportion = round(count/sum(count), 4) ) %>%
-        ungroup()
-    })
-  temp <- bind_rows(temp)
-  temp$count <- NULL
-  return(temp)
-}
-Barplot.p <- function(din){
-    split_label<- colnames(din)[1]
-    din <- din %>%
-      group_by(q28_YN, var_name) %>%
-      mutate(
-        start = 1-cumsum(proportion),
-        end = 1-lag(cumsum(proportion), default = 0)
-      )
-    pic <- ggplot(din) +
-              geom_bar(aes(x = factor(!!sym(split_label)),
-                           y = proportion,
-                           fill = as.character(barcolor)),
-                       position = "stack",
-                       stat = "identity")+
-              geom_text(
-                aes(label = paste0(din$unique_value,"\n",proportion * 100, "%"),
-                    x = factor(!!sym(split_label)),
-                    y = (start + end) / 2),
-                position = position_dodge2(width = 0.2,padding = 0.2),
-                size = 2.5
-              )+
-              facet_grid(.~var_name, switch = "x", labeller = labeller(var_name = label_wrap_gen(width = 10)))+
-              scale_fill_grey(start = 0.7,end = 0.3)+
-              ggtitle(label = "各變數依據是否有抵制行為分類之比例圖")+
-              labs(x = "變數名稱", y="比例")+
-              theme(strip.placement = "outside",
-                    strip.background = element_rect(fill = NA, color = "white"),
-                    panel.spacing = unit(-.01,"cm"),
-                    legend.position = "none",
-                    plot.margin = unit(c(0.15, 0.15, 0.15, 0.15),"inches"))
-    return(pic)
-}
-```
+
+
+
+
 
 ## 年齡對教育程度之抵制者比例
 
 從這張圖中可發現:教育程度愈高(越上層)，抵制者比例愈高(底色越深)；而抵制者比例對年齡較無規則，可能有其他原因共同影響。圖中方格內的數字代表樣本數。
 
-![年齡對教育程度](年齡對教育程度.pdf){fig-align="center"}
-
-```{r, fig.align='center', fig.width=10, fig.height=6}
-#| output: false
-#| eval: false
-#| echo: false
+```{r, fig.align='center', fig.width=10, fig.height=6, fig.pos="H"}
+#| fig-align: center
 DB.csv$q2rr <- rr
 heatmapDF <- DB.csv %>%
   group_by(q2rr, q4) %>%
   summarise(
-    proportion = mean(q28_YN),
+    proportion = mean(as.numeric(as.character(q28_YN))),
     sample_count = n(),  # 樣本數
     .groups = "drop"
   )
-
-showtext.auto(enable = TRUE)
+showtext_auto(enable = TRUE)
 ggplot(heatmapDF, aes(x = q2rr, y = q4, fill = proportion)) +
   geom_tile(color = "white", alpha = 0.5) +
   geom_text(aes(label = sample_count), color = "black", size = 4) +  # 顯示樣本數
@@ -555,21 +494,23 @@ ggplot(heatmapDF, aes(x = q2rr, y = q4, fill = proportion)) +
   )
 ```
 
+
+
+
+
+
+
+
 ## 民進黨好感度對意識形態之抵制者比例
 
 從這張圖中可發現:當民進黨好感度越大時，出現抵制行為的比率也會越大。而其中的空缺方格則是因為樣本數不足產生。
 
-![](民進黨好感度對意識形態.pdf)
-
-```{r, fig.align='center', fig.width=10, fig.height=6}
-#| output: false
-#| eval: false
-#| echo: false
-DB.csv$q2rr <- rr
+```{r, fig.align='center', fig.width=10, fig.height=6, fig.pos="H"}
+#| fig-align: center
 heatmapDF <- DB.csv %>%
   group_by(q42, q41) %>%
   summarise(
-    proportion = mean(q28_YN),
+    proportion = mean(as.numeric(as.character(q28_YN))),
     sample_count = n(),  # 樣本數
     .groups = "drop"
   )
@@ -586,16 +527,23 @@ ggplot(heatmapDF, aes(x = q42, y = q41, fill = proportion)) +
   )
 ```
 
+
+
+
+
+
+
+
+
+
+
+
 ## 媒體識讀素養對抵制行為的重要性
 
 從這張圖中可看出，媒體識讀素養在較低分數的時候並沒有明顯趨勢，而在約大於10以後，才出現了媒體識讀素養越高，認為抵制行為重要性也越高的趨勢。因此，我們推論：媒體識讀素養也許要大於某個值或階段才真正對抵制行為有影響力。
 
-![媒體素養](媒體素養.pdf)
-
-```{r}
-#| output: false
-#| eval: false
-#| echo: false
+```{r, fig.pos="H"}
+#| fig-align: center
 tempDF <- DB.csv %>%
   filter(q28_YN==1) %>%
   mutate(weighted_var = weight*q33) %>%
@@ -618,7 +566,8 @@ showtext_auto()
 
 從下圖可發現:平均而言有抵制行為的人（綠色）比起沒有抵制行為的人（紅色）要更頻繁看見他人網路攻擊。
 
-```{r, fig.align='center', fig.width=10, fig.height=6}
+```{r, fig.align='center', fig.width=10, fig.height=6, fig.pos="H"}
+#| fig-align: center
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q22', group = 'q28_YN',
            xlab = "年齡", 
            ylab = "平均看見他人網路攻擊頻繁程度",
@@ -631,11 +580,13 @@ showtext_auto()
 gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
+
 ## 觀察不同年齡下，抵制者與不抵制者的自己網路攻擊頻繁程度
 
 從下圖可發現：平均而言有抵制行為的人（綠色）比起沒有抵制行為的人（紅色）要更頻繁出現網路攻擊。
 
-```{r, fig.align='center', fig.width=10, fig.height=6}
+```{r, fig.align='center', fig.width=10, fig.height=6, fig.pos="H"}
+#| fig-align: center
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q23', group = 'q28_YN',
            xlab = "年齡", 
            ylab = "平均自己網路攻擊頻繁程度",
@@ -648,11 +599,24 @@ showtext_auto()
 gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
+
+
+
+
+
+
+
+
+
+
+
+
 ## 觀察不同年齡下，抵制者與不抵制者的抵制意圖
 
 從下圖可發現：平均而言有抵制行為的人（綠色）比起沒有抵制行為的人（紅色）更有抵制行為的意圖。
 
-```{r, fig.align='center', fig.width=10, fig.height=6}
+```{r, fig.align='center', fig.width=10, fig.height=6, fig.pos="H"}
+#| fig-align: center
 # 連續型年齡
 p1 <- my_scatter(DB.csv, x = 'q2', y = 'q27', group = 'q28_YN',
            xlab = "年齡", 
@@ -666,6 +630,14 @@ showtext_auto()
 gridExtra::grid.arrange(p2,p1,ncol=1)
 ```
 
+
+
+
+
+
+
+
+
 # 分析影響抵制與否之因素
 
 ## Logistic regression model
@@ -673,7 +645,6 @@ gridExtra::grid.arrange(p2,p1,ncol=1)
 我們採用逐步選取法（Heinze，2018）對可能影響抵制行為的變數進行篩選並加上人口權重。結果如下，此模型有10個顯著變數，以下針對顯著變數解讀
 
 ```{r}
-
 library(dplyr)
 library(knitr)
 # 建立資料框
@@ -725,7 +696,8 @@ summary(glm_log)
 
 決策樹選出的重要變數和邏輯式模型大致相同，但更能捕捉變數間交互作用。在圖3中，先從抵制意願做區分，具有高度抵制意圖的人，會有抵制行為。然而較不具備抵制意圖的人會受他人網路攻擊行為影響，如果常看到他人網路攻擊行為，便可能會有抵制行為；反之則不會有抵制行為。另外，就算經常看到他人攻擊言論，如果對國民黨好感度較高、能接受網路攻擊行為且教育程度較低，也不會有抵制行為。而在年齡的分層當中，我們可以看出來決策樹在中老年齡去做了分枝，也就是代表在這段年齡層的人們已經具備成熟的心智，然而若是年齡在增長一點，出現抵制行為的可能性也會降低，與加權邏輯式仍是稍有區別。
 
-```{r, fig.width=12, fig.height=6}
+```{r, fig.width=12, fig.height=6, fig.pos="H"}
+#| fig-align: center
 library(rpart)
 library(rpart.plot)
 tree_model <- rpart(
@@ -766,7 +738,8 @@ rpart.plot(tree_model,
 
 我們藉由建構XGboost模型以此來取得shap值來作為變數重要性的指標。從圖中，可以清楚看到q27(抵制意圖)他的影響力是最大的，並且是呈現正向的影響力，也就是隨著抵制意圖的提升會對抵制行為的發生。 而q22(他人攻擊行為的頻率)，也能夠很明顯的看出越常接觸到他人攻擊，越容易產生抵制行為。 至於q2(年齡)，我們也可以很明顯的看出隨著年齡的增長越容易產生抵制行為。
 
-```{r, fig.align='center', fig.width=4, fig.height=4}
+```{r, fig.align='center', fig.width=4, fig.height=4, fig.pos="H"}
+#| fig-align: center
 library(xgboost)
 library(DiagrammeR)
 set.seed(2012)
@@ -808,8 +781,8 @@ shap.plot.summary(shap_long,
 
 ## Canonical Correlation Analysis and PCA-對全部變數做
 
-```{r}
-
+```{r, fig.pos="H"}
+#| fig-align: center
 library(FactoMineR)
 library(factoextra)
 boycott <- subset(DB.csv, q28_YN == 1) %>% dplyr::select(-"q28_YN")
@@ -856,8 +829,8 @@ cat("反應變數之自我相關係數",round((colSums(ally_lodings^2)[1]/4),4),
 
 解釋變數中的「抵制效度」和「抵制規模」皆與第一典型變數有高度相關，而反應變數與抵制程度最相關的正相關變數為「看見網路攻擊頻率」，接著是「抵制行為的重要性」、「不文明留言的影響力」和「媒體識讀素養」，負相關為「意識形態」。因此我們可以推論：如果常常看到別人在網路上的攻擊行為，並且本身的不文明留言常常會影響到別人也留下此類留言，且常常蒐集同溫層外資訊的人，抵制行為的程度會比較高；而如果本身立場越偏向統一而非台灣獨立或支持國民黨的人，抵制行為的程度會比較低。
 
-```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%"}
-
+```{r, fig.align='center', fig.width=6, fig.height=5, out.width="100%", fig.pos="H"}
+#| fig-align: center
 y <-boycott[,c('q30','q32','q35')]
 x <-boycott[,c("q2","q4","q6","q7","q10","q11","q1719","q22","q23","q24","q26","q27","q29_1","q29_3","q31",'q33','q36',"q29_1_3","q40","q42")]
 
@@ -880,9 +853,8 @@ num<-round(cca$cor^2,4)[1:2]
 
 ```
 
-```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%"}
-
-
+```{r, fig.align='center', fig.width=6, fig.height=2.5, out.width="100%", fig.pos="H"}
+#| fig-align: center
 data <- x_lodings[,c(1)]
 df <- data.frame(
   Name = names(data),
